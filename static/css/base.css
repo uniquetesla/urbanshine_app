@@ -111,6 +111,13 @@ body {
 
 .content-area { display: grid; gap: 1rem; }
 
+.dashboard-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 320px;
+    gap: 1rem;
+    align-items: start;
+}
+
 .dashboard-grid {
     display: grid;
     grid-template-columns: repeat(12, 1fr);
@@ -118,18 +125,57 @@ body {
 }
 
 .kpi-card {
-    grid-column: span 3;
-    padding: 1rem;
+    grid-column: span 4;
+    padding: 1.1rem;
+    background: linear-gradient(145deg, rgba(255,255,255,.12), rgba(255,255,255,.06));
 }
 .kpi-card h3 { margin: 0 0 .5rem; color: var(--muted); font-size: .95rem; }
-.kpi-card strong { font-size: 1.75rem; }
-.kpi-trend { color: var(--accent); font-size: .85rem; }
+.kpi-card strong { font-size: 1.65rem; letter-spacing: .02em; }
+.kpi-trend { color: var(--accent); font-size: .85rem; margin: .55rem 0 0; }
+.kpi-trend--warning { color: #ffd166; }
 
 .panel {
-    grid-column: span 6;
-    padding: 1rem;
+    grid-column: span 12;
+    padding: 1.1rem;
 }
 .panel.full { grid-column: span 12; }
+
+.panel-heading { display: flex; justify-content: space-between; align-items: center; gap: .7rem; }
+.panel-heading h3 { margin: 0; }
+.panel-heading span {
+    font-size: .78rem;
+    color: var(--muted);
+    border: 1px solid rgba(255,255,255,.2);
+    border-radius: 999px;
+    padding: .2rem .6rem;
+}
+
+.activity-list { list-style: none; margin: .8rem 0 0; padding: 0; display: grid; gap: .75rem; }
+.activity-list li {
+    background: rgba(255,255,255,.04);
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 12px;
+    padding: .75rem .8rem;
+}
+.activity-list strong { display: block; font-size: .94rem; }
+.activity-list p { margin: .3rem 0 0; color: var(--muted); font-size: .85rem; }
+
+.quick-actions {
+    padding: 1.1rem;
+    position: sticky;
+    top: 1rem;
+    display: grid;
+    gap: .8rem;
+}
+.quick-actions h3 { margin: 0 0 .2rem; }
+.quick-actions details {
+    background: rgba(255,255,255,.05);
+    border: 1px solid rgba(255,255,255,.15);
+    border-radius: 12px;
+    padding: .7rem .75rem;
+}
+.quick-actions summary { cursor: pointer; font-weight: 600; }
+.quick-actions details p { color: var(--muted); font-size: .86rem; margin: .65rem 0; }
 
 .messages { list-style: none; margin: 0; padding: 1rem; }
 .messages li { color: var(--text); }
@@ -164,6 +210,8 @@ th, td { padding: .75rem; border-bottom: 1px solid rgba(255,255,255,.14); text-a
     .sidebar { position: fixed; inset: 0 auto 0 0; width: min(300px, 90vw); z-index: 20; transform: translateX(-102%); transition: transform .25s ease; }
     .app-shell[data-sidebar-open="true"] .sidebar { transform: translateX(0); }
     .icon-btn { display: inline-flex; align-items: center; justify-content: center; }
+    .dashboard-layout { grid-template-columns: 1fr; }
+    .quick-actions { position: static; }
     .kpi-card { grid-column: span 6; }
     .panel { grid-column: span 12; }
 }

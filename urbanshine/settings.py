@@ -13,7 +13,7 @@ DEBUG = os.getenv("DJANGO_DEBUG", "True").lower() in {"1", "true", "yes", "on"}
 if DJANGO_ENV == "production" and SECRET_KEY == "unsafe-dev-key-change-me":
     raise ValueError("DJANGO_SECRET_KEY must be set in production")
 
-ALLOWED_HOSTS = [host.strip() for host in os.getenv("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",") if host.strip()]
+ALLOWED_HOSTS = ["*"]
 
 INSTALLED_APPS = [
     "django.contrib.admin",
