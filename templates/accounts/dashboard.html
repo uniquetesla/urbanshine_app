@@ -3,46 +3,79 @@
 {% block page_title %}Dashboard{% endblock %}
 {% block page_subtitle %}Live Kennzahlen und operative Übersicht{% endblock %}
 {% block content %}
-<section class="dashboard-grid">
-    <article class="glass-card kpi-card">
-        <h3>Aktive Aufträge</h3>
-        <strong>128</strong>
-        <p class="kpi-trend">+8.4% seit letzter Woche</p>
-    </article>
-    <article class="glass-card kpi-card">
-        <h3>Heutige Termine</h3>
-        <strong>34</strong>
-        <p class="kpi-trend">+3 neue in 24h</p>
-    </article>
-    <article class="glass-card kpi-card">
-        <h3>Monatsumsatz</h3>
-        <strong>€ 98.450</strong>
-        <p class="kpi-trend">+12.2% im Vergleich</p>
-    </article>
-    <article class="glass-card kpi-card">
-        <h3>Kundenzufriedenheit</h3>
-        <strong>4.9 / 5</strong>
-        <p class="kpi-trend">Stabil auf Premium-Niveau</p>
-    </article>
+<section class="dashboard-layout">
+    <div class="dashboard-grid">
+        <article class="glass-card kpi-card">
+            <h3>Aktive Aufträge</h3>
+            <strong>128</strong>
+            <p class="kpi-trend">+8.4% seit letzter Woche</p>
+        </article>
+        <article class="glass-card kpi-card">
+            <h3>Offene Rechnungen</h3>
+            <strong>42</strong>
+            <p class="kpi-trend kpi-trend--warning">7 heute fällig</p>
+        </article>
+        <article class="glass-card kpi-card">
+            <h3>Offene Summen</h3>
+            <strong>€ 24.860</strong>
+            <p class="kpi-trend kpi-trend--warning">-3.1% zum Vormonat</p>
+        </article>
+        <article class="glass-card kpi-card">
+            <h3>Monatsumsatz</h3>
+            <strong>€ 98.450</strong>
+            <p class="kpi-trend">+12.2% im Vergleich</p>
+        </article>
+        <article class="glass-card kpi-card">
+            <h3>Jahresumsatz</h3>
+            <strong>€ 1.240.300</strong>
+            <p class="kpi-trend">+18.6% YoY</p>
+        </article>
 
-    <article class="glass-card panel">
-        <h3>Teamstatus</h3>
-        <p>18 Mitarbeiter im Einsatz, 4 im Bereitschaftsdienst. Keine offenen Eskalationen.</p>
-    </article>
+        <article class="glass-card panel panel-activity">
+            <div class="panel-heading">
+                <h3>Letzte Aktivitäten</h3>
+                <span>Live-Feed</span>
+            </div>
+            <ul class="activity-list">
+                <li>
+                    <strong>Auftrag #A-391</strong>
+                    <p>Fahrzeugaufbereitung abgeschlossen · vor 12 Min</p>
+                </li>
+                <li>
+                    <strong>Rechnung #R-812</strong>
+                    <p>Zahlungseingang verbucht · vor 34 Min</p>
+                </li>
+                <li>
+                    <strong>Kunde Müller GmbH</strong>
+                    <p>Neues Angebot erstellt · vor 51 Min</p>
+                </li>
+                <li>
+                    <strong>Kasse</strong>
+                    <p>Schichtwechsel protokolliert · vor 1 Std</p>
+                </li>
+            </ul>
+        </article>
 
-    <article class="glass-card panel">
-        <h3>Nächste Prioritäten</h3>
-        <p>Heute stehen 5 Premium-Aufträge, 2 Angebotsprüfungen und 1 Audit-Termin an.</p>
-    </article>
+        <article class="glass-card panel full">
+            <h3>Admin-Bereich</h3>
+            {% if request.user.role == 'admin' or request.user.role == 'chef' %}
+                <p>Sie haben erweiterten Zugriff auf die Benutzerverwaltung und rollenbasierte Freigaben.</p>
+                <a class="btn" href="{% url 'accounts:user_list' %}">Benutzerverwaltung öffnen</a>
+            {% else %}
+                <p>Sie haben keinen Zugriff auf die Benutzerverwaltung.</p>
+            {% endif %}
+        </article>
+    </div>
 
-    <article class="glass-card panel full">
-        <h3>Admin-Bereich</h3>
-        {% if request.user.role == 'admin' or request.user.role == 'chef' %}
-            <p>Sie haben erweiterten Zugriff auf die Benutzerverwaltung und rollenbasierte Freigaben.</p>
-            <a class="btn" href="{% url 'accounts:user_list' %}">Benutzerverwaltung öffnen</a>
-        {% else %}
-            <p>Sie haben keinen Zugriff auf die Benutzerverwaltung.</p>
-        {% endif %}
-    </article>
+    <aside class="glass-card quick-actions">
+        <h3>Schnellaktionen</h3>
+        <details>
+            <summary>Neuer Auftrag</summary>
+            <p>Lege in wenigen Schritten einen neuen Auftrag mit Fahrzeug- und Leistungsdaten an.</p>
+            <a class="btn" href="#">Auftrag starten</a>
+        </details>
+        <a class="btn btn-secondary" href="#">Neuer Kunde</a>
+        <a class="btn btn-secondary" href="#">Kasse öffnen</a>
+    </aside>
 </section>
 {% endblock %}
