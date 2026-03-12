@@ -1,114 +1,70 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>{% block title %}UrbanShine{% endblock %}</title>
-    <style>
-        :root {
-            color-scheme: light;
-            --bg: #f4f7fb;
-            --primary: #185adb;
-            --surface: #ffffff;
-            --text: #1e293b;
-            --muted: #64748b;
-            --danger: #dc2626;
-        }
-
-        body {
-            margin: 0;
-            font-family: "Inter", "Segoe UI", sans-serif;
-            background: linear-gradient(145deg, #f8fafc 0%, #e2e8f0 100%);
-            color: var(--text);
-            min-height: 100vh;
-        }
-
-        .container {
-            max-width: 980px;
-            margin: 2rem auto;
-            background: var(--surface);
-            border-radius: 16px;
-            box-shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
-            padding: 2rem;
-        }
-
-        .nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-        }
-
-        .btn {
-            border: none;
-            border-radius: 8px;
-            padding: 0.6rem 1rem;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
-            color: white;
-            background: var(--primary);
-            font-weight: 600;
-        }
-
-        .btn.danger { background: var(--danger); }
-        .btn.secondary { background: #334155; }
-
-        .form-grid {
-            display: grid;
-            gap: 1rem;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-        }
-
-        label { font-weight: 600; display: block; margin-bottom: .3rem; }
-        input, select {
-            width: 100%;
-            padding: 0.6rem;
-            border-radius: 8px;
-            border: 1px solid #cbd5e1;
-            font-size: 1rem;
-            box-sizing: border-box;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 1rem;
-        }
-
-        th, td {
-            border-bottom: 1px solid #e2e8f0;
-            text-align: left;
-            padding: .8rem;
-        }
-
-        .messages { list-style: none; padding: 0; }
-        .messages li {
-            background: #e2e8f0;
-            padding: .7rem;
-            border-radius: 8px;
-            margin-bottom: .5rem;
-        }
-
-        .login-wrap {
-            min-height: 100vh;
-            display: grid;
-            place-items: center;
-            padding: 1rem;
-        }
-
-        .login-card {
-            width: min(440px, 100%);
-            background: var(--surface);
-            border-radius: 16px;
-            box-shadow: 0 20px 50px rgba(15, 23, 42, 0.12);
-            padding: 2rem;
-        }
-
-        .subtitle { color: var(--muted); margin-top: 0; }
-    </style>
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
 </head>
 <body>
+{% if request.user.is_authenticated %}
+<div class="app-shell" data-sidebar-open="true">
+    <aside class="sidebar" id="sidebar">
+        <div class="brand">
+            <span class="brand-dot"></span>
+            <div>
+                <strong>UrbanShine</strong>
+                <small>Operations Suite</small>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav" aria-label="Hauptnavigation">
+            <a href="{% url 'accounts:dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">Dashboard</a>
+            <a href="#" class="nav-link">Aufträge</a>
+            <a href="#" class="nav-link">Kunden</a>
+            <a href="#" class="nav-link">Produkte</a>
+            <a href="#" class="nav-link">Mitarbeiter</a>
+            <a href="#" class="nav-link">Termine</a>
+            <a href="#" class="nav-link">Rechnungen</a>
+            <a href="#" class="nav-link">Angebote</a>
+            <a href="#" class="nav-link">Dokumente</a>
+            <a href="{% url 'accounts:user_list' %}" class="nav-link {% if request.resolver_match.url_name == 'user_list' or request.resolver_match.url_name == 'user_create' or request.resolver_match.url_name == 'user_update' %}active{% endif %}">Admin</a>
+        </nav>
+    </aside>
+
+    <div class="main-layout">
+        <header class="topbar glass-card">
+            <button type="button" class="icon-btn" id="menuToggle" aria-label="Navigation umschalten">☰</button>
+            <div>
+                <h1>{% block page_title %}Dashboard{% endblock %}</h1>
+                <p>{% block page_subtitle %}UrbanShine Plattformübersicht{% endblock %}</p>
+            </div>
+            <div class="topbar-actions">
+                <span class="user-pill">{{ request.user.first_name|default:request.user.username }}</span>
+                <form method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}<button class="btn btn-secondary" type="submit">Abmelden</button></form>
+            </div>
+        </header>
+
+        <main class="content-area">
+            {% if messages %}
+                <ul class="messages glass-card">
+                    {% for message in messages %}<li>{{ message }}</li>{% endfor %}
+                </ul>
+            {% endif %}
+{% else %}
+<main class="auth-layout">
+{% endif %}
+
 {% block content %}{% endblock %}
+
+{% if request.user.is_authenticated %}
+        </main>
+    </div>
+</div>
+{% else %}
+</main>
+{% endif %}
+<script src="{% static 'js/app.js' %}" defer></script>
 </body>
 </html>
