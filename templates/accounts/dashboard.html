@@ -74,6 +74,8 @@
             <p>Lege in wenigen Schritten einen neuen Auftrag mit Fahrzeug- und Leistungsdaten an.</p>
             <a class="btn" href="{% url 'orders:order_create' %}">Auftrag starten</a>
         </details>
+        <a class="btn btn-secondary" href="{% url 'employees:employee_list' %}">Mitarbeiterplanung</a>
+        <a class="btn btn-secondary" href="{% url 'scheduling:appointment_overview' %}">Terminplanung</a>
         <a class="btn btn-secondary" href="{% url 'customers:customer_create' %}">Neuer Kunde</a>
         <a class="btn btn-secondary" href="{% url 'checkout:pos' %}">Kasse öffnen</a>
     </aside>
