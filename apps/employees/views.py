@@ -12,7 +12,7 @@ from apps.orders.models import Order
 
 
 class EmployeeAccessMixin(LoginRequiredMixin, UserPassesTestMixin):
-    allowed_roles = (UserRole.ADMIN, UserRole.CHEF)
+    allowed_roles = (UserRole.ADMIN, UserRole.CHEF, UserRole.MITARBEITER)
 
     def test_func(self):
         user = self.request.user
@@ -25,7 +25,7 @@ class EmployeeListView(EmployeeAccessMixin, ListView):
     context_object_name = "employees"
 
     def get_queryset(self):
-        return (
+        queryset = (
             User.objects.filter(role__in=[UserRole.ADMIN, UserRole.CHEF, UserRole.MITARBEITER], is_active=True)
             .order_by("first_name", "last_name", "username")
             .prefetch_related(
@@ -35,9 +35,16 @@ class EmployeeListView(EmployeeAccessMixin, ListView):
                 )
             )
         )
+        if self.request.user.role == UserRole.MITARBEITER:
+            return queryset.filter(pk=self.request.user.pk)
+        return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        if self.request.user.role == UserRole.MITARBEITER:
+            context["unassigned_orders"] = Order.objects.none()
+            return context
+
         context["unassigned_orders"] = (
             Order.objects.filter(mitarbeiter__isnull=True)
             .select_related("kunde")
@@ -53,7 +60,10 @@ class EmployeeDetailView(EmployeeAccessMixin, DetailView):
     context_object_name = "employee"
 
     def get_queryset(self):
-        return User.objects.filter(role__in=[UserRole.ADMIN, UserRole.CHEF, UserRole.MITARBEITER], is_active=True)
+        queryset = User.objects.filter(role__in=[UserRole.ADMIN, UserRole.CHEF, UserRole.MITARBEITER], is_active=True)
+        if self.request.user.role == UserRole.MITARBEITER:
+            return queryset.filter(pk=self.request.user.pk)
+        return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -83,10 +93,11 @@ class EmployeeCalendarView(EmployeeAccessMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        employee = get_object_or_404(
-            User.objects.filter(role__in=[UserRole.ADMIN, UserRole.CHEF, UserRole.MITARBEITER], is_active=True),
-            pk=self.kwargs["pk"],
-        )
+        queryset = User.objects.filter(role__in=[UserRole.ADMIN, UserRole.CHEF, UserRole.MITARBEITER], is_active=True)
+        if self.request.user.role == UserRole.MITARBEITER:
+            queryset = queryset.filter(pk=self.request.user.pk)
+
+        employee = get_object_or_404(queryset, pk=self.kwargs["pk"])
         employee_orders = employee.auftraege.select_related("kunde").order_by("termin", "auftragsnummer")
 
         calendar = defaultdict(list)
