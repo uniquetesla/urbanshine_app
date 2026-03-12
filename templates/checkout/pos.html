@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}Kasse | UrbanShine{% endblock %}
+{% block page_title %}Kasse{% endblock %}
+{% block page_subtitle %}Artikel suchen, Warenkorb pflegen und Verkäufe buchen{% endblock %}
+{% block content %}
+<section class="dashboard-layout">
+    <div class="glass-card panel full">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:.7rem;flex-wrap:wrap;margin-bottom:1rem;">
+            <h3>Artikel</h3>
+            <form method="get" style="display:flex;gap:.5rem;flex-wrap:wrap;">
+                <input type="search" name="q" value="{{ query }}" placeholder="Suche nach Artikelname, Kategorie oder Beschreibung">
+                <button class="btn" type="submit">Suchen</button>
+                {% if query %}
+                    <a class="btn btn-secondary" href="{% url 'checkout:pos' %}">Zurücksetzen</a>
+                {% endif %}
+            </form>
+        </div>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                <tr>
+                    <th>Artikel</th>
+                    <th>Kategorie</th>
+                    <th>Preis</th>
+                    <th>Lagerbestand</th>
+                    <th>Auswahl</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for article in articles %}
+                    <tr>
+                        <td>{{ article.name }}</td>
+                        <td>{{ article.kategorie }}</td>
+                        <td>{{ article.preis }} €</td>
+                        <td>{{ article.lagerbestand }}</td>
+                        <td>
+                            <form method="post" style="display:flex;gap:.5rem;align-items:center;">{% csrf_token %}
+                                <input type="hidden" name="action" value="add">
+                                <input type="hidden" name="article_id" value="{{ article.id }}">
+                                <input type="number" name="quantity" min="1" value="1" style="width:90px;">
+                                <button class="btn" type="submit" {% if article.lagerbestand == 0 %}disabled{% endif %}>Auswählen</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="5">Keine Artikel gefunden.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <aside class="glass-card quick-actions">
+        <h3>Warenkorb</h3>
+        {% if cart_items %}
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Artikel</th>
+                        <th>Menge</th>
+                        <th>Summe</th>
+                        <th></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for item in cart_items %}
+                        <tr>
+                            <td>{{ item.article.name }}</td>
+                            <td>
+                                <form method="post" style="display:flex;gap:.4rem;align-items:center;">{% csrf_token %}
+                                    <input type="hidden" name="action" value="update">
+                                    <input type="hidden" name="article_id" value="{{ item.article.id }}">
+                                    <input type="number" name="quantity" min="0" value="{{ item.quantity }}" style="width:80px;">
+                                    <button class="btn btn-secondary" type="submit">Ändern</button>
+                                </form>
+                            </td>
+                            <td>{{ item.line_total }} €</td>
+                            <td>
+                                <form method="post">{% csrf_token %}
+                                    <input type="hidden" name="action" value="remove">
+                                    <input type="hidden" name="article_id" value="{{ item.article.id }}">
+                                    <button class="btn btn-danger" type="submit">Entfernen</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <p><strong>Gesamt: {{ cart_total }} €</strong></p>
+
+            <form method="post" style="display:grid;gap:.6rem;">{% csrf_token %}
+                <input type="hidden" name="action" value="checkout">
+                <label for="payment_method">Zahlungsart</label>
+                <select name="payment_method" id="payment_method" required>
+                    <option value="">Bitte wählen</option>
+                    {% for value, label in payment_methods %}
+                        <option value="{{ value }}">{{ label }}</option>
+                    {% endfor %}
+                </select>
+                <button class="btn" type="submit">Verkauf abschließen</button>
+            </form>
+            <a class="btn btn-secondary" href="{% url 'checkout:pos' %}?clear=1">Warenkorb leeren</a>
+        {% else %}
+            <p>Der Warenkorb ist leer.</p>
+        {% endif %}
+    </aside>
+</section>
+{% endblock %}
