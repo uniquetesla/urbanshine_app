@@ -25,7 +25,7 @@
             <a href="{% url 'customers:customer_list' %}" class="nav-link {% if request.resolver_match.namespace == 'customers' %}active{% endif %}">Kunden</a>
             <a href="{% url 'catalog:article_list' %}" class="nav-link {% if request.resolver_match.namespace == 'catalog' %}active{% endif %}">Produkte</a>
             <a href="{% url 'employees:employee_list' %}" class="nav-link {% if request.resolver_match.namespace == 'employees' %}active{% endif %}">Mitarbeiter</a>
-            <a href="#" class="nav-link">Termine</a>
+            <a href="{% url 'scheduling:appointment_overview' %}" class="nav-link {% if request.resolver_match.namespace == 'scheduling' %}active{% endif %}">Termine</a>
             <a href="#" class="nav-link">Rechnungen</a>
             <a href="#" class="nav-link">Angebote</a>
             <a href="#" class="nav-link">Dokumente</a>

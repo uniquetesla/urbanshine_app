@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Termine | UrbanShine{% endblock %}
+{% block page_title %}Terminmodul{% endblock %}
+{% block page_subtitle %}Ansichten für Heute und Woche{% endblock %}
+{% block content %}
+<section class="glass-card panel full">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:.8rem;flex-wrap:wrap;">
+        <h3>Terminübersicht</h3>
+        <div style="display:flex;gap:.5rem;">
+            <a href="?ansicht=heute" class="btn {% if selected_view == 'heute' %}{% else %}btn-secondary{% endif %}">Heute</a>
+            <a href="?ansicht=woche" class="btn {% if selected_view == 'woche' %}{% else %}btn-secondary{% endif %}">Woche</a>
+        </div>
+    </div>
+
+    {% if selected_view == 'woche' %}
+        {% include "scheduling/partials/appointment_table.html" with appointments=week_appointments empty_text="Keine Termine in dieser Woche." %}
+    {% else %}
+        {% include "scheduling/partials/appointment_table.html" with appointments=today_appointments empty_text="Keine Termine für heute." %}
+    {% endif %}
+</section>
+{% endblock %}
