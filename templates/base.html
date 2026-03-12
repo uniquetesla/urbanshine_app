@@ -32,7 +32,7 @@
             <a href="{{ article_list_url|default:'/artikel/' }}" class="nav-link {% if request.resolver_match.namespace == 'catalog' %}active{% endif %}">Produkte</a>
             <a href="{{ employee_list_url|default:'/mitarbeiter/' }}" class="nav-link {% if request.resolver_match.namespace == 'employees' %}active{% endif %}">Mitarbeiter</a>
             <a href="{{ appointment_overview_url|default:'/termine/' }}" class="nav-link {% if request.resolver_match.namespace == 'scheduling' %}active{% endif %}">Termine</a>
-            <a href="#" class="nav-link">Rechnungen</a>
+            <a href="{% url 'invoices:invoice_list' %}" class="nav-link {% if request.resolver_match.namespace == 'invoices' %}active{% endif %}">Rechnungen</a>
             <a href="#" class="nav-link">Angebote</a>
             <a href="#" class="nav-link">Dokumente</a>
             <a href="{% url 'checkout:pos' %}" class="nav-link {% if request.resolver_match.namespace == 'checkout' %}active{% endif %}">Kasse</a>
