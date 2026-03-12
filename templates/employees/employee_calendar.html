@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Mitarbeiterkalender | UrbanShine{% endblock %}
+{% block page_title %}Kalender: {{ employee.get_full_name|default:employee.username }}{% endblock %}
+{% block page_subtitle %}Terminübersicht je Mitarbeiter{% endblock %}
+{% block content %}
+<section class="glass-card panel full">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:.6rem;flex-wrap:wrap;">
+        <h3>Kalender je Mitarbeiter</h3>
+        <a class="btn btn-secondary" href="{% url 'employees:employee_detail' employee.pk %}">Zur Detailseite</a>
+    </div>
+
+    {% for day, orders in calendar_items.items %}
+        <div style="margin-top:1rem;">
+            <strong>{{ day }}</strong>
+            <div class="table-wrap" style="margin-top:.5rem;">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Uhrzeit</th>
+                        <th>Auftragsnr.</th>
+                        <th>Kunde</th>
+                        <th>Auftragsart</th>
+                        <th>Status</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for order in orders %}
+                        <tr>
+                            <td>{{ order.termin|date:"H:i"|default:"-" }}</td>
+                            <td><a href="{% url 'orders:order_detail' order.pk %}">#{{ order.auftragsnummer }}</a></td>
+                            <td>{{ order.kunde.vorname }} {{ order.kunde.nachname }}</td>
+                            <td>{{ order.auftragsart }}</td>
+                            <td>{{ order.get_status_display }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% empty %}
+        <p style="margin-top:1rem;">Keine Termine vorhanden.</p>
+    {% endfor %}
+</section>
+{% endblock %}

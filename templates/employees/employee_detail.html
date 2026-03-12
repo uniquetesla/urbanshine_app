@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Mitarbeiterdetails | UrbanShine{% endblock %}
+{% block page_title %}{{ employee.get_full_name|default:employee.username }}{% endblock %}
+{% block page_subtitle %}Mitarbeiterdetailseite mit Auftragszuweisung und Kalender{% endblock %}
+{% block content %}
+<section class="glass-card panel full">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:.7rem;flex-wrap:wrap;">
+        <h3>Profil</h3>
+        <div style="display:flex;gap:.5rem;">
+            <a href="{% url 'employees:employee_calendar' employee.pk %}" class="btn btn-secondary">Kalenderansicht</a>
+            <a href="{% url 'employees:employee_list' %}" class="btn btn-secondary">Zurück</a>
+        </div>
+    </div>
+
+    <div class="form-grid" style="margin-top:1rem;">
+        <div><strong>Name</strong><br>{{ employee.get_full_name|default:employee.username }}</div>
+        <div><strong>Benutzername</strong><br>{{ employee.username }}</div>
+        <div><strong>E-Mail</strong><br>{{ employee.email|default:"-" }}</div>
+        <div><strong>Rolle</strong><br>{{ employee.get_role_display }}</div>
+    </div>
+</section>
+
+<section class="glass-card panel full">
+    <h3>Aufträge zuweisen</h3>
+    <form method="post" action="{% url 'employees:assign_orders' employee.pk %}" style="margin-top:.8rem;display:grid;gap:.7rem;">
+        {% csrf_token %}
+        <div class="table-wrap">
+            <table>
+                <thead>
+                <tr>
+                    <th></th>
+                    <th>Auftragsnr.</th>
+                    <th>Kunde</th>
+                    <th>Termin</th>
+                    <th>Status</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for order in unassigned_orders %}
+                    <tr>
+                        <td><input type="checkbox" name="order_ids" value="{{ order.pk }}"></td>
+                        <td>#{{ order.auftragsnummer }}</td>
+                        <td>{{ order.kunde.vorname }} {{ order.kunde.nachname }}</td>
+                        <td>{{ order.termin|date:"d.m.Y H:i"|default:"-" }}</td>
+                        <td>{{ order.get_status_display }}</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="5">Keine offenen Aufträge für die Zuweisung vorhanden.</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div>
+            <button type="submit" class="btn">Ausgewählte Aufträge zuweisen</button>
+        </div>
+    </form>
+</section>
+
+<section class="glass-card panel full">
+    <h3>Kalender je Mitarbeiter</h3>
+    {% for day, orders in calendar_items.items %}
+        <div style="margin-top:.8rem;">
+            <strong>{{ day }}</strong>
+            <ul class="activity-list">
+                {% for order in orders %}
+                    <li>
+                        <strong>#{{ order.auftragsnummer }} · {{ order.kunde.vorname }} {{ order.kunde.nachname }}</strong>
+                        <p>{{ order.auftragsart }} · {{ order.termin|date:"H:i"|default:"ohne Zeit" }} · {{ order.get_status_display }}</p>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% empty %}
+        <p style="margin-top:.8rem;">Dem Mitarbeiter sind derzeit keine Aufträge zugeordnet.</p>
+    {% endfor %}
+</section>
+{% endblock %}
