@@ -36,6 +36,7 @@
     </div>
 </section>
 
+{% if request.user.role != "mitarbeiter" %}
 <section class="glass-card panel full">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:.6rem;flex-wrap:wrap;">
         <h3>Nicht zugeordnete Aufträge</h3>
@@ -71,4 +72,5 @@
         </table>
     </div>
 </section>
+{% endif %}
 {% endblock %}
