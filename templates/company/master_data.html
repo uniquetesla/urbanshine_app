@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+
+{% block title %}Stammdaten | UrbanShine{% endblock %}
+{% block page_title %}Stammdaten-Administration{% endblock %}
+{% block page_subtitle %}Pflege zentraler Unternehmensdaten (nur Admin/Chef){% endblock %}
+
+{% block content %}
+<section class="glass-card panel admin-area">
+    <div class="panel-heading">
+        <h3>⚙️ Adminbereich: Stammdaten</h3>
+        <span class="admin-badge">Nur für Admin &amp; Chef</span>
+    </div>
+    <p class="subtitle">Hier können Leistungen, Preise, Auftragsarten, Verschmutzungsgrade, Zuschläge sowie Firmendaten gepflegt werden.</p>
+</section>
+
+<div class="dashboard-grid">
+    <section class="glass-card panel admin-area">
+        <h3>Leistungen</h3>
+        <form method="post" class="form-grid">{% csrf_token %}
+            <input type="hidden" name="action" value="service">
+            {{ service_form.as_p }}
+            <button class="btn" type="submit">Leistung speichern</button>
+        </form>
+        <ul class="activity-list">
+            {% for item in services %}
+                <li>
+                    <strong>{{ item.name }}</strong>
+                    <p>{{ item.description|default:'-' }}</p>
+                    <form method="post" action="{% url 'company:master_data_delete' 'service' item.pk %}">{% csrf_token %}<button class="btn btn-danger" type="submit">Löschen</button></form>
+                </li>
+            {% empty %}<li>Keine Leistungen vorhanden.</li>{% endfor %}
+        </ul>
+    </section>
+
+    <section class="glass-card panel admin-area">
+        <h3>Preise</h3>
+        <form method="post" class="form-grid">{% csrf_token %}
+            <input type="hidden" name="action" value="price">
+            {{ price_form.as_p }}
+            <button class="btn" type="submit">Preis speichern</button>
+        </form>
+        <ul class="activity-list">
+            {% for item in prices %}
+                <li>
+                    <strong>{{ item.name }}: {{ item.amount }} €{% if item.unit %} / {{ item.unit }}{% endif %}</strong>
+                    <form method="post" action="{% url 'company:master_data_delete' 'price' item.pk %}">{% csrf_token %}<button class="btn btn-danger" type="submit">Löschen</button></form>
+                </li>
+            {% empty %}<li>Keine Preise vorhanden.</li>{% endfor %}
+        </ul>
+    </section>
+
+    <section class="glass-card panel admin-area">
+        <h3>Auftragsarten</h3>
+        <form method="post" class="form-grid">{% csrf_token %}
+            <input type="hidden" name="action" value="order_type">
+            {{ order_type_form.as_p }}
+            <button class="btn" type="submit">Auftragsart speichern</button>
+        </form>
+        <ul class="activity-list">
+            {% for item in order_types %}
+                <li>
+                    <strong>{{ item.name }}</strong>
+                    <form method="post" action="{% url 'company:master_data_delete' 'order_type' item.pk %}">{% csrf_token %}<button class="btn btn-danger" type="submit">Löschen</button></form>
+                </li>
+            {% empty %}<li>Keine Auftragsarten vorhanden.</li>{% endfor %}
+        </ul>
+    </section>
+
+    <section class="glass-card panel admin-area">
+        <h3>Verschmutzungsgrade</h3>
+        <form method="post" class="form-grid">{% csrf_token %}
+            <input type="hidden" name="action" value="soiling_level">
+            {{ soiling_level_form.as_p }}
+            <button class="btn" type="submit">Verschmutzungsgrad speichern</button>
+        </form>
+        <ul class="activity-list">
+            {% for item in soiling_levels %}
+                <li>
+                    <strong>{{ item.name }} (Faktor {{ item.multiplier }})</strong>
+                    <form method="post" action="{% url 'company:master_data_delete' 'soiling_level' item.pk %}">{% csrf_token %}<button class="btn btn-danger" type="submit">Löschen</button></form>
+                </li>
+            {% empty %}<li>Keine Verschmutzungsgrade vorhanden.</li>{% endfor %}
+        </ul>
+    </section>
+
+    <section class="glass-card panel admin-area">
+        <h3>Zuschläge</h3>
+        <form method="post" class="form-grid">{% csrf_token %}
+            <input type="hidden" name="action" value="surcharge">
+            {{ surcharge_form.as_p }}
+            <button class="btn" type="submit">Zuschlag speichern</button>
+        </form>
+        <ul class="activity-list">
+            {% for item in surcharges %}
+                <li>
+                    <strong>{{ item.name }}: {{ item.amount }}{% if item.is_percentage %} %{% else %} €{% endif %}</strong>
+                    <form method="post" action="{% url 'company:master_data_delete' 'surcharge' item.pk %}">{% csrf_token %}<button class="btn btn-danger" type="submit">Löschen</button></form>
+                </li>
+            {% empty %}<li>Keine Zuschläge vorhanden.</li>{% endfor %}
+        </ul>
+    </section>
+
+    <section class="glass-card panel admin-area">
+        <h3>Firmendaten &amp; Rechnungseinstellung</h3>
+        <form method="post" enctype="multipart/form-data" class="form-grid">{% csrf_token %}
+            <input type="hidden" name="action" value="company_settings">
+            {{ company_form.as_p }}
+            <button class="btn" type="submit">Firmendaten speichern</button>
+        </form>
+        {% if company_settings.logo %}
+            <p>Aktuelles Logo:</p>
+            <img src="{{ company_settings.logo.url }}" alt="Firmenlogo" style="max-height: 80px; border-radius: 10px;">
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

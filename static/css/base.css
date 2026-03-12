@@ -220,3 +220,19 @@ th, td { padding: .75rem; border-bottom: 1px solid rgba(255,255,255,.14); text-a
     .topbar { flex-wrap: wrap; }
     .kpi-card { grid-column: span 12; }
 }
+
+.nav-link-admin {
+    border-color: rgba(255, 165, 0, 0.5);
+    background: rgba(255, 165, 0, 0.12);
+}
+
+.admin-area {
+    border-color: rgba(255, 165, 0, 0.55);
+    box-shadow: inset 0 0 0 1px rgba(255, 165, 0, 0.2);
+}
+
+.admin-badge {
+    color: #ffda8a !important;
+    border-color: rgba(255, 165, 0, 0.5) !important;
+    background: rgba(255, 165, 0, 0.15);
+}

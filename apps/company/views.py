@@ -1,0 +1,94 @@
+from django.contrib import messages
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.shortcuts import get_object_or_404, redirect
+from django.urls import reverse_lazy
+from django.views.generic import TemplateView, View
+
+from apps.accounts.models import UserRole
+
+from .forms import CompanySettingsForm, OrderTypeForm, PriceForm, ServiceForm, SoilingLevelForm, SurchargeForm
+from .models import CompanySettings, OrderType, Price, Service, SoilingLevel, Surcharge
+
+
+class MasterDataAccessMixin(LoginRequiredMixin, UserPassesTestMixin):
+    def test_func(self):
+        user = self.request.user
+        return user.is_authenticated and user.role in {UserRole.ADMIN, UserRole.CHEF}
+
+
+class MasterDataView(MasterDataAccessMixin, TemplateView):
+    template_name = "company/master_data.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        settings_instance, _ = CompanySettings.objects.get_or_create(company_name="UrbanShine")
+
+        context.update(
+            {
+                "service_form": ServiceForm(),
+                "price_form": PriceForm(),
+                "order_type_form": OrderTypeForm(),
+                "soiling_level_form": SoilingLevelForm(),
+                "surcharge_form": SurchargeForm(),
+                "company_form": CompanySettingsForm(instance=settings_instance),
+                "services": Service.objects.all(),
+                "prices": Price.objects.all(),
+                "order_types": OrderType.objects.all(),
+                "soiling_levels": SoilingLevel.objects.all(),
+                "surcharges": Surcharge.objects.all(),
+                "company_settings": settings_instance,
+            }
+        )
+        return context
+
+    def post(self, request, *args, **kwargs):
+        action = request.POST.get("action")
+        form_map = {
+            "service": (ServiceForm, "Leistung gespeichert."),
+            "price": (PriceForm, "Preis gespeichert."),
+            "order_type": (OrderTypeForm, "Auftragsart gespeichert."),
+            "soiling_level": (SoilingLevelForm, "Verschmutzungsgrad gespeichert."),
+            "surcharge": (SurchargeForm, "Zuschlag gespeichert."),
+        }
+
+        if action == "company_settings":
+            settings_instance, _ = CompanySettings.objects.get_or_create(company_name="UrbanShine")
+            form = CompanySettingsForm(request.POST, request.FILES, instance=settings_instance)
+            if form.is_valid():
+                form.save()
+                messages.success(request, "Firmendaten wurden gespeichert.")
+            else:
+                messages.error(request, "Firmendaten konnten nicht gespeichert werden.")
+            return redirect("company:master_data")
+
+        if action in form_map:
+            form_class, success_message = form_map[action]
+            form = form_class(request.POST)
+            if form.is_valid():
+                form.save()
+                messages.success(request, success_message)
+            else:
+                messages.error(request, "Bitte Eingaben prüfen.")
+
+        return redirect("company:master_data")
+
+
+class MasterDataDeleteView(MasterDataAccessMixin, View):
+    model_map = {
+        "service": Service,
+        "price": Price,
+        "order_type": OrderType,
+        "soiling_level": SoilingLevel,
+        "surcharge": Surcharge,
+    }
+
+    def post(self, request, model_name, pk):
+        model = self.model_map.get(model_name)
+        if not model:
+            messages.error(request, "Ungültiger Datensatztyp.")
+            return redirect(reverse_lazy("company:master_data"))
+
+        instance = get_object_or_404(model, pk=pk)
+        instance.delete()
+        messages.success(request, "Eintrag wurde gelöscht.")
+        return redirect(reverse_lazy("company:master_data"))
