@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Artikel löschen | UrbanShine{% endblock %}
+{% block page_title %}Artikel löschen{% endblock %}
+{% block page_subtitle %}Soll dieser Artikel wirklich entfernt werden?{% endblock %}
+{% block content %}
+<section class="glass-card panel full" style="max-width:680px;">
+    <p>Möchtest du <strong>{{ object.name }}</strong> wirklich löschen?</p>
+    <form method="post" style="display:flex;gap:.6rem;">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Löschen</button>
+        <a href="{% url 'catalog:article_list' %}" class="btn btn-secondary">Abbrechen</a>
+    </form>
+</section>
+{% endblock %}
