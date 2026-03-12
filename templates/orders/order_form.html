@@ -10,12 +10,25 @@
     <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
         <div class="form-grid">
+            <div>
+                {{ form.kunden_suche.label_tag }}
+                <input type="text" name="kunden_suche" id="id_kunden_suche" list="kunden-vorschlaege" value="{{ form.kunden_suche.value|default:'' }}" required>
+                <datalist id="kunden-vorschlaege">
+                    {% for customer in form.customer_suggestions %}
+                        <option value="{{ customer }}"></option>
+                    {% endfor %}
+                </datalist>
+                {{ form.kunde }}
+                {% if form.kunden_suche.errors %}<small style="color:#ff9ca4;">{{ form.kunden_suche.errors|striptags }}</small>{% endif %}
+            </div>
             {% for field in form %}
-                <div>
-                    {{ field.label_tag }}
-                    {{ field }}
-                    {% if field.errors %}<small style="color:#ff9ca4;">{{ field.errors|striptags }}</small>{% endif %}
-                </div>
+                {% if field.name != 'kunden_suche' and field.name != 'kunde' %}
+                    <div>
+                        {{ field.label_tag }}
+                        {{ field }}
+                        {% if field.errors %}<small style="color:#ff9ca4;">{{ field.errors|striptags }}</small>{% endif %}
+                    </div>
+                {% endif %}
             {% endfor %}
         </div>
 

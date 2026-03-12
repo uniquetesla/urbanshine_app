@@ -33,10 +33,20 @@
             <tbody>
             {% for order in orders %}
                 <tr>
-                    <td>{{ order.auftragsnummer }}</td>
+                    <td><a href="{% url 'orders:order_detail' order.pk %}">#{{ order.auftragsnummer }}</a></td>
                     <td>{{ order.kunde.vorname }} {{ order.kunde.nachname }}</td>
                     <td>{{ order.auftragsart }}</td>
-                    <td>{{ order.get_status_display }}</td>
+                    <td>
+                        <form method="post" action="{% url 'orders:order_quick_status' order.pk %}" style="display:flex;gap:.3rem;align-items:center;">
+                            {% csrf_token %}
+                            <input type="hidden" name="next" value="{% url 'orders:order_list' %}">
+                            <select name="status" onchange="this.form.submit()">
+                                {% for value, label in order._meta.get_field('status').choices %}
+                                    <option value="{{ value }}" {% if order.status == value %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </form>
+                    </td>
                     <td>{{ order.termin|date:"d.m.Y H:i"|default:"-" }}</td>
                     <td>{{ order.gesamtpreis }} €</td>
                     <td style="display:flex;gap:.4rem;flex-wrap:wrap;">

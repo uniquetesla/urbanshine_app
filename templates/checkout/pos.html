@@ -93,6 +93,13 @@
 
             <form method="post" style="display:grid;gap:.6rem;">{% csrf_token %}
                 <input type="hidden" name="action" value="checkout">
+                <label for="customer_search">Kunde</label>
+                <input type="text" name="customer_search" id="customer_search" list="kunden-vorschlaege" placeholder="Kundennummer oder Name" required>
+                <datalist id="kunden-vorschlaege">
+                    {% for customer in customer_suggestions %}
+                        <option value="{{ customer }}"></option>
+                    {% endfor %}
+                </datalist>
                 <label for="payment_method">Zahlungsart</label>
                 <select name="payment_method" id="payment_method" required>
                     <option value="">Bitte wählen</option>

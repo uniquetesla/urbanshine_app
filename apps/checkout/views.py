@@ -8,6 +8,7 @@ from django.shortcuts import redirect
 from django.views.generic import TemplateView
 
 from apps.catalog.models import Article
+from apps.customers.models import Customer
 
 from .models import PaymentMethod, Sale, SaleItem
 
@@ -46,7 +47,8 @@ class CheckoutView(LoginRequiredMixin, TemplateView):
 
         if action == "checkout":
             payment_method = request.POST.get("payment_method")
-            self._finalize_sale(payment_method)
+            customer_search = request.POST.get("customer_search", "")
+            self._finalize_sale(payment_method, customer_search)
             return redirect("checkout:pos")
 
         messages.error(request, "Unbekannte Aktion.")
@@ -74,13 +76,18 @@ class CheckoutView(LoginRequiredMixin, TemplateView):
         self.request.session[self.cart_session_key] = cart
         self.request.session.modified = True
 
-    def _finalize_sale(self, payment_method):
+    def _finalize_sale(self, payment_method, customer_search):
         cart = self._get_cart()
         if not cart:
             messages.error(self.request, "Der Warenkorb ist leer.")
             return
         if payment_method not in dict(PaymentMethod.choices):
             messages.error(self.request, "Bitte eine gültige Zahlungsart wählen.")
+            return
+
+        customer = self._resolve_customer(customer_search)
+        if not customer:
+            messages.error(self.request, "Bitte einen gültigen Kunden auswählen.")
             return
 
         article_ids = [int(article_id) for article_id in cart.keys()]
@@ -101,7 +108,7 @@ class CheckoutView(LoginRequiredMixin, TemplateView):
                     )
                     return
 
-            sale = Sale.objects.create(mitarbeiter=self.request.user, zahlungsart=payment_method)
+            sale = Sale.objects.create(mitarbeiter=self.request.user, kunde=customer, zahlungsart=payment_method)
             total = Decimal("0.00")
             for article_id, qty in cart.items():
                 article = articles[int(article_id)]
@@ -134,6 +141,23 @@ class CheckoutView(LoginRequiredMixin, TemplateView):
             return default
         return max(value, 0)
 
+    @staticmethod
+    def _resolve_customer(value):
+        value = (value or "").strip()
+        if not value:
+            return None
+
+        kundennummer_raw = value.split("·", 1)[0].strip()
+        if kundennummer_raw.isdigit():
+            customer = Customer.objects.filter(kundennummer=int(kundennummer_raw)).first()
+            if customer:
+                return customer
+
+        if " " in value:
+            vorname, nachname = value.split(" ", 1)
+            return Customer.objects.filter(vorname__iexact=vorname, nachname__iexact=nachname).first()
+        return None
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         query = self.request.GET.get("q", "").strip()
@@ -165,6 +189,10 @@ class CheckoutView(LoginRequiredMixin, TemplateView):
                 "cart_items": cart_items,
                 "cart_total": total,
                 "payment_methods": PaymentMethod.choices,
+                "customer_suggestions": [
+                    f"{customer.kundennummer} · {customer.vorname} {customer.nachname}"
+                    for customer in Customer.objects.order_by("nachname", "vorname")
+                ],
             }
         )
         return context

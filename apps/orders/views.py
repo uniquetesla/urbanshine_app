@@ -1,11 +1,15 @@
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q
+from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
+from django.views import View
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
+from apps.invoices.services import create_invoice_for_completed_order
+
 from .forms import OrderForm
-from .models import Order, OrderImage
+from .models import Order, OrderImage, OrderStatus
 
 
 class OrderListView(LoginRequiredMixin, ListView):
@@ -57,8 +61,13 @@ class OrderUpdateView(LoginRequiredMixin, UpdateView):
     success_url = reverse_lazy("orders:order_list")
 
     def form_valid(self, form):
+        old_status = self.get_object().status
         response = super().form_valid(form)
         self._save_images(form)
+        if old_status != self.object.status and self.object.status == OrderStatus.ABGESCHLOSSEN:
+            invoice = create_invoice_for_completed_order(self.object)
+            if invoice:
+                messages.success(self.request, f"Rechnung R-{invoice.rechnungsnummer:05d} wurde erstellt.")
         messages.success(self.request, "Auftrag wurde erfolgreich bearbeitet.")
         return response
 
@@ -81,3 +90,23 @@ class OrderDetailView(LoginRequiredMixin, DetailView):
     model = Order
     template_name = "orders/order_detail.html"
     context_object_name = "order"
+
+
+class OrderQuickStatusUpdateView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        order = get_object_or_404(Order, pk=pk)
+        new_status = request.POST.get("status")
+        if new_status not in dict(OrderStatus.choices):
+            messages.error(request, "Ungültiger Status.")
+            return redirect(request.POST.get("next") or "orders:order_list")
+
+        old_status = order.status
+        order.status = new_status
+        order.save(update_fields=["status", "updated_at"])
+
+        if old_status != new_status and new_status == OrderStatus.ABGESCHLOSSEN:
+            invoice = create_invoice_for_completed_order(order)
+            if invoice:
+                messages.success(request, f"Rechnung R-{invoice.rechnungsnummer:05d} wurde erstellt.")
+        messages.success(request, f"Status für Auftrag {order.auftragsnummer} aktualisiert.")
+        return redirect(request.POST.get("next") or "orders:order_list")
