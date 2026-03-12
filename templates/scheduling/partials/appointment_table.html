@@ -1,0 +1,36 @@
+<div class="table-wrap" style="margin-top:.8rem;">
+    <table>
+        <thead>
+        <tr>
+            <th>Auftrag</th>
+            <th>Kunde</th>
+            <th>Mitarbeiter</th>
+            <th>Zeit</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for appointment in appointments %}
+            <tr>
+                <td>
+                    <a href="{% url 'orders:order_detail' appointment.pk %}">
+                        #{{ appointment.auftragsnummer }} · {{ appointment.auftragsart }}
+                    </a>
+                </td>
+                <td>{{ appointment.kunde.vorname }} {{ appointment.kunde.nachname }}</td>
+                <td>
+                    {% for employee in appointment.mitarbeiter.all %}
+                        {{ employee.get_full_name|default:employee.username }}{% if not forloop.last %}, {% endif %}
+                    {% empty %}
+                        -
+                    {% endfor %}
+                </td>
+                <td>{{ appointment.termin|date:"d.m.Y H:i" }}</td>
+            </tr>
+        {% empty %}
+            <tr>
+                <td colspan="4">{{ empty_text }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
