@@ -55,14 +55,18 @@ urbanshine_app/
    docker compose up --build
    ```
 3. Applikation öffnen:
-   - App: http://localhost:8000/
-   - Healthcheck: http://localhost:8000/health/
-   - Django Admin: http://localhost:8000/admin/
+   - App: http://localhost:8090/
+   - Healthcheck: http://localhost:8090/health/
+   - Django Admin: http://localhost:8090/admin/
 
 Beim Start führt der Web-Container automatisch aus:
 - `python manage.py migrate`
 - `python manage.py collectstatic --noinput`
 - Start von Gunicorn
+
+### Standard-Adminlogin (automatisch via Migration)
+- Benutzername: `admin`
+- Passwort: `admin1234`
 
 ## Nützliche Befehle
 

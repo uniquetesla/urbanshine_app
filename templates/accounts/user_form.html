@@ -1,12 +1,9 @@
 {% extends "base.html" %}
 {% block title %}Benutzer bearbeiten | UrbanShine{% endblock %}
+{% block page_title %}{% if object %}Benutzer bearbeiten{% else %}Benutzer anlegen{% endif %}{% endblock %}
+{% block page_subtitle %}Rollen und Stammdaten sicher verwalten{% endblock %}
 {% block content %}
-<div class="container">
-    <div class="nav">
-        <h1>{% if object %}Benutzer bearbeiten{% else %}Benutzer anlegen{% endif %}</h1>
-        <a href="{% url 'accounts:user_list' %}" class="btn secondary">Zurück</a>
-    </div>
-
+<section class="glass-card panel full">
     <form method="post">
         {% csrf_token %}
         <div class="form-grid">
@@ -14,11 +11,14 @@
                 <div>
                     {{ field.label_tag }}
                     {{ field }}
-                    {% if field.errors %}<small style="color:#dc2626;">{{ field.errors|striptags }}</small>{% endif %}
+                    {% if field.errors %}<small style="color:#ff9ca4;">{{ field.errors|striptags }}</small>{% endif %}
                 </div>
             {% endfor %}
         </div>
-        <div style="margin-top:1rem;"><button class="btn" type="submit">Speichern</button></div>
+        <div style="margin-top:1rem;display:flex;gap:.6rem;">
+            <button class="btn" type="submit">Speichern</button>
+            <a href="{% url 'accounts:user_list' %}" class="btn btn-secondary">Zurück</a>
+        </div>
     </form>
-</div>
+</section>
 {% endblock %}

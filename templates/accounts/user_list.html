@@ -1,48 +1,45 @@
 {% extends "base.html" %}
 {% block title %}Benutzerverwaltung | UrbanShine{% endblock %}
+{% block page_title %}Admin · Benutzerverwaltung{% endblock %}
+{% block page_subtitle %}Rollen, Status und Zugänge zentral verwalten{% endblock %}
 {% block content %}
-<div class="container">
-    <div class="nav">
-        <h1>Benutzerverwaltung</h1>
-        <div>
-            <a href="{% url 'accounts:dashboard' %}" class="btn secondary">Dashboard</a>
-            <a href="{% url 'accounts:user_create' %}" class="btn">Neuer Benutzer</a>
-        </div>
+<section class="glass-card panel full">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:.7rem;flex-wrap:wrap;">
+        <h3>Alle Benutzer</h3>
+        <a href="{% url 'accounts:user_create' %}" class="btn">Neuer Benutzer</a>
     </div>
 
-    {% if messages %}
-    <ul class="messages">{% for message in messages %}<li>{{ message }}</li>{% endfor %}</ul>
-    {% endif %}
-
-    <table>
-        <thead>
-        <tr>
-            <th>Benutzername</th>
-            <th>Name</th>
-            <th>Rolle</th>
-            <th>Status</th>
-            <th>Aktionen</th>
-        </tr>
-        </thead>
-        <tbody>
-        {% for user in users %}
+    <div class="table-wrap">
+        <table>
+            <thead>
             <tr>
-                <td>{{ user.username }}</td>
-                <td>{{ user.first_name }} {{ user.last_name }}</td>
-                <td>{{ user.get_role_display }}</td>
-                <td>{% if user.is_active %}Aktiv{% else %}Deaktiviert{% endif %}</td>
-                <td>
-                    <a class="btn" href="{% url 'accounts:user_update' user.pk %}">Bearbeiten</a>
-                    {% if user.is_active %}
-                    <form method="post" action="{% url 'accounts:user_deactivate' user.pk %}" style="display:inline;">
-                        {% csrf_token %}
-                        <button class="btn danger" type="submit">Deaktivieren</button>
-                    </form>
-                    {% endif %}
-                </td>
+                <th>Benutzername</th>
+                <th>Name</th>
+                <th>Rolle</th>
+                <th>Status</th>
+                <th>Aktionen</th>
             </tr>
-        {% endfor %}
-        </tbody>
-    </table>
-</div>
+            </thead>
+            <tbody>
+            {% for user in users %}
+                <tr>
+                    <td>{{ user.username }}</td>
+                    <td>{{ user.first_name }} {{ user.last_name }}</td>
+                    <td>{{ user.get_role_display }}</td>
+                    <td>{% if user.is_active %}Aktiv{% else %}Deaktiviert{% endif %}</td>
+                    <td style="display:flex;gap:.4rem;flex-wrap:wrap;">
+                        <a class="btn btn-secondary" href="{% url 'accounts:user_update' user.pk %}">Bearbeiten</a>
+                        {% if user.is_active %}
+                        <form method="post" action="{% url 'accounts:user_deactivate' user.pk %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button class="btn btn-danger" type="submit">Deaktivieren</button>
+                        </form>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
 {% endblock %}

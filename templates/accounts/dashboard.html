@@ -1,22 +1,48 @@
 {% extends "base.html" %}
 {% block title %}Dashboard | UrbanShine{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block page_subtitle %}Live Kennzahlen und operative Übersicht{% endblock %}
 {% block content %}
-<div class="container">
-    <div class="nav">
-        <h1>Willkommen, {{ request.user.first_name|default:request.user.username }}</h1>
-        <form method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}<button class="btn secondary" type="submit">Abmelden</button></form>
-    </div>
+<section class="dashboard-grid">
+    <article class="glass-card kpi-card">
+        <h3>Aktive Aufträge</h3>
+        <strong>128</strong>
+        <p class="kpi-trend">+8.4% seit letzter Woche</p>
+    </article>
+    <article class="glass-card kpi-card">
+        <h3>Heutige Termine</h3>
+        <strong>34</strong>
+        <p class="kpi-trend">+3 neue in 24h</p>
+    </article>
+    <article class="glass-card kpi-card">
+        <h3>Monatsumsatz</h3>
+        <strong>€ 98.450</strong>
+        <p class="kpi-trend">+12.2% im Vergleich</p>
+    </article>
+    <article class="glass-card kpi-card">
+        <h3>Kundenzufriedenheit</h3>
+        <strong>4.9 / 5</strong>
+        <p class="kpi-trend">Stabil auf Premium-Niveau</p>
+    </article>
 
-    {% if messages %}
-    <ul class="messages">{% for message in messages %}<li>{{ message }}</li>{% endfor %}</ul>
-    {% endif %}
+    <article class="glass-card panel">
+        <h3>Teamstatus</h3>
+        <p>18 Mitarbeiter im Einsatz, 4 im Bereitschaftsdienst. Keine offenen Eskalationen.</p>
+    </article>
 
-    <p>Ihre Rolle: <strong>{{ request.user.get_role_display }}</strong></p>
+    <article class="glass-card panel">
+        <h3>Nächste Prioritäten</h3>
+        <p>Heute stehen 5 Premium-Aufträge, 2 Angebotsprüfungen und 1 Audit-Termin an.</p>
+    </article>
 
-    {% if request.user.role == 'admin' or request.user.role == 'chef' %}
-        <a class="btn" href="{% url 'accounts:user_list' %}">Benutzerverwaltung öffnen</a>
-    {% else %}
-        <p>Sie haben keinen Zugriff auf die Benutzerverwaltung.</p>
-    {% endif %}
-</div>
+    <article class="glass-card panel full">
+        <h3>Admin-Bereich</h3>
+        {% if request.user.role == 'admin' or request.user.role == 'chef' %}
+            <p>Sie haben erweiterten Zugriff auf die Benutzerverwaltung und rollenbasierte Freigaben.</p>
+            <a class="btn" href="{% url 'accounts:user_list' %}">Benutzerverwaltung öffnen</a>
+        {% else %}
+            <p>Sie haben keinen Zugriff auf die Benutzerverwaltung.</p>
+        {% endif %}
+    </article>
+</section>
 {% endblock %}
