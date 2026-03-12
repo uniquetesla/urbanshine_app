@@ -23,7 +23,7 @@
             <a href="{% url 'accounts:dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">Dashboard</a>
             <a href="{% url 'orders:order_list' %}" class="nav-link {% if request.resolver_match.namespace == 'orders' %}active{% endif %}">Aufträge</a>
             <a href="{% url 'customers:customer_list' %}" class="nav-link {% if request.resolver_match.namespace == 'customers' %}active{% endif %}">Kunden</a>
-            <a href="#" class="nav-link">Produkte</a>
+            <a href="{% url 'catalog:article_list' %}" class="nav-link {% if request.resolver_match.namespace == 'catalog' %}active{% endif %}">Produkte</a>
             <a href="#" class="nav-link">Mitarbeiter</a>
             <a href="#" class="nav-link">Termine</a>
             <a href="#" class="nav-link">Rechnungen</a>
