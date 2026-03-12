@@ -72,10 +72,10 @@
         <details>
             <summary>Neuer Auftrag</summary>
             <p>Lege in wenigen Schritten einen neuen Auftrag mit Fahrzeug- und Leistungsdaten an.</p>
-            <a class="btn" href="#">Auftrag starten</a>
+            <a class="btn" href="{% url 'orders:order_create' %}">Auftrag starten</a>
         </details>
-        <a class="btn btn-secondary" href="#">Neuer Kunde</a>
-        <a class="btn btn-secondary" href="#">Kasse öffnen</a>
+        <a class="btn btn-secondary" href="{% url 'customers:customer_create' %}">Neuer Kunde</a>
+        <a class="btn btn-secondary" href="{% url 'checkout:pos' %}">Kasse öffnen</a>
     </aside>
 </section>
 {% endblock %}
