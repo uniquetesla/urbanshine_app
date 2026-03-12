@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Rechnung R-{{ invoice.rechnungsnummer|stringformat:"05d" }} | UrbanShine{% endblock %}
+{% block page_title %}Rechnung R-{{ invoice.rechnungsnummer|stringformat:"05d" }}{% endblock %}
+{% block page_subtitle %}Rechnungsdetailseite{% endblock %}
+{% block content %}
+<section class="glass-card panel full">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:.7rem;flex-wrap:wrap;">
+        <h3>{{ invoice.kunde.vorname }} {{ invoice.kunde.nachname }}</h3>
+        <a href="{% url 'invoices:invoice_list' %}" class="btn btn-secondary">Zurück zur Liste</a>
+    </div>
+
+    <div class="form-grid" style="margin-top:1rem;">
+        <div><strong>Rechnungsnummer</strong><br>R-{{ invoice.rechnungsnummer|stringformat:"05d" }}</div>
+        <div><strong>Zahlungsstatus</strong><br>{{ invoice.get_zahlungsstatus_display }}</div>
+        <div><strong>Rechnungsdatum</strong><br>{{ invoice.rechnungsdatum|date:"d.m.Y" }}</div>
+        <div><strong>Fällig am</strong><br>{{ invoice.faellig_am|date:"d.m.Y"|default:"-" }}</div>
+        <div><strong>Betrag</strong><br>{{ invoice.betrag }} €</div>
+        <div><strong>Kundennummer</strong><br>{{ invoice.kunde.kundennummer }}</div>
+        <div><strong>Auftrag</strong><br>{% if invoice.auftrag %}{{ invoice.auftrag.auftragsnummer }}{% else %}-{% endif %}</div>
+    </div>
+
+    <div style="margin-top:1rem;">
+        <strong>Notizen</strong>
+        <p>{{ invoice.notizen|default:"Keine Notizen hinterlegt."|linebreaksbr }}</p>
+    </div>
+</section>
+{% endblock %}
