@@ -6,7 +6,12 @@
 <section class="glass-card panel full">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:.7rem;flex-wrap:wrap;">
         <h3>{{ invoice.kunde.vorname }} {{ invoice.kunde.nachname }}</h3>
-        <a href="{% url 'invoices:invoice_list' %}" class="btn btn-secondary">Zurück zur Liste</a>
+        <div style="display:flex;gap:.5rem;">
+            {% if invoice.pdf_datei %}
+                <a href="{% url 'invoices:invoice_pdf' invoice.pk %}" class="btn">PDF herunterladen</a>
+            {% endif %}
+            <a href="{% url 'invoices:invoice_list' %}" class="btn btn-secondary">Zurück zur Liste</a>
+        </div>
     </div>
 
     <div class="form-grid" style="margin-top:1rem;">

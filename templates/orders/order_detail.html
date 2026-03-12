@@ -14,7 +14,18 @@
 
     <div class="form-grid" style="margin-top:1rem;">
         <div><strong>Auftragsart</strong><br>{{ order.auftragsart }}</div>
-        <div><strong>Status</strong><br>{{ order.get_status_display }}</div>
+        <div>
+            <strong>Status</strong><br>
+            <form method="post" action="{% url 'orders:order_quick_status' order.pk %}" style="display:flex;gap:.4rem;align-items:center;margin-top:.2rem;">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{% url 'orders:order_detail' order.pk %}">
+                <select name="status" onchange="this.form.submit()">
+                    {% for value, label in order._meta.get_field('status').choices %}
+                        <option value="{{ value }}" {% if order.status == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </form>
+        </div>
         <div><strong>Verschmutzungsgrad</strong><br>{{ order.get_verschmutzungsgrad_display }}</div>
         <div><strong>Termin</strong><br>{{ order.termin|date:"d.m.Y H:i"|default:"-" }}</div>
         <div><strong>Zuschläge</strong><br>{{ order.zuschlaege }} €</div>

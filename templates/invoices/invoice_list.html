@@ -42,6 +42,9 @@
                     <td>{{ invoice.get_zahlungsstatus_display }}</td>
                     <td>
                         <a class="btn btn-secondary" href="{% url 'invoices:invoice_detail' invoice.pk %}">Details</a>
+                        {% if invoice.pdf_datei %}
+                            <a class="btn" href="{% url 'invoices:invoice_pdf' invoice.pk %}">PDF</a>
+                        {% endif %}
                     </td>
                 </tr>
             {% empty %}

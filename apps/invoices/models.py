@@ -42,6 +42,7 @@ class Invoice(models.Model):
         verbose_name="Zahlungsstatus",
     )
     notizen = models.TextField(blank=True, verbose_name="Notizen")
+    pdf_datei = models.FileField(upload_to="invoices/", blank=True, null=True, verbose_name="PDF-Datei")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

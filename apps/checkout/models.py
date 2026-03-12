@@ -19,6 +19,14 @@ class Sale(models.Model):
         related_name="verkaeufe",
         verbose_name="Mitarbeiter",
     )
+    kunde = models.ForeignKey(
+        "customers.Customer",
+        on_delete=models.PROTECT,
+        related_name="verkaeufe",
+        verbose_name="Kunde",
+        blank=True,
+        null=True,
+    )
     zahlungsart = models.CharField(max_length=20, choices=PaymentMethod.choices, verbose_name="Zahlungsart")
     gesamtbetrag = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("0.00"))
     created_at = models.DateTimeField(auto_now_add=True)
