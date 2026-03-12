@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}{% if object %}Auftrag bearbeiten{% else %}Auftrag erstellen{% endif %} | UrbanShine{% endblock %}
+{% block page_title %}{% if object %}Auftrag bearbeiten{% else %}Auftrag erstellen{% endif %}{% endblock %}
+{% block page_subtitle %}Auftragsdaten, Mitarbeiter und Termin verwalten{% endblock %}
+{% block content %}
+<section class="glass-card panel full">
+    {% if object %}
+        <p><strong>Auftragsnummer:</strong> {{ object.auftragsnummer }}</p>
+    {% endif %}
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="form-grid">
+            {% for field in form %}
+                <div>
+                    {{ field.label_tag }}
+                    {{ field }}
+                    {% if field.errors %}<small style="color:#ff9ca4;">{{ field.errors|striptags }}</small>{% endif %}
+                </div>
+            {% endfor %}
+        </div>
+
+        {% if object and object.bilder.exists %}
+            <div style="margin-top:1rem;">
+                <strong>Bereits hochgeladene Bilder</strong>
+                <div style="display:flex;flex-wrap:wrap;gap:.8rem;margin-top:.6rem;">
+                    {% for image in object.bilder.all %}
+                        <a href="{{ image.bild.url }}" target="_blank" rel="noopener">
+                            <img src="{{ image.bild.url }}" alt="Auftragsbild" style="width:120px;height:120px;object-fit:cover;border-radius:10px;">
+                        </a>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+
+        <div style="margin-top:1rem;display:flex;gap:.6rem;">
+            <button class="btn" type="submit">Speichern</button>
+            <a href="{% url 'orders:order_list' %}" class="btn btn-secondary">Zurück</a>
+        </div>
+    </form>
+</section>
+{% endblock %}
