@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Benutzer bearbeiten | UrbanShine{% endblock %}
+{% block content %}
+<div class="container">
+    <div class="nav">
+        <h1>{% if object %}Benutzer bearbeiten{% else %}Benutzer anlegen{% endif %}</h1>
+        <a href="{% url 'accounts:user_list' %}" class="btn secondary">Zurück</a>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-grid">
+            {% for field in form %}
+                <div>
+                    {{ field.label_tag }}
+                    {{ field }}
+                    {% if field.errors %}<small style="color:#dc2626;">{{ field.errors|striptags }}</small>{% endif %}
+                </div>
+            {% endfor %}
+        </div>
+        <div style="margin-top:1rem;"><button class="btn" type="submit">Speichern</button></div>
+    </form>
+</div>
+{% endblock %}

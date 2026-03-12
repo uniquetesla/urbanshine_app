@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Dashboard | UrbanShine{% endblock %}
+{% block content %}
+<div class="container">
+    <div class="nav">
+        <h1>Willkommen, {{ request.user.first_name|default:request.user.username }}</h1>
+        <form method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}<button class="btn secondary" type="submit">Abmelden</button></form>
+    </div>
+
+    {% if messages %}
+    <ul class="messages">{% for message in messages %}<li>{{ message }}</li>{% endfor %}</ul>
+    {% endif %}
+
+    <p>Ihre Rolle: <strong>{{ request.user.get_role_display }}</strong></p>
+
+    {% if request.user.role == 'admin' or request.user.role == 'chef' %}
+        <a class="btn" href="{% url 'accounts:user_list' %}">Benutzerverwaltung öffnen</a>
+    {% else %}
+        <p>Sie haben keinen Zugriff auf die Benutzerverwaltung.</p>
+    {% endif %}
+</div>
+{% endblock %}
