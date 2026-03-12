@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Mitarbeiter | UrbanShine{% endblock %}
+{% block page_title %}Mitarbeiterbereich{% endblock %}
+{% block page_subtitle %}Teamübersicht und nicht zugeordnete Aufträge{% endblock %}
+{% block content %}
+<section class="glass-card panel full">
+    <h3>Mitarbeiterliste</h3>
+    <div class="table-wrap" style="margin-top:.8rem;">
+        <table>
+            <thead>
+            <tr>
+                <th>Name</th>
+                <th>Rolle</th>
+                <th>Zugeordnete Aufträge</th>
+                <th>Aktionen</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for employee in employees %}
+                <tr>
+                    <td>{{ employee.get_full_name|default:employee.username }}</td>
+                    <td>{{ employee.get_role_display }}</td>
+                    <td>{{ employee.auftraege.count }}</td>
+                    <td style="display:flex;gap:.4rem;flex-wrap:wrap;">
+                        <a href="{% url 'employees:employee_detail' employee.pk %}" class="btn btn-secondary">Details</a>
+                        <a href="{% url 'employees:employee_calendar' employee.pk %}" class="btn btn-secondary">Kalender</a>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="4">Keine Mitarbeiter gefunden.</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="glass-card panel full">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:.6rem;flex-wrap:wrap;">
+        <h3>Nicht zugeordnete Aufträge</h3>
+        <span class="icon-chip">Offen: {{ unassigned_orders|length }}</span>
+    </div>
+
+    <div class="table-wrap" style="margin-top:.8rem;">
+        <table>
+            <thead>
+            <tr>
+                <th>Auftragsnr.</th>
+                <th>Kunde</th>
+                <th>Art</th>
+                <th>Termin</th>
+                <th>Status</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for order in unassigned_orders %}
+                <tr>
+                    <td><a href="{% url 'orders:order_detail' order.pk %}">#{{ order.auftragsnummer }}</a></td>
+                    <td>{{ order.kunde.vorname }} {{ order.kunde.nachname }}</td>
+                    <td>{{ order.auftragsart }}</td>
+                    <td>{{ order.termin|date:"d.m.Y H:i"|default:"-" }}</td>
+                    <td>{{ order.get_status_display }}</td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="5">Aktuell sind alle Aufträge zugeordnet.</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}
