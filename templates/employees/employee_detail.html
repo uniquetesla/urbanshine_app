@@ -20,6 +20,7 @@
     </div>
 </section>
 
+{% if request.user.role != "mitarbeiter" %}
 <section class="glass-card panel full">
     <h3>Aufträge zuweisen</h3>
     <form method="post" action="{% url 'employees:assign_orders' employee.pk %}" style="margin-top:.8rem;display:grid;gap:.7rem;">
@@ -57,6 +58,7 @@
         </div>
     </form>
 </section>
+{% endif %}
 
 <section class="glass-card panel full">
     <h3>Kalender je Mitarbeiter</h3>

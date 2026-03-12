@@ -20,12 +20,18 @@
         </div>
 
         <nav class="sidebar-nav" aria-label="Hauptnavigation">
-            <a href="{% url 'accounts:dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">Dashboard</a>
-            <a href="{% url 'orders:order_list' %}" class="nav-link {% if request.resolver_match.namespace == 'orders' %}active{% endif %}">Aufträge</a>
-            <a href="{% url 'customers:customer_list' %}" class="nav-link {% if request.resolver_match.namespace == 'customers' %}active{% endif %}">Kunden</a>
-            <a href="{% url 'catalog:article_list' %}" class="nav-link {% if request.resolver_match.namespace == 'catalog' %}active{% endif %}">Produkte</a>
-            <a href="{% url 'employees:employee_list' %}" class="nav-link {% if request.resolver_match.namespace == 'employees' %}active{% endif %}">Mitarbeiter</a>
-            <a href="{% url 'scheduling:appointment_overview' %}" class="nav-link {% if request.resolver_match.namespace == 'scheduling' %}active{% endif %}">Termine</a>
+            {% url 'accounts:dashboard' as dashboard_url %}
+            {% url 'orders:order_list' as order_list_url %}
+            {% url 'customers:customer_list' as customer_list_url %}
+            {% url 'catalog:article_list' as article_list_url %}
+            {% url 'employees:employee_list' as employee_list_url %}
+            {% url 'scheduling:appointment_overview' as appointment_overview_url %}
+            <a href="{{ dashboard_url|default:'/accounts/dashboard/' }}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">Dashboard</a>
+            <a href="{{ order_list_url|default:'/auftraege/' }}" class="nav-link {% if request.resolver_match.namespace == 'orders' %}active{% endif %}">Aufträge</a>
+            <a href="{{ customer_list_url|default:'/kunden/' }}" class="nav-link {% if request.resolver_match.namespace == 'customers' %}active{% endif %}">Kunden</a>
+            <a href="{{ article_list_url|default:'/artikel/' }}" class="nav-link {% if request.resolver_match.namespace == 'catalog' %}active{% endif %}">Produkte</a>
+            <a href="{{ employee_list_url|default:'/mitarbeiter/' }}" class="nav-link {% if request.resolver_match.namespace == 'employees' %}active{% endif %}">Mitarbeiter</a>
+            <a href="{{ appointment_overview_url|default:'/termine/' }}" class="nav-link {% if request.resolver_match.namespace == 'scheduling' %}active{% endif %}">Termine</a>
             <a href="#" class="nav-link">Rechnungen</a>
             <a href="#" class="nav-link">Angebote</a>
             <a href="#" class="nav-link">Dokumente</a>

@@ -79,6 +79,10 @@ class EmployeeDetailView(EmployeeAccessMixin, DetailView):
 
         context["employee_orders"] = employee_orders
         context["calendar_items"] = dict(calendar)
+        if self.request.user.role == UserRole.MITARBEITER:
+            context["unassigned_orders"] = Order.objects.none()
+            return context
+
         context["unassigned_orders"] = (
             Order.objects.filter(mitarbeiter__isnull=True)
             .select_related("kunde")
@@ -112,6 +116,7 @@ class EmployeeCalendarView(EmployeeAccessMixin, TemplateView):
 
 
 class AssignOrdersView(EmployeeAccessMixin, View):
+    allowed_roles = (UserRole.ADMIN, UserRole.CHEF)
     success_url = reverse_lazy("employees:employee_list")
 
     def post(self, request, pk):
