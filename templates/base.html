@@ -22,7 +22,7 @@
         <nav class="sidebar-nav" aria-label="Hauptnavigation">
             <a href="{% url 'accounts:dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">Dashboard</a>
             <a href="#" class="nav-link">Aufträge</a>
-            <a href="#" class="nav-link">Kunden</a>
+            <a href="{% url 'customers:customer_list' %}" class="nav-link {% if request.resolver_match.namespace == 'customers' %}active{% endif %}">Kunden</a>
             <a href="#" class="nav-link">Produkte</a>
             <a href="#" class="nav-link">Mitarbeiter</a>
             <a href="#" class="nav-link">Termine</a>

@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Kundenliste | UrbanShine{% endblock %}
+{% block page_title %}Kunden{% endblock %}
+{% block page_subtitle %}Kundenverwaltung mit Suche und Detailansicht{% endblock %}
+{% block content %}
+<section class="glass-card panel full">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:.7rem;flex-wrap:wrap;margin-bottom:1rem;">
+        <h3>Alle Kunden</h3>
+        <a href="{% url 'customers:customer_create' %}" class="btn">Kunde anlegen</a>
+    </div>
+
+    <form method="get" style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1rem;">
+        <input type="search" name="q" value="{{ query }}" placeholder="Suche nach Name, Nummer, Ort, E-Mail oder Telefon">
+        <button class="btn" type="submit">Suchen</button>
+        {% if query %}
+            <a class="btn btn-secondary" href="{% url 'customers:customer_list' %}">Zurücksetzen</a>
+        {% endif %}
+    </form>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+            <tr>
+                <th>Kundennummer</th>
+                <th>Name</th>
+                <th>Adresse</th>
+                <th>Kontakt</th>
+                <th>Aktionen</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for customer in customers %}
+                <tr>
+                    <td>{{ customer.kundennummer }}</td>
+                    <td>{{ customer.vorname }} {{ customer.nachname }}</td>
+                    <td>{{ customer.strasse }} {{ customer.hausnummer }}, {{ customer.plz }} {{ customer.ort }}</td>
+                    <td>
+                        {% if customer.telefon %}{{ customer.telefon }}<br>{% endif %}
+                        {{ customer.email|default:"-" }}
+                    </td>
+                    <td style="display:flex;gap:.4rem;flex-wrap:wrap;">
+                        <a class="btn btn-secondary" href="{% url 'customers:customer_detail' customer.pk %}">Details</a>
+                        <a class="btn btn-secondary" href="{% url 'customers:customer_update' customer.pk %}">Bearbeiten</a>
+                        <a class="btn btn-danger" href="{% url 'customers:customer_delete' customer.pk %}">Löschen</a>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="5">Keine Kunden gefunden.</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

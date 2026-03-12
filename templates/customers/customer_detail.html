@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Kundendetails | UrbanShine{% endblock %}
+{% block page_title %}Kundendetails{% endblock %}
+{% block page_subtitle %}Übersicht über Stamm- und Vorgangsdaten{% endblock %}
+{% block content %}
+<section class="glass-card panel full">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:.7rem;flex-wrap:wrap;">
+        <h3>{{ customer.vorname }} {{ customer.nachname }}</h3>
+        <div style="display:flex;gap:.5rem;">
+            <a href="{% url 'customers:customer_update' customer.pk %}" class="btn btn-secondary">Bearbeiten</a>
+            <a href="{% url 'customers:customer_list' %}" class="btn btn-secondary">Zurück zur Liste</a>
+        </div>
+    </div>
+
+    <div class="form-grid" style="margin-top:1rem;">
+        <div><strong>Kundennummer</strong><br>{{ customer.kundennummer }}</div>
+        <div><strong>Adresse</strong><br>{{ customer.strasse }} {{ customer.hausnummer }}, {{ customer.plz }} {{ customer.ort }}</div>
+        <div><strong>Telefon</strong><br>{{ customer.telefon|default:"-" }}</div>
+        <div><strong>E-Mail</strong><br>{{ customer.email|default:"-" }}</div>
+    </div>
+
+    <div style="margin-top:1rem;">
+        <strong>Notizen</strong>
+        <p>{{ customer.notizen|default:"Keine Notizen hinterlegt."|linebreaksbr }}</p>
+    </div>
+</section>
+
+<section class="dashboard-grid">
+    <article class="glass-card panel">
+        <div class="panel-heading"><h3>Aufträge</h3></div>
+        <ul class="activity-list">
+            {% for eintrag in auftraege %}
+                <li>{{ eintrag }}</li>
+            {% empty %}
+                <li>Keine Aufträge vorhanden.</li>
+            {% endfor %}
+        </ul>
+    </article>
+
+    <article class="glass-card panel">
+        <div class="panel-heading"><h3>Rechnungen</h3></div>
+        <ul class="activity-list">
+            {% for eintrag in rechnungen %}
+                <li>{{ eintrag }}</li>
+            {% empty %}
+                <li>Keine Rechnungen vorhanden.</li>
+            {% endfor %}
+        </ul>
+    </article>
+
+    <article class="glass-card panel">
+        <div class="panel-heading"><h3>Angebote</h3></div>
+        <ul class="activity-list">
+            {% for eintrag in angebote %}
+                <li>{{ eintrag }}</li>
+            {% empty %}
+                <li>Keine Angebote vorhanden.</li>
+            {% endfor %}
+        </ul>
+    </article>
+
+    <article class="glass-card panel">
+        <div class="panel-heading"><h3>Verkäufe</h3></div>
+        <ul class="activity-list">
+            {% for eintrag in verkaeufe %}
+                <li>{{ eintrag }}</li>
+            {% empty %}
+                <li>Keine Verkäufe vorhanden.</li>
+            {% endfor %}
+        </ul>
+    </article>
+</section>
+{% endblock %}
