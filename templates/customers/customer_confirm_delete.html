@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Kunde löschen | UrbanShine{% endblock %}
+{% block page_title %}Kunde löschen{% endblock %}
+{% block page_subtitle %}Bitte Löschvorgang bestätigen{% endblock %}
+{% block content %}
+<section class="glass-card panel full">
+    <h3>Kunde wirklich löschen?</h3>
+    <p>Der Kunde <strong>{{ object.vorname }} {{ object.nachname }}</strong> (Nr. {{ object.kundennummer }}) wird dauerhaft entfernt.</p>
+    <form method="post" style="display:flex;gap:.6rem;">
+        {% csrf_token %}
+        <button class="btn btn-danger" type="submit">Ja, löschen</button>
+        <a class="btn btn-secondary" href="{% url 'customers:customer_list' %}">Abbrechen</a>
+    </form>
+</section>
+{% endblock %}
