@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Angebote | UrbanShine{% endblock %}
+{% block page_title %}Angebote{% endblock %}
+{% block page_subtitle %}Angebote erstellen und in Aufträge umwandeln{% endblock %}
+{% block content %}
+<section class="glass-card panel full">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:.7rem;flex-wrap:wrap;margin-bottom:1rem;">
+        <h3>Angebotsliste</h3>
+        <a href="{% url 'offers:offer_create' %}" class="btn">Angebot erstellen</a>
+    </div>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+            <tr>
+                <th>Nr.</th>
+                <th>Kunde</th>
+                <th>Titel</th>
+                <th>Status</th>
+                <th>Gesamtpreis</th>
+                <th>Aktionen</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for offer in offers %}
+                <tr>
+                    <td>A-{{ offer.angebotsnummer|stringformat:"05d" }}</td>
+                    <td>{{ offer.kunde.vorname }} {{ offer.kunde.nachname }}</td>
+                    <td>{{ offer.titel }}</td>
+                    <td>{{ offer.get_status_display }}</td>
+                    <td>{{ offer.gesamtpreis }} €</td>
+                    <td>
+                        <a class="btn btn-secondary" href="{% url 'offers:offer_detail' offer.pk %}">Details</a>
+                        {% if offer.umgewandelter_auftrag %}
+                            <a class="btn" href="{% url 'orders:order_detail' offer.umgewandelter_auftrag.pk %}">Auftrag</a>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="6">Noch keine Angebote vorhanden.</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Angebot erstellen | UrbanShine{% endblock %}
+{% block page_title %}Angebot erstellen{% endblock %}
+{% block page_subtitle %}Positionen und Rabatt direkt erfassen{% endblock %}
+{% block content %}
+<section class="glass-card panel full">
+    <h3>Neues Angebot</h3>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+
+        <div style="display:grid;gap:1rem;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));">
+            {% for field in form %}
+                <div>
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {{ field.errors }}
+                </div>
+            {% endfor %}
+        </div>
+
+        <h4 style="margin-top:1.2rem;">Positionen</h4>
+        {{ formset.management_form }}
+        <div style="display:grid;gap:.7rem;">
+            {% for item_form in formset %}
+                <div class="glass-card" style="padding:.8rem;display:grid;gap:.5rem;grid-template-columns:2fr 1fr 1fr auto;align-items:end;">
+                    {% for hidden in item_form.hidden_fields %}{{ hidden }}{% endfor %}
+                    <div>
+                        <label>{{ item_form.bezeichnung.label }}</label>
+                        {{ item_form.bezeichnung }}
+                        {{ item_form.bezeichnung.errors }}
+                    </div>
+                    <div>
+                        <label>{{ item_form.menge.label }}</label>
+                        {{ item_form.menge }}
+                        {{ item_form.menge.errors }}
+                    </div>
+                    <div>
+                        <label>{{ item_form.einzelpreis.label }}</label>
+                        {{ item_form.einzelpreis }}
+                        {{ item_form.einzelpreis.errors }}
+                    </div>
+                    <div>
+                        <label>{{ item_form.DELETE.label }}</label>
+                        {{ item_form.DELETE }}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <div style="margin-top:1rem;display:flex;gap:.5rem;">
+            <button type="submit" class="btn">Speichern</button>
+            <a href="{% url 'offers:offer_list' %}" class="btn btn-secondary">Abbrechen</a>
+        </div>
+    </form>
+</section>
+{% endblock %}
