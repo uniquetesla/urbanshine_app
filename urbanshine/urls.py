@@ -23,6 +23,7 @@ urlpatterns = [
     path("mitarbeiter/", include("apps.employees.urls")),
     path("termine/", include("apps.scheduling.urls")),
     path("rechnungen/", include("apps.invoices.urls")),
+    path("angebote/", include("apps.offers.urls")),
     path("", include("apps.company.urls")),
     path("health/", healthcheck, name="healthcheck"),
 ]

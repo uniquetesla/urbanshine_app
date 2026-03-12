@@ -41,7 +41,7 @@
                             {% csrf_token %}
                             <input type="hidden" name="next" value="{% url 'orders:order_list' %}">
                             <select name="status" onchange="this.form.submit()">
-                                {% for value, label in order._meta.get_field('status').choices %}
+                                {% for value, label in status_choices %}
                                     <option value="{{ value }}" {% if order.status == value %}selected{% endif %}>{{ label }}</option>
                                 {% endfor %}
                             </select>
