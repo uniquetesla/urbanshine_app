@@ -47,8 +47,8 @@
                     <td>{{ article.lagerbestand }}</td>
                     <td>{{ article.beschreibung|default:'-'|truncatechars:90 }}</td>
                     <td class="table-actions">
-                        <a class="btn btn-secondary" href="{% url 'catalog:article_update' article.pk %}"><span class="btn-icon" aria-hidden="true">✏️</span><span>Bearbeiten</span></a>
-                        <a class="btn btn-danger" href="{% url 'catalog:article_delete' article.pk %}"><span class="btn-icon" aria-hidden="true">🗑️</span><span>Löschen</span></a>
+                        <a class="btn btn-secondary action-icon" aria-label="Bearbeiten" title="Bearbeiten" href="{% url 'catalog:article_update' article.pk %}"><span class="btn-icon" aria-hidden="true">🛠️</span><span class="btn-text">Bearbeiten</span></a>
+                        <a class="btn btn-danger action-icon" aria-label="Löschen" title="Löschen" href="{% url 'catalog:article_delete' article.pk %}"><span class="btn-icon" aria-hidden="true">🗑️</span><span class="btn-text">Löschen</span></a>
                     </td>
                 </tr>
             {% empty %}

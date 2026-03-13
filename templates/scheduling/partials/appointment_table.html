@@ -15,7 +15,7 @@
             <tr>
                 <td><strong>{{ appointment.termin|date:"H:i" }}</strong><br><small>{{ appointment.termin|date:"d.m.Y" }}</small></td>
                 <td>
-                    <a href="{% url 'orders:order_detail' appointment.pk %}">
+                    <a class="table-link" href="{% url 'orders:order_detail' appointment.pk %}">
                         {{ appointment.formatted_auftragsnummer }} · {{ appointment.order_type.name|default:appointment.auftragsart }}
                     </a>
                 </td>
@@ -32,7 +32,7 @@
                         {{ appointment.get_status_display }}
                     </span>
                 </td>
-                <td><a class="btn btn-secondary" href="{% url 'orders:order_update' appointment.pk %}"><span class="btn-icon" aria-hidden="true">📅</span><span>Termin bearbeiten</span></a></td>
+                <td><a class="btn btn-secondary action-icon" aria-label="Termin bearbeiten" title="Termin bearbeiten" href="{% url 'orders:order_update' appointment.pk %}"><span class="btn-icon" aria-hidden="true">📅</span><span class="btn-text">Termin bearbeiten</span></a></td>
             </tr>
         {% empty %}
             <tr>

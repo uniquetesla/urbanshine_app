@@ -29,6 +29,32 @@ document.addEventListener('DOMContentLoaded', () => {
     window.setTimeout(removeToast, 4200);
   });
 
+
+  const spawnToast = (message, level = 'info') => {
+    let stack = document.querySelector('.toast-stack');
+    if (!stack) {
+      stack = document.createElement('div');
+      stack.className = 'toast-stack';
+      stack.setAttribute('aria-live', 'polite');
+      stack.setAttribute('aria-atomic', 'true');
+      document.body.appendChild(stack);
+    }
+
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${level}`;
+    toast.setAttribute('data-toast', '');
+    toast.innerHTML = `<button type="button" class="toast-close" data-toast-close aria-label="Meldung schließen">×</button><p>${message}</p>`;
+    stack.appendChild(toast);
+
+    const removeToast = () => {
+      toast.classList.add('toast-hide');
+      window.setTimeout(() => toast.remove(), 220);
+    };
+
+    toast.querySelector('[data-toast-close]')?.addEventListener('click', removeToast);
+    window.setTimeout(removeToast, 4200);
+  };
+
   const servicePrices = JSON.parse(document.getElementById('service-prices-data')?.textContent || '{}');
   const serviceDurations = JSON.parse(document.getElementById('service-durations-data')?.textContent || '{}');
   const soilingMultipliers = JSON.parse(document.getElementById('soiling-multipliers-data')?.textContent || '{}');
@@ -157,4 +183,81 @@ document.addEventListener('DOMContentLoaded', () => {
     offerForm.addEventListener('input', updateOfferPrices);
     updateOfferPrices();
   }
+  const scanForm = document.getElementById('goods-receipt-scan-form');
+  if (scanForm) {
+    const scanInput = document.getElementById('scan-code');
+    const overlay = document.getElementById('receiptOverlay');
+    const articleInfo = document.getElementById('receiptArticleInfo');
+    const articleId = document.getElementById('receipt-article-id');
+    const qtyInput = document.getElementById('receipt-qty');
+    const noteInput = document.getElementById('receipt-note');
+    const bookForm = document.getElementById('goods-receipt-book-form');
+    const cancelBtn = document.getElementById('receiptCancel');
+    const csrfToken = scanForm.querySelector('input[name="csrfmiddlewaretoken"]')?.value;
+
+    const closeModal = () => {
+      overlay?.classList.remove('open');
+      overlay?.setAttribute('aria-hidden', 'true');
+      articleId.value = '';
+      articleInfo.textContent = '';
+      qtyInput.value = 1;
+      noteInput.value = '';
+      scanInput.focus();
+      scanInput.select();
+    };
+
+    cancelBtn?.addEventListener('click', closeModal);
+
+    scanForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const formData = new FormData(scanForm);
+      try {
+        const response = await fetch(scanForm.action, {
+          method: 'POST',
+          headers: { 'X-CSRFToken': csrfToken },
+          body: formData,
+        });
+        const payload = await response.json();
+        if (!response.ok || !payload.ok) {
+          spawnToast(payload.message || 'Artikel wurde nicht gefunden.', 'error');
+          scanInput.focus();
+          scanInput.select();
+          return;
+        }
+
+        articleId.value = payload.article.id;
+        articleInfo.innerHTML = `<strong>${payload.article.name}</strong><br>Artikelnummer: ${payload.article.artikelnummer}<br>Barcode: ${payload.article.barcode}<br>Aktueller Bestand: ${payload.article.stock}`;
+        overlay?.classList.add('open');
+        overlay?.setAttribute('aria-hidden', 'false');
+        qtyInput.focus();
+        qtyInput.select();
+      } catch (_error) {
+        spawnToast('Wareneingang konnte nicht vorbereitet werden.', 'error');
+      }
+    });
+
+    bookForm?.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const formData = new FormData(bookForm);
+      try {
+        const response = await fetch(bookForm.action, {
+          method: 'POST',
+          headers: { 'X-CSRFToken': csrfToken },
+          body: formData,
+        });
+        const payload = await response.json();
+        if (!response.ok || !payload.ok) {
+          spawnToast(payload.message || 'Wareneingang fehlgeschlagen.', 'error');
+          qtyInput.focus();
+          return;
+        }
+
+        spawnToast(payload.message, 'success');
+        window.location.reload();
+      } catch (_error) {
+        spawnToast('Wareneingang fehlgeschlagen.', 'error');
+      }
+    });
+  }
+
 });

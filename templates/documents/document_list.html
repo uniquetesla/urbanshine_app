@@ -52,7 +52,7 @@
                         <td>{{ document.uploaded_at|date:"d.m.Y H:i" }}</td>
                         <td>{{ document.uploaded_by|default:"System" }}</td>
                         <td>
-                            <a class="btn btn-secondary" href="{% url 'documents:document_detail' document.pk %}"><span class="btn-icon" aria-hidden="true">🔎</span><span>Details</span></a>
+                            <a class="btn btn-secondary action-icon" aria-label="Details" title="Details" href="{% url 'documents:document_detail' document.pk %}"><span class="btn-icon" aria-hidden="true">🔎</span><span class="btn-text">Details</span></a>
                         </td>
                     </tr>
                 {% empty %}

@@ -117,3 +117,7 @@ Zusätzlich aktiviert `production` sichere Cookie- und Header-Einstellungen in D
   - `.env` mit sicheren Werten bereitstellen
   - Reverse Proxy (z. B. Nginx/Caddy) vor den `web`-Container setzen
   - Backups für `postgres_data` einrichten
+
+## Admin-Login-Flow
+
+Sobald mindestens ein aktiver UrbanShine-Benutzer mit Rolle `Admin` existiert, wird ` /admin/login/ ` automatisch auf den internen Login (`/accounts/login/`) umgeleitet. Damit bleibt der zentrale Login-Flow erhalten und das Django-Standardlogin wird nur für die Initialphase ohne internen Admin genutzt.

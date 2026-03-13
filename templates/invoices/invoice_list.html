@@ -47,7 +47,7 @@
                         </span>
                     </td>
                     <td class="table-actions">
-                        <a class="btn btn-secondary" href="{% url 'invoices:invoice_detail' invoice.pk %}"><span class="btn-icon" aria-hidden="true">🔎</span><span>Details</span></a>
+                        <a class="btn btn-secondary action-icon" aria-label="Rechnung ansehen" title="Rechnung ansehen" href="{% url 'invoices:invoice_detail' invoice.pk %}"><span class="btn-icon" aria-hidden="true">📄</span><span class="btn-text">Details</span></a>
                         {% if invoice.pdf_datei %}
                             <a class="btn" href="{% url 'invoices:invoice_pdf' invoice.pk %}"><span class="btn-icon" aria-hidden="true">⬇️</span><span>PDF</span></a>
                         {% endif %}

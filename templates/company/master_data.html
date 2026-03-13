@@ -2,25 +2,49 @@
 
 {% block title %}Stammdaten | UrbanShine{% endblock %}
 {% block page_title %}Stammdaten-Administration{% endblock %}
-{% block page_subtitle %}Klar gegliedert, schnell bedienbar, vollständig bearbeitbar{% endblock %}
+{% block page_subtitle %}Strukturiert nach Bereichen: Stammdaten, Nummernkreise, Firmendaten &amp; Benutzer{% endblock %}
 
 {% block content %}
 <section class="glass-card panel admin-area">
     <div class="panel-heading">
-        <h3>⚙️ Adminbereich: Stammdaten</h3>
+        <h3>⚙️ Adminbereich</h3>
         <span class="admin-badge">Nur für Admin &amp; Chef</span>
     </div>
-    <p class="subtitle">Leistungen, Auftragsarten, Verschmutzungsgrade, Zuschläge, Preise, Nummernkreise und Firmendaten zentral verwalten.</p>
+    <div class="admin-menu-grid">
+        <div class="admin-menu-group"><h4>Stammdaten</h4><a href="#md-stammdaten">Leistungen, Auftragsarten, Verschmutzungsgrade, Zuschläge</a><a href="#md-artikel">Artikel- und Preiskonfiguration</a></div>
+        <div class="admin-menu-group"><h4>Nummernkreise</h4><a href="#md-nummern">Aufträge, Kunden, Rechnungen, Artikel</a></div>
+        <div class="admin-menu-group"><h4>Firmendaten</h4><a href="#md-firma">Kontaktdaten, Logo, Rechnungsregeln</a></div>
+        <div class="admin-menu-group"><h4>Benutzer / Rollen</h4><a href="{% url 'accounts:user_list' %}">Benutzerverwaltung öffnen</a></div>
+    </div>
 </section>
 
-<div class="dashboard-grid">
+<div class="dashboard-grid" id="md-stammdaten">
     {% include 'company/partials/master_data_section.html' with title='Leistungen' action='service' form=service_form items=services type='service' %}
-    {% include 'company/partials/master_data_section.html' with title='Preise' action='price' form=price_form items=prices type='price' %}
     {% include 'company/partials/master_data_section.html' with title='Auftragsarten' action='order_type' form=order_type_form items=order_types type='order_type' %}
     {% include 'company/partials/master_data_section.html' with title='Verschmutzungsgrade' action='soiling_level' form=soiling_level_form items=soiling_levels type='soiling_level' %}
     {% include 'company/partials/master_data_section.html' with title='Zuschläge' action='surcharge' form=surcharge_form items=surcharges type='surcharge' %}
 
-    <section class="glass-card panel admin-area">
+    <section class="glass-card panel admin-area" id="md-artikel">
+        <h3>Preise / Artikelkontext</h3>
+        <form method="post" class="form-grid">{% csrf_token %}
+            <input type="hidden" name="action" value="price">
+            {{ price_form.as_p }}
+            <button class="btn" type="submit">Preise speichern</button>
+        </form>
+        <ul class="activity-list">
+            {% for item in prices %}
+                <li>
+                    <strong>{{ item }}</strong>
+                    <div class="table-actions">
+                        <a class="btn btn-secondary action-icon" aria-label="Bearbeiten" title="Bearbeiten" href="{% url 'company:master_data_update' 'price' item.pk %}"><span class="btn-icon" aria-hidden="true">🛠️</span><span class="btn-text">Bearbeiten</span></a>
+                        <form method="post" action="{% url 'company:master_data_delete' 'price' item.pk %}" class="action-form">{% csrf_token %}<button class="btn btn-danger action-icon" aria-label="Löschen" title="Löschen" type="submit"><span class="btn-icon" aria-hidden="true">🗑️</span><span class="btn-text">Löschen</span></button></form>
+                    </div>
+                </li>
+            {% empty %}<li>Keine Preise vorhanden.</li>{% endfor %}
+        </ul>
+    </section>
+
+    <section class="glass-card panel admin-area" id="md-nummern">
         <h3>Nummernkreise</h3>
         <form method="post" class="form-grid">{% csrf_token %}
             <input type="hidden" name="action" value="number_sequences">
@@ -41,8 +65,8 @@
         </form>
     </section>
 
-    <section class="glass-card panel admin-area">
-        <h3>Firmendaten &amp; Rechnungseinstellung</h3>
+    <section class="glass-card panel admin-area" id="md-firma">
+        <h3>Firmendaten &amp; Angebots-/Rechnungskonfiguration</h3>
         <form method="post" enctype="multipart/form-data" class="form-grid">{% csrf_token %}
             <input type="hidden" name="action" value="company_settings">
             {{ company_form.as_p }}
