@@ -3,8 +3,9 @@
 {% block page_title %}Kasse{% endblock %}
 {% block page_subtitle %}Scanner-freundlicher Verkauf mit fixem Warenkorb{% endblock %}
 {% block content %}
-<section class="pos-layout">
-    <div class="glass-card panel full pos-products-panel">
+<section class="pos-shell">
+    <div class="pos-main-grid">
+    <div class="glass-card pos-products-panel">
         <div class="panel-heading pos-panel-header">
             <h3>Artikelübersicht</h3>
             <form method="get" class="button-row pos-search-row">
@@ -16,23 +17,25 @@
             </form>
         </div>
 
-        <div class="pos-tiles-grid">
-            {% for article in articles %}
-                <form method="post" class="pos-article-tile">
-                    {% csrf_token %}
-                    <input type="hidden" name="action" value="add">
-                    <input type="hidden" name="article_id" value="{{ article.id }}">
-                    <input type="hidden" name="quantity" value="1">
-                    <button type="submit" {% if article.lagerbestand == 0 %}disabled{% endif %}>
-                        <strong>{{ article.name }}</strong>
-                        <span>{{ article.formatted_artikelnummer }}{% if article.barcode %} · {{ article.barcode }}{% endif %}</span>
-                        <span>{{ article.preis|floatformat:2 }} €</span>
-                        <small>Lager: {{ article.lagerbestand }}</small>
-                    </button>
-                </form>
-            {% empty %}
-                <p>Keine Artikel gefunden.</p>
-            {% endfor %}
+        <div class="pos-products-scroll">
+            <div class="pos-tiles-grid">
+                {% for article in articles %}
+                    <form method="post" class="pos-article-tile">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="add">
+                        <input type="hidden" name="article_id" value="{{ article.id }}">
+                        <input type="hidden" name="quantity" value="1">
+                        <button type="submit" {% if article.lagerbestand == 0 %}disabled{% endif %}>
+                            <strong>{{ article.name }}</strong>
+                            <span>{{ article.formatted_artikelnummer }}{% if article.barcode %} · {{ article.barcode }}{% endif %}</span>
+                            <span>{{ article.preis|floatformat:2 }} €</span>
+                            <small>Lager: {{ article.lagerbestand }}</small>
+                        </button>
+                    </form>
+                {% empty %}
+                    <p>Keine Artikel gefunden.</p>
+                {% endfor %}
+            </div>
         </div>
     </div>
 
@@ -96,6 +99,7 @@
             {% endif %}
         </div>
     </aside>
+    </div>
 </section>
 
 <div class="receipt-overlay" id="pos-checkout-modal" aria-hidden="true">
