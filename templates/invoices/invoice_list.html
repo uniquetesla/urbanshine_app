@@ -22,7 +22,7 @@
             <tr>
                 <th>Rechnungsnr.</th>
                 <th>Kunde</th>
-                <th>Auftrag</th>
+                <th>Auftrag</th><th>Verkauf</th>
                 <th>Rechnungsdatum</th>
                 <th>Fällig am</th>
                 <th>Betrag</th>
@@ -35,7 +35,7 @@
                 <tr>
                     <td>R-{{ invoice.rechnungsnummer|stringformat:"05d" }}</td>
                     <td>{{ invoice.kunde.vorname }} {{ invoice.kunde.nachname }}</td>
-                    <td>{% if invoice.auftrag %}{{ invoice.auftrag.auftragsnummer }}{% else %}-{% endif %}</td>
+                    <td>{% if invoice.auftrag %}{{ invoice.auftrag.auftragsnummer }}{% else %}-{% endif %}</td><td>{% if invoice.verkauf %}{{ invoice.verkauf.verkaufsnummer }}{% else %}-{% endif %}</td>
                     <td>{{ invoice.rechnungsdatum|date:"d.m.Y" }}</td>
                     <td>{{ invoice.faellig_am|date:"d.m.Y"|default:"-" }}</td>
                     <td>{{ invoice.betrag }} €</td>
@@ -49,7 +49,7 @@
                 </tr>
             {% empty %}
                 <tr>
-                    <td colspan="8">Keine Rechnungen gefunden.</td>
+                    <td colspan="9">Keine Rechnungen gefunden.</td>
                 </tr>
             {% endfor %}
             </tbody>

@@ -6,7 +6,21 @@
 <section class="glass-card panel full">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:.7rem;flex-wrap:wrap;">
         <h3>{{ order.kunde.vorname }} {{ order.kunde.nachname }}</h3>
-        <div style="display:flex;gap:.5rem;"><a href="{% url 'orders:order_update' order.pk %}" class="btn btn-secondary">Bearbeiten</a><a href="{% url 'orders:order_list' %}" class="btn btn-secondary">Zurück zur Liste</a></div>
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+            {% with order.rechnungen.first as invoice %}
+                {% if invoice %}
+                    <a href="{% url 'invoices:invoice_detail' invoice.pk %}" class="btn">Rechnung ansehen</a>
+                {% else %}
+                    <form method="post" action="{% url 'orders:order_create_invoice' order.pk %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{% url 'orders:order_detail' order.pk %}">
+                        <button class="btn" type="submit">Rechnung erstellen</button>
+                    </form>
+                {% endif %}
+            {% endwith %}
+            <a href="{% url 'orders:order_update' order.pk %}" class="btn btn-secondary">Bearbeiten</a>
+            <a href="{% url 'orders:order_list' %}" class="btn btn-secondary">Zurück zur Liste</a>
+        </div>
     </div>
 
     <div class="form-grid" style="margin-top:1rem;">

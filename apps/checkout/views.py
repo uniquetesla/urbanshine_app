@@ -1,19 +1,27 @@
 from decimal import Decimal
 
 from django.contrib import messages
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.db import transaction
 from django.db.models import F, Q
-from django.shortcuts import redirect
+from django.shortcuts import get_object_or_404, redirect
+from django.views import View
 from django.views.generic import TemplateView
 
+from apps.accounts.models import UserRole
 from apps.catalog.models import Article
 from apps.customers.models import Customer
+from apps.invoices.services import create_invoice_for_sale
 
 from .models import PaymentMethod, Sale, SaleItem
 
 
-class CheckoutView(LoginRequiredMixin, TemplateView):
+class EmployeeOnlyMixin(UserPassesTestMixin):
+    def test_func(self):
+        return self.request.user.is_authenticated and self.request.user.role != UserRole.STAMMKUNDE
+
+
+class CheckoutView(EmployeeOnlyMixin, LoginRequiredMixin, TemplateView):
     template_name = "checkout/pos.html"
     cart_session_key = "checkout_cart"
 
@@ -182,6 +190,12 @@ class CheckoutView(LoginRequiredMixin, TemplateView):
             total += line_total
             cart_items.append({"article": article, "quantity": qty, "line_total": line_total})
 
+        sales_queryset = Sale.objects.select_related("kunde", "mitarbeiter").prefetch_related("positionen__artikel")[:20]
+        sales = [
+            {"sale": sale, "invoice": getattr(sale, "rechnung", None)}
+            for sale in sales_queryset
+        ]
+
         context.update(
             {
                 "query": query,
@@ -193,6 +207,24 @@ class CheckoutView(LoginRequiredMixin, TemplateView):
                     f"{customer.kundennummer} · {customer.vorname} {customer.nachname}"
                     for customer in Customer.objects.order_by("nachname", "vorname")
                 ],
+                "sales": sales,
             }
         )
         return context
+
+
+class SaleCreateInvoiceView(EmployeeOnlyMixin, LoginRequiredMixin, View):
+    def post(self, request, pk):
+        sale = get_object_or_404(Sale.objects.select_related("kunde"), pk=pk)
+        existing_invoice = getattr(sale, "rechnung", None)
+        if existing_invoice:
+            messages.info(request, f"Für Verkauf #{sale.verkaufsnummer} existiert bereits eine Rechnung.")
+            return redirect("checkout:pos")
+
+        invoice = create_invoice_for_sale(sale)
+        if not invoice:
+            messages.error(request, "Für diesen Verkauf konnte keine Rechnung erstellt werden.")
+            return redirect("checkout:pos")
+
+        messages.success(request, f"Rechnung R-{invoice.rechnungsnummer:05d} für Verkauf #{sale.verkaufsnummer} erstellt.")
+        return redirect("checkout:pos")

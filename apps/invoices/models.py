@@ -32,6 +32,14 @@ class Invoice(models.Model):
         null=True,
         verbose_name="Auftrag",
     )
+    verkauf = models.OneToOneField(
+        "checkout.Sale",
+        on_delete=models.SET_NULL,
+        related_name="rechnung",
+        blank=True,
+        null=True,
+        verbose_name="Verkauf",
+    )
     rechnungsdatum = models.DateField(default=timezone.localdate, verbose_name="Rechnungsdatum")
     faellig_am = models.DateField(blank=True, null=True, verbose_name="Fällig am")
     betrag = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Betrag")
@@ -48,6 +56,9 @@ class Invoice(models.Model):
 
     class Meta:
         ordering = ["-rechnungsdatum", "-rechnungsnummer"]
+        constraints = [
+            models.UniqueConstraint(fields=["auftrag"], name="unique_invoice_per_order"),
+        ]
         verbose_name = "Rechnung"
         verbose_name_plural = "Rechnungen"
 
