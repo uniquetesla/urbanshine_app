@@ -31,7 +31,10 @@ class OrderForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields["kunde"].widget = forms.HiddenInput()
         self.fields["kunde"].required = False
-        self.fields["order_type"].queryset = OrderType.objects.filter(is_active=True)
+        order_type_qs = OrderType.objects.filter(is_active=True)
+        if self.instance and self.instance.pk and self.instance.order_type_id:
+            order_type_qs = OrderType.objects.filter(pk=self.instance.order_type_id) | order_type_qs
+        self.fields["order_type"].queryset = order_type_qs.distinct()
         self.fields["mitarbeiter"].queryset = self.fields["mitarbeiter"].queryset.filter(
             role__in=[UserRole.ADMIN, UserRole.CHEF, UserRole.MITARBEITER]
         )

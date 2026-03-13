@@ -14,7 +14,7 @@
     </div>
 
     <div class="form-grid" style="margin-top:1rem;">
-        <div><strong>Kundennummer</strong><br>{{ customer.kundennummer }}</div>
+        <div><strong>Kundennummer</strong><br>{{ customer.formatted_kundennummer }}</div>
         <div><strong>Adresse</strong><br>{{ customer.strasse }} {{ customer.hausnummer }}, {{ customer.plz }} {{ customer.ort }}</div>
         <div><strong>Telefon</strong><br>{{ customer.telefon|default:"-" }}</div>
         <div><strong>E-Mail</strong><br>{{ customer.email|default:"-" }}</div>

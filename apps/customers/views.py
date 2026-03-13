@@ -7,6 +7,7 @@ from django.views.generic import CreateView, DeleteView, DetailView, ListView, U
 from apps.accounts.models import UserRole
 from apps.core.activity import log_activity
 from apps.core.models import ActivitySubject
+from apps.core.number_sequences import parse_sequence_value
 
 from .forms import CustomerForm
 from .models import Customer
@@ -31,14 +32,17 @@ class CustomerListView(LoginRequiredMixin, ListView):
 
         query = self.request.GET.get("q", "").strip()
         if query:
-            queryset = queryset.filter(
-                Q(kundennummer__icontains=query)
-                | Q(vorname__icontains=query)
+            number_query = parse_sequence_value(query)
+            customer_filters = (
+                Q(vorname__icontains=query)
                 | Q(nachname__icontains=query)
                 | Q(ort__icontains=query)
                 | Q(email__icontains=query)
                 | Q(telefon__icontains=query)
             )
+            if number_query is not None:
+                customer_filters |= Q(kundennummer=number_query)
+            queryset = queryset.filter(customer_filters)
         return queryset
 
     def get_context_data(self, **kwargs):
@@ -60,7 +64,7 @@ class CustomerCreateView(EmployeeOnlyMixin, LoginRequiredMixin, CreateView):
             subject_type=ActivitySubject.KUNDE,
             subject_label=f"{self.object.vorname} {self.object.nachname}",
             action="Kunde erstellt",
-            details=f"Kundennummer {self.object.kundennummer}",
+            details=f"Kundennummer {self.object.formatted_kundennummer}",
             icon="👤",
         )
         messages.success(self.request, "Kunde wurde erfolgreich angelegt.")
@@ -82,7 +86,7 @@ class CustomerUpdateView(EmployeeOnlyMixin, LoginRequiredMixin, UpdateView):
             subject_type=ActivitySubject.KUNDE,
             subject_label=f"{self.object.vorname} {self.object.nachname}",
             action="Kunde bearbeitet",
-            details=f"Kundennummer {self.object.kundennummer}",
+            details=f"Kundennummer {self.object.formatted_kundennummer}",
             from_state=old_name,
             to_state=f"{self.object.vorname} {self.object.nachname}",
             icon="✏️",
