@@ -2,7 +2,7 @@ from decimal import Decimal
 
 from django.conf import settings
 from django.db import models
-from django.db.models import Max
+from django.db.models import Max, Sum
 
 
 class OrderStatus(models.TextChoices):
@@ -14,11 +14,12 @@ class OrderStatus(models.TextChoices):
     STORNIERT = "storniert", "Storniert"
 
 
-class Verschmutzungsgrad(models.TextChoices):
-    LEICHT = "leicht", "Leicht"
-    NORMAL = "normal", "Normal"
-    STARK = "stark", "Stark"
-    EXTREM = "extrem", "Extrem"
+class PositionStatus(models.TextChoices):
+    NEU = "neu", "Neu"
+    GEPLANT = "geplant", "Geplant"
+    IN_BEARBEITUNG = "in_bearbeitung", "In Bearbeitung"
+    ABGESCHLOSSEN = "abgeschlossen", "Abgeschlossen"
+    STORNIERT = "storniert", "Storniert"
 
 
 class Order(models.Model):
@@ -34,22 +35,19 @@ class Order(models.Model):
         related_name="auftraege",
         verbose_name="Kunde",
     )
-    auftragsart = models.CharField(max_length=120, verbose_name="Auftragsart")
-    leistungen = models.TextField(verbose_name="Leistungen")
-    verschmutzungsgrad = models.CharField(
-        max_length=20,
-        choices=Verschmutzungsgrad.choices,
-        default=Verschmutzungsgrad.NORMAL,
-        verbose_name="Verschmutzungsgrad",
+    auftragsart = models.CharField(max_length=120, blank=True, verbose_name="Auftragsart")
+    order_type = models.ForeignKey(
+        "company.OrderType",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="auftraege",
+        verbose_name="Auftragsart (Stammdaten)",
     )
-    zuschlaege = models.DecimalField(
-        max_digits=10,
-        decimal_places=2,
-        default=Decimal("0.00"),
-        verbose_name="Zuschläge (€)",
-    )
-    preisberechnung = models.TextField(verbose_name="Preisberechnung")
-    gesamtpreis = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Gesamtpreis (€)")
+    leistungen = models.TextField(blank=True, verbose_name="Leistungen")
+    preisberechnung = models.TextField(blank=True, verbose_name="Preisberechnung")
+    gesamtpreis = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("0.00"), verbose_name="Gesamtpreis (€)")
+    gesamtzeit_minuten = models.PositiveIntegerField(default=0, verbose_name="Gesamtzeit (Minuten)")
     status = models.CharField(
         max_length=20,
         choices=OrderStatus.choices,
@@ -75,22 +73,96 @@ class Order(models.Model):
     def __str__(self):
         return f"{self.auftragsnummer} · {self.kunde}"
 
+    @property
+    def gesamtzeit_formatiert(self):
+        stunden, minuten = divmod(self.gesamtzeit_minuten, 60)
+        return f"{stunden} Std. {minuten} Min." if stunden else f"{minuten} Min."
+
+    def recalculate_totals(self, save=True):
+        totals = self.positionen.aggregate(
+            total=Sum("einzelpreis"),
+            minuten=Sum("geschaetzte_dauer_minuten"),
+        )
+        self.gesamtpreis = totals["total"] or Decimal("0.00")
+        self.gesamtzeit_minuten = totals["minuten"] or 0
+        self.leistungen = "\n".join(
+            f"- {position.leistung.name}: {position.einzelpreis} €"
+            for position in self.positionen.select_related("leistung")
+        )
+        self.preisberechnung = "\n".join(
+            f"{position.leistung.name}: Basis {position.leistung.price} € × Faktor {position.verschmutzungsgrad.multiplier}"
+            + (f" + Zuschlag {position.zuschlag.name}" if position.zuschlag else "")
+            + f" = {position.einzelpreis} €"
+            for position in self.positionen.select_related("leistung", "verschmutzungsgrad", "zuschlag")
+        )
+        if self.order_type:
+            self.auftragsart = self.order_type.name
+        if save and self.pk:
+            self.save(update_fields=["gesamtpreis", "gesamtzeit_minuten", "leistungen", "preisberechnung", "auftragsart", "updated_at"])
+
     def save(self, *args, **kwargs):
         if not self.auftragsnummer:
             last_number = Order.objects.aggregate(last=Max("auftragsnummer"))["last"] or 0
             self.auftragsnummer = last_number + 1
+        if self.order_type and not self.auftragsart:
+            self.auftragsart = self.order_type.name
+        super().save(*args, **kwargs)
+
+
+class OrderPosition(models.Model):
+    auftrag = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="positionen", verbose_name="Auftrag")
+    leistung = models.ForeignKey("company.Service", on_delete=models.PROTECT, related_name="auftragspositionen", verbose_name="Leistung")
+    verschmutzungsgrad = models.ForeignKey(
+        "company.SoilingLevel",
+        on_delete=models.PROTECT,
+        related_name="auftragspositionen",
+        verbose_name="Verschmutzungsgrad",
+    )
+    zuschlag = models.ForeignKey(
+        "company.Surcharge",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="auftragspositionen",
+        verbose_name="Zuschlag",
+    )
+    status = models.CharField(max_length=20, choices=PositionStatus.choices, default=PositionStatus.NEU, verbose_name="Status")
+    einzelpreis = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("0.00"), verbose_name="Einzelpreis (€)")
+    geschaetzte_dauer_minuten = models.PositiveIntegerField(default=0, verbose_name="Dauer (Minuten)")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Auftragsposition"
+        verbose_name_plural = "Auftragspositionen"
+
+    def __str__(self):
+        return f"{self.auftrag.auftragsnummer} · {self.leistung.name}"
+
+    def calculate_price(self):
+        base_price = self.leistung.price
+        price = base_price * self.verschmutzungsgrad.multiplier
+        if self.zuschlag:
+            if self.zuschlag.is_percentage:
+                price += (price * self.zuschlag.amount) / Decimal("100")
+            else:
+                price += self.zuschlag.amount
+        return price.quantize(Decimal("0.01"))
+
+    def save(self, *args, **kwargs):
+        self.einzelpreis = self.calculate_price()
+        self.geschaetzte_dauer_minuten = self.leistung.estimated_duration_minutes
         super().save(*args, **kwargs)
 
 
 class OrderImage(models.Model):
     auftrag = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="bilder", verbose_name="Auftrag")
-    bild = models.ImageField(upload_to="orders/", verbose_name="Bild")
+    bild = models.FileField(upload_to="orders/", verbose_name="Datei")
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ["-uploaded_at"]
-        verbose_name = "Auftragsbild"
-        verbose_name_plural = "Auftragsbilder"
+        verbose_name = "Auftragsdatei"
+        verbose_name_plural = "Auftragsdateien"
 
     def __str__(self):
-        return f"Bild zu Auftrag {self.auftrag.auftragsnummer}"
+        return f"Datei zu Auftrag {self.auftrag.auftragsnummer}"

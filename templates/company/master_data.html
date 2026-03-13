@@ -24,7 +24,7 @@
         <ul class="activity-list">
             {% for item in services %}
                 <li>
-                    <strong>{{ item.name }}</strong>
+                    <strong>{{ item.name }} · {{ item.price }} € · {{ item.estimated_duration_minutes }} Min.</strong>
                     <p>{{ item.description|default:'-' }}</p>
                     <form method="post" action="{% url 'company:master_data_delete' 'service' item.pk %}">{% csrf_token %}<button class="btn btn-danger" type="submit">Löschen</button></form>
                 </li>

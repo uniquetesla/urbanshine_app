@@ -1,10 +1,12 @@
 from django import forms
 from django.core.exceptions import ValidationError
+from django.forms import BaseInlineFormSet, inlineformset_factory
 
 from apps.accounts.models import UserRole
+from apps.company.models import OrderType, Service, SoilingLevel, Surcharge
 from apps.customers.models import Customer
 
-from .models import Order
+from .models import Order, OrderPosition
 
 
 class MultiFileInput(forms.ClearableFileInput):
@@ -13,30 +15,12 @@ class MultiFileInput(forms.ClearableFileInput):
 
 class OrderForm(forms.ModelForm):
     kunden_suche = forms.CharField(label="Kunde suchen", required=True)
-    bilder = forms.FileField(
-        required=False,
-        widget=MultiFileInput(),
-        label="Bilder Upload",
-    )
+    bilder = forms.FileField(required=False, widget=MultiFileInput(), label="Dateien Upload")
 
     class Meta:
         model = Order
-        fields = [
-            "kunde",
-            "auftragsart",
-            "leistungen",
-            "verschmutzungsgrad",
-            "zuschlaege",
-            "preisberechnung",
-            "gesamtpreis",
-            "status",
-            "termin",
-            "mitarbeiter",
-            "interne_notizen",
-        ]
+        fields = ["kunde", "order_type", "status", "termin", "mitarbeiter", "interne_notizen"]
         widgets = {
-            "leistungen": forms.Textarea(attrs={"rows": 4}),
-            "preisberechnung": forms.Textarea(attrs={"rows": 4}),
             "interne_notizen": forms.Textarea(attrs={"rows": 4}),
             "termin": forms.DateTimeInput(attrs={"type": "datetime-local"}),
             "mitarbeiter": forms.SelectMultiple(attrs={"size": 6}),
@@ -45,6 +29,7 @@ class OrderForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["kunde"].widget = forms.HiddenInput()
+        self.fields["order_type"].queryset = OrderType.objects.filter(is_active=True)
         self.fields["mitarbeiter"].queryset = self.fields["mitarbeiter"].queryset.filter(
             role__in=[UserRole.ADMIN, UserRole.CHEF, UserRole.MITARBEITER]
         )
@@ -54,8 +39,7 @@ class OrderForm(forms.ModelForm):
         ]
         if self.instance and self.instance.pk:
             self.fields["kunden_suche"].initial = (
-                f"{self.instance.kunde.kundennummer} · "
-                f"{self.instance.kunde.vorname} {self.instance.kunde.nachname}"
+                f"{self.instance.kunde.kundennummer} · " f"{self.instance.kunde.vorname} {self.instance.kunde.nachname}"
             )
 
     def clean_kunden_suche(self):
@@ -70,14 +54,42 @@ class OrderForm(forms.ModelForm):
                 self.cleaned_data["kunde"] = customer
                 return value
 
-        customer = Customer.objects.filter(
-            vorname__iexact=value.split(" ", 1)[0],
-            nachname__iexact=value.split(" ", 1)[1] if " " in value else value,
-        ).first()
-        if not customer:
-            raise ValidationError("Kunde wurde nicht gefunden. Bitte aus der Vorschlagsliste auswählen.")
-        self.cleaned_data["kunde"] = customer
-        return value
+        raise ValidationError("Kunde wurde nicht gefunden. Bitte aus der Vorschlagsliste auswählen.")
 
     def clean_bilder(self):
         return self.files.getlist("bilder")
+
+
+class OrderPositionForm(forms.ModelForm):
+    class Meta:
+        model = OrderPosition
+        fields = ["leistung", "verschmutzungsgrad", "zuschlag", "status"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["leistung"].queryset = Service.objects.filter(is_active=True)
+        self.fields["verschmutzungsgrad"].queryset = SoilingLevel.objects.filter(is_active=True)
+        self.fields["zuschlag"].queryset = Surcharge.objects.filter(is_active=True)
+        self.fields["zuschlag"].required = False
+
+
+class BaseOrderPositionFormSet(BaseInlineFormSet):
+    def clean(self):
+        super().clean()
+        active_forms = [
+            form
+            for form in self.forms
+            if form.cleaned_data and not form.cleaned_data.get("DELETE", False) and form.cleaned_data.get("leistung")
+        ]
+        if not active_forms:
+            raise ValidationError("Bitte mindestens eine Leistungsposition anlegen.")
+
+
+OrderPositionFormSet = inlineformset_factory(
+    Order,
+    OrderPosition,
+    form=OrderPositionForm,
+    formset=BaseOrderPositionFormSet,
+    extra=5,
+    can_delete=True,
+)

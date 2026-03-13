@@ -113,7 +113,6 @@ class OfferConvertToOrderView(EmployeeOnlyMixin, LoginRequiredMixin, View):
                 f"Gesamt: {offer.gesamtpreis} €"
             ),
             gesamtpreis=offer.gesamtpreis,
-            zuschlaege=0,
             status=OrderStatus.NEU,
             interne_notizen=f"Automatisch aus Angebot A-{offer.angebotsnummer:05d} erstellt.",
         )
