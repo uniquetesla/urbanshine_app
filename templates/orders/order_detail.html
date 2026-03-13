@@ -19,6 +19,7 @@
                 {% endif %}
             {% endwith %}
             <a href="{% url 'orders:order_update' order.pk %}" class="btn btn-secondary"><span class="btn-icon" aria-hidden="true">✏️</span><span>Bearbeiten</span></a>
+            <a href="{% url 'orders:order_delete' order.pk %}" class="btn btn-danger"><span class="btn-icon" aria-hidden="true">🗑️</span><span>Löschen</span></a>
             <a href="{% url 'orders:order_list' %}" class="btn btn-secondary"><span class="btn-icon" aria-hidden="true">←</span><span>Zurück zur Liste</span></a>
         </div>
     </div>

@@ -5,7 +5,7 @@ from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
 from django.views import View
-from django.views.generic import CreateView, DetailView, ListView, UpdateView
+from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
 from apps.accounts.models import UserRole
 from apps.company.models import Service, SoilingLevel, Surcharge
@@ -138,6 +138,16 @@ class OfferUpdateView(EmployeeOnlyMixin, LoginRequiredMixin, UpdateView):
         )
         messages.success(self.request, "Angebot wurde bearbeitet.")
         return response
+
+
+class OfferDeleteView(EmployeeOnlyMixin, LoginRequiredMixin, DeleteView):
+    model = Offer
+    template_name = "offers/offer_confirm_delete.html"
+    success_url = reverse_lazy("offers:offer_list")
+
+    def form_valid(self, form):
+        messages.success(self.request, "Angebot wurde gelöscht.")
+        return super().form_valid(form)
 
 
 class OfferDetailView(LoginRequiredMixin, DetailView):

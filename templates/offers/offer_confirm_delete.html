@@ -1,0 +1,5 @@
+{% extends "base.html" %}
+{% block title %}Angebot löschen | UrbanShine{% endblock %}
+{% block page_title %}Angebot löschen{% endblock %}
+{% block page_subtitle %}Datensatz endgültig entfernen{% endblock %}
+{% block content %}<section class="glass-card panel" style="max-width:720px;"><p>Soll das Angebot {{ object.formatted_angebotsnummer }} wirklich gelöscht werden?</p><form method="post">{% csrf_token %}<div class="button-row"><button class="btn btn-danger" type="submit">Löschen</button><a class="btn btn-secondary" href="{% url 'offers:offer_detail' object.pk %}">Abbrechen</a></div></form></section>{% endblock %}

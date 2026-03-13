@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block title %}{{ module_title }} Detail | Interner Admin{% endblock %}
+{% block page_title %}{{ module_title }} · Detail{% endblock %}
+{% block page_subtitle %}Vollständige Datensatzansicht{% endblock %}
+{% block content %}
+<section class="glass-card panel admin-area" style="max-width:900px;">
+    <div class="button-row" style="justify-content:flex-end;">
+        <a class="btn btn-secondary" href="{% url 'company:master_data_module_update' module_name item.pk %}">Bearbeiten</a>
+        <a class="btn btn-danger" href="{% url 'company:master_data_module_delete' module_name item.pk %}">Löschen</a>
+        <a class="btn btn-secondary" href="{% url 'company:master_data_module_list' module_name %}">Zurück</a>
+    </div>
+    <div class="form-grid" style="margin-top:1rem;">
+        {% for field in item._meta.fields %}
+            <div><strong>{{ field.verbose_name|capfirst }}</strong><br>{{ field.value_from_object(item)|default:'-' }}</div>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

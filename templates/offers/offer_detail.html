@@ -7,7 +7,7 @@
     <div style="display:flex;justify-content:space-between;align-items:center;gap:.8rem;flex-wrap:wrap;">
         <h3>{{ offer.formatted_angebotsnummer }} · {{ offer.titel }}</h3>
         <div style="display:flex;gap:.5rem;">
-            {% if not offer.umgewandelter_auftrag %}<a href="{% url 'offers:offer_update' offer.pk %}" class="btn"><span class="btn-icon" aria-hidden="true">✏️</span><span>Bearbeiten</span></a>{% endif %}
+            {% if not offer.umgewandelter_auftrag %}<a href="{% url 'offers:offer_update' offer.pk %}" class="btn"><span class="btn-icon" aria-hidden="true">✏️</span><span>Bearbeiten</span></a><a href="{% url 'offers:offer_delete' offer.pk %}" class="btn btn-danger"><span class="btn-icon" aria-hidden="true">🗑️</span><span>Löschen</span></a>{% endif %}
             <a href="{% url 'offers:offer_list' %}" class="btn btn-secondary"><span class="btn-icon" aria-hidden="true">←</span><span>Zurück</span></a>
         </div>
     </div>

@@ -5,7 +5,7 @@ from django.db.models import F, Q
 from django.http import JsonResponse
 from django.urls import reverse_lazy
 from django.views import View
-from django.views.generic import CreateView, DeleteView, ListView, TemplateView, UpdateView
+from django.views.generic import CreateView, DeleteView, DetailView, ListView, TemplateView, UpdateView
 
 from apps.accounts.models import UserRole
 
@@ -41,6 +41,12 @@ class ArticleListView(LoginRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         context["query"] = self.request.GET.get("q", "").strip()
         return context
+
+
+class ArticleDetailView(EmployeeOnlyMixin, LoginRequiredMixin, DetailView):
+    model = Article
+    template_name = "catalog/article_detail.html"
+    context_object_name = "article"
 
 
 class ArticleCreateView(EmployeeOnlyMixin, LoginRequiredMixin, CreateView):

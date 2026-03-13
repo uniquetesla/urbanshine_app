@@ -16,7 +16,7 @@ body { margin: 0; font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe 
 .app-shell { display: grid; grid-template-columns: 270px 1fr; min-height: 100vh; }
 .glass-card { background: var(--surface); border: 1px solid var(--border); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-radius: var(--radius); }
 .sidebar { padding: 1.4rem 1rem; border-right: 1px solid rgba(255, 255, 255, 0.08); background: linear-gradient(185deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03)); }
-.brand { display: flex; gap: .7rem; align-items: center; margin-bottom: 1.4rem; }
+.brand { display: flex; justify-content: center; align-items: center; margin-bottom: 1.4rem; min-height: 72px; }
 .brand small { color: var(--muted); display: block; }
 .brand-dot { width: 16px; height: 16px; border-radius: 50%; background: linear-gradient(145deg, var(--primary), var(--accent)); box-shadow: 0 0 30px var(--primary); }
 .sidebar-nav { display: grid; gap: .4rem; }
@@ -26,7 +26,7 @@ body { margin: 0; font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe 
 .sidebar-group[open] summary { color: var(--text); background: var(--surface-strong); border-color: var(--border); }
 .nav-link { color: var(--text); text-decoration: none; padding: .65rem .8rem; border-radius: 12px; border: 1px solid transparent; display:flex; align-items:center; gap:.55rem; }
 .nav-icon { width: 1.15rem; text-align:center; opacity:.92; }
-.brand-logo { width: 44px; height: 44px; object-fit: contain; border-radius: 10px; background: rgba(255,255,255,.1); padding: .2rem; }
+.brand-logo { width: 72px; height: 72px; object-fit: contain; border-radius: 14px; background: rgba(255,255,255,.1); padding: .35rem; }
 .nav-link:hover, .nav-link.active { background: var(--surface-strong); border-color: var(--border); }
 .main-layout { padding: 1rem; display: grid; grid-template-rows: auto 1fr; gap: 1rem; }
 .topbar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .9rem 1rem; }

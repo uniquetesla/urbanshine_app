@@ -15,7 +15,7 @@ from apps.invoices.services import create_invoice_for_completed_order, create_ma
 from apps.company.models import Service, SoilingLevel, Surcharge
 
 from .forms import OrderForm, OrderPositionFormSet
-from .models import Order, OrderImage, OrderStatus
+from .models import Order, OrderImage, OrderStatus, map_order_status_to_position_status
 
 
 def _customer_for_user(user):
@@ -94,6 +94,7 @@ class OrderCreateView(EmployeeOnlyMixin, LoginRequiredMixin, CreateView):
             response = super().form_valid(form)
             position_formset.instance = self.object
             position_formset.save()
+            self.object.sync_position_statuses()
             self.object.recalculate_totals(save=True)
             self._save_files()
 
@@ -148,6 +149,7 @@ class OrderUpdateView(EmployeeOnlyMixin, LoginRequiredMixin, UpdateView):
         with transaction.atomic():
             response = super().form_valid(form)
             position_formset.save()
+            self.object.sync_position_statuses()
             self.object.recalculate_totals(save=True)
             self._save_files()
 
@@ -222,9 +224,22 @@ class OrderQuickStatusUpdateView(EmployeeOnlyMixin, LoginRequiredMixin, View):
             messages.error(request, "Ungültiger Status.")
             return redirect(request.POST.get("next") or "orders:order_list")
 
+        old_status = order.status
         order.status = new_status
         order.save(update_fields=["status", "updated_at"])
-        messages.success(request, f"Status für Auftrag {order.formatted_auftragsnummer} aktualisiert.")
+        order.sync_position_statuses()
+
+        log_activity(
+            actor=request.user,
+            subject_type=ActivitySubject.AUFTRAG,
+            subject_label=f"Auftrag #{order.auftragsnummer}",
+            action="Status global aktualisiert",
+            from_state=dict(OrderStatus.choices).get(old_status, old_status),
+            to_state=order.get_status_display(),
+            details=f"Alle Positionen auf {dict(order.positionen.model._meta.get_field('status').choices).get(map_order_status_to_position_status(new_status))} gesetzt",
+            icon="🔄",
+        )
+        messages.success(request, f"Status für Auftrag {order.formatted_auftragsnummer} und alle Positionen aktualisiert.")
         return redirect(request.POST.get("next") or "orders:order_list")
 
 

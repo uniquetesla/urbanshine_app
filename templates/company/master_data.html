@@ -1,81 +1,28 @@
 {% extends 'base.html' %}
-
-{% block title %}Stammdaten | UrbanShine{% endblock %}
-{% block page_title %}Stammdaten-Administration{% endblock %}
-{% block page_subtitle %}Strukturiert nach Bereichen: Stammdaten, Nummernkreise, Firmendaten &amp; Benutzer{% endblock %}
-
+{% block title %}Interner Admin | UrbanShine{% endblock %}
+{% block page_title %}Interner Adminbereich{% endblock %}
+{% block page_subtitle %}Strukturierte Verwaltung aller Stammdaten, Nummernkreise und Firmeneinstellungen{% endblock %}
 {% block content %}
 <section class="glass-card panel admin-area">
     <div class="panel-heading">
-        <h3>⚙️ Adminbereich</h3>
-        <span class="admin-badge">Nur für Admin &amp; Chef</span>
+        <h3>⚙️ Verwaltungsmodule</h3>
+        <span class="admin-badge">Admin &amp; Chef</span>
     </div>
-    <div class="admin-menu-grid">
-        <div class="admin-menu-group"><h4>Stammdaten</h4><a href="#md-stammdaten">Leistungen, Auftragsarten, Verschmutzungsgrade, Zuschläge</a><a href="#md-artikel">Artikel- und Preiskonfiguration</a></div>
-        <div class="admin-menu-group"><h4>Nummernkreise</h4><a href="#md-nummern">Aufträge, Kunden, Rechnungen, Artikel</a></div>
-        <div class="admin-menu-group"><h4>Firmendaten</h4><a href="#md-firma">Kontaktdaten, Logo, Rechnungsregeln</a></div>
-        <div class="admin-menu-group"><h4>Benutzer / Rollen</h4><a href="{% url 'accounts:user_list' %}">Benutzerverwaltung öffnen</a></div>
+    <div class="dashboard-grid" style="margin-top:1rem;">
+        {% for key, module in modules.items %}
+            <a href="{% url 'company:master_data_module_list' key %}" class="glass-card kpi-card kpi-card-link" style="grid-column:span 4;">
+                <h3>{{ module.title }}</h3>
+                <p>Liste, Details, Bearbeiten, Löschen &amp; Neuanlage.</p>
+            </a>
+        {% endfor %}
+        <a href="{% url 'company:company_settings_detail' %}" class="glass-card kpi-card kpi-card-link" style="grid-column:span 4;">
+            <h3>Firmendaten</h3>
+            <p>Logo, Kontaktinformationen und Rechnungs-Konfiguration.</p>
+        </a>
+        <a href="{% url 'accounts:user_list' %}" class="glass-card kpi-card kpi-card-link" style="grid-column:span 4;">
+            <h3>Benutzer &amp; Rollen</h3>
+            <p>Zentrale Benutzerverwaltung mit Rollen und Aktivitätsstatus.</p>
+        </a>
     </div>
 </section>
-
-<div class="dashboard-grid" id="md-stammdaten">
-    {% include 'company/partials/master_data_section.html' with title='Leistungen' action='service' form=service_form items=services type='service' %}
-    {% include 'company/partials/master_data_section.html' with title='Auftragsarten' action='order_type' form=order_type_form items=order_types type='order_type' %}
-    {% include 'company/partials/master_data_section.html' with title='Verschmutzungsgrade' action='soiling_level' form=soiling_level_form items=soiling_levels type='soiling_level' %}
-    {% include 'company/partials/master_data_section.html' with title='Zuschläge' action='surcharge' form=surcharge_form items=surcharges type='surcharge' %}
-
-    <section class="glass-card panel admin-area" id="md-artikel">
-        <h3>Preise / Artikelkontext</h3>
-        <form method="post" class="form-grid">{% csrf_token %}
-            <input type="hidden" name="action" value="price">
-            {{ price_form.as_p }}
-            <button class="btn" type="submit">Preise speichern</button>
-        </form>
-        <ul class="activity-list">
-            {% for item in prices %}
-                <li>
-                    <strong>{{ item }}</strong>
-                    <div class="table-actions">
-                        <a class="btn btn-secondary action-icon" aria-label="Bearbeiten" title="Bearbeiten" href="{% url 'company:master_data_update' 'price' item.pk %}"><span class="btn-icon" aria-hidden="true">🛠️</span><span class="btn-text">Bearbeiten</span></a>
-                        <form method="post" action="{% url 'company:master_data_delete' 'price' item.pk %}" class="action-form">{% csrf_token %}<button class="btn btn-danger action-icon" aria-label="Löschen" title="Löschen" type="submit"><span class="btn-icon" aria-hidden="true">🗑️</span><span class="btn-text">Löschen</span></button></form>
-                    </div>
-                </li>
-            {% empty %}<li>Keine Preise vorhanden.</li>{% endfor %}
-        </ul>
-    </section>
-
-    <section class="glass-card panel admin-area" id="md-nummern">
-        <h3>Nummernkreise</h3>
-        <form method="post" class="form-grid">{% csrf_token %}
-            <input type="hidden" name="action" value="number_sequences">
-            {{ number_sequence_formset.management_form }}
-            {% for form in number_sequence_formset %}
-                <div class="glass-card compact-card">
-                    {{ form.id }}
-                    <p><strong>{{ form.instance.get_sequence_type_display }}</strong></p>
-                    <label>Prefix</label>{{ form.prefix }}
-                    <label>Trennzeichen</label>{{ form.separator }}
-                    <label>Startwert</label>{{ form.start_value }}
-                    <label>Stellenanzahl</label>{{ form.padding }}
-                    <label>Letzte Nummer</label>{{ form.last_value }}
-                    {{ form.sequence_type.as_hidden }}
-                </div>
-            {% endfor %}
-            <div style="grid-column:1/-1;"><button class="btn" type="submit">Nummernkreise speichern</button></div>
-        </form>
-    </section>
-
-    <section class="glass-card panel admin-area" id="md-firma">
-        <h3>Firmendaten &amp; Angebots-/Rechnungskonfiguration</h3>
-        <form method="post" enctype="multipart/form-data" class="form-grid">{% csrf_token %}
-            <input type="hidden" name="action" value="company_settings">
-            {{ company_form.as_p }}
-            <button class="btn" type="submit">Firmendaten speichern</button>
-        </form>
-        {% if company_settings.logo %}
-            <p>Aktuelles Logo:</p>
-            <img src="{{ company_settings.logo.url }}" alt="Firmenlogo" style="max-height: 80px; border-radius: 10px;">
-        {% endif %}
-    </section>
-</div>
 {% endblock %}
