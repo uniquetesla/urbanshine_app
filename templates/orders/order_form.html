@@ -4,7 +4,7 @@
 {% block page_subtitle %}Praxisnahe Auftragsanlage mit Leistungspositionen{% endblock %}
 {% block content %}
 <section class="glass-card panel full">
-    <form method="post" enctype="multipart/form-data">
+    <form method="post" enctype="multipart/form-data" id="order-form">
         {% csrf_token %}
         {% if form.non_field_errors %}<div class="messages"><li>{{ form.non_field_errors|striptags }}</li></div>{% endif %}
         {% if position_formset.non_form_errors %}<div class="messages"><li>{{ position_formset.non_form_errors|striptags }}</li></div>{% endif %}
@@ -28,14 +28,15 @@
         {{ position_formset.management_form }}
         <div class="table-wrap">
             <table>
-                <thead><tr><th>Leistung</th><th>Verschmutzungsgrad</th><th>Zuschlag</th><th>Status</th><th>Entfernen</th></tr></thead>
+                <thead><tr><th>Leistung</th><th>Verschmutzungsgrad</th><th>Zuschlag</th><th>Status</th><th>Einzelpreis</th><th>Entfernen</th></tr></thead>
                 <tbody>
                 {% for pform in position_formset %}
                     <tr>
-                        <td>{{ pform.leistung }}{{ pform.leistung.errors }}</td>
-                        <td>{{ pform.verschmutzungsgrad }}{{ pform.verschmutzungsgrad.errors }}</td>
-                        <td>{{ pform.zuschlag }}{{ pform.zuschlag.errors }}</td>
-                        <td>{{ pform.status }}{{ pform.status.errors }}</td>
+                        <td>{{ pform.leistung }}{% if pform.leistung.errors %}<small style="color:#ff9ca4;display:block;">{{ pform.leistung.errors|striptags }}</small>{% endif %}</td>
+                        <td>{{ pform.verschmutzungsgrad }}{% if pform.verschmutzungsgrad.errors %}<small style="color:#ff9ca4;display:block;">{{ pform.verschmutzungsgrad.errors|striptags }}</small>{% endif %}</td>
+                        <td>{{ pform.zuschlag }}{% if pform.zuschlag.errors %}<small style="color:#ff9ca4;display:block;">{{ pform.zuschlag.errors|striptags }}</small>{% endif %}</td>
+                        <td>{{ pform.status }}{% if pform.status.errors %}<small style="color:#ff9ca4;display:block;">{{ pform.status.errors|striptags }}</small>{% endif %}</td>
+                        <td><strong data-role="row-price">0,00 €</strong>{% if pform.non_field_errors %}<small style="color:#ff9ca4;display:block;">{{ pform.non_field_errors|striptags }}</small>{% endif %}</td>
                         <td>{% if pform.instance.pk %}{{ pform.DELETE }}{% endif %}{{ pform.id }}</td>
                     </tr>
                 {% endfor %}
@@ -43,7 +44,8 @@
             </table>
         </div>
 
-        <p style="margin-top:1rem;"><strong>Hinweis:</strong> Der Gesamtpreis und die Gesamtzeit werden serverseitig aus den Positionen berechnet.</p>
+        <p style="margin-top:1rem;"><strong>Gesamtsumme (Vorschau):</strong> <span id="order-total-price">0,00 €</span></p>
+        <p><strong>Hinweis:</strong> Der Gesamtpreis und die Gesamtzeit werden serverseitig aus den Positionen berechnet.</p>
 
         {% if object and object.bilder.exists %}
             <div style="margin-top:1rem;"><strong>Bereits hochgeladene Dateien</strong><ul>
@@ -54,4 +56,7 @@
         <div style="margin-top:1rem;display:flex;gap:.6rem;"><button class="btn" type="submit">Speichern</button><a href="{% url 'orders:order_list' %}" class="btn btn-secondary">Zurück</a></div>
     </form>
 </section>
+{{ service_prices|json_script:"service-prices-data" }}
+{{ soiling_multipliers|json_script:"soiling-multipliers-data" }}
+{{ surcharge_values|json_script:"surcharge-values-data" }}
 {% endblock %}

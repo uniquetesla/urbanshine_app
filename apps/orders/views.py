@@ -12,6 +12,7 @@ from apps.core.activity import log_activity
 from apps.core.models import ActivitySubject
 from apps.customers.models import Customer
 from apps.invoices.services import create_invoice_for_completed_order
+from apps.company.models import Service, SoilingLevel, Surcharge
 
 from .forms import OrderForm, OrderPositionFormSet
 from .models import Order, OrderImage, OrderStatus
@@ -72,7 +73,12 @@ class OrderCreateView(EmployeeOnlyMixin, LoginRequiredMixin, CreateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["position_formset"] = kwargs.get("position_formset") or OrderPositionFormSet(self.request.POST or None)
+        context.update(_get_price_context())
         return context
+
+    def form_invalid(self, form):
+        messages.error(self.request, "Auftrag konnte nicht gespeichert werden. Bitte die markierten Felder prüfen.")
+        return super().form_invalid(form)
 
     def form_valid(self, form):
         position_formset = OrderPositionFormSet(self.request.POST)
@@ -116,7 +122,12 @@ class OrderUpdateView(EmployeeOnlyMixin, LoginRequiredMixin, UpdateView):
         context["position_formset"] = kwargs.get("position_formset") or OrderPositionFormSet(
             self.request.POST or None, instance=self.object
         )
+        context.update(_get_price_context())
         return context
+
+    def form_invalid(self, form):
+        messages.error(self.request, "Auftrag konnte nicht gespeichert werden. Bitte die markierten Felder prüfen.")
+        return super().form_invalid(form)
 
     def form_valid(self, form):
         old_status = self.get_object().status
@@ -193,3 +204,19 @@ class OrderQuickStatusUpdateView(EmployeeOnlyMixin, LoginRequiredMixin, View):
         order.save(update_fields=["status", "updated_at"])
         messages.success(request, f"Status für Auftrag {order.auftragsnummer} aktualisiert.")
         return redirect(request.POST.get("next") or "orders:order_list")
+
+
+def _get_price_context():
+    return {
+        "service_prices": {str(service.pk): str(service.price) for service in Service.objects.filter(is_active=True)},
+        "soiling_multipliers": {
+            str(level.pk): str(level.multiplier) for level in SoilingLevel.objects.filter(is_active=True)
+        },
+        "surcharge_values": {
+            str(surcharge.pk): {
+                "amount": str(surcharge.amount),
+                "is_percentage": surcharge.is_percentage,
+            }
+            for surcharge in Surcharge.objects.filter(is_active=True)
+        },
+    }

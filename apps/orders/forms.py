@@ -29,6 +29,7 @@ class OrderForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["kunde"].widget = forms.HiddenInput()
+        self.fields["kunde"].required = False
         self.fields["order_type"].queryset = OrderType.objects.filter(is_active=True)
         self.fields["mitarbeiter"].queryset = self.fields["mitarbeiter"].queryset.filter(
             role__in=[UserRole.ADMIN, UserRole.CHEF, UserRole.MITARBEITER]
@@ -55,6 +56,12 @@ class OrderForm(forms.ModelForm):
                 return value
 
         raise ValidationError("Kunde wurde nicht gefunden. Bitte aus der Vorschlagsliste auswählen.")
+
+    def clean(self):
+        cleaned_data = super().clean()
+        if not cleaned_data.get("kunde"):
+            self.add_error("kunden_suche", "Bitte einen gültigen Kunden aus der Liste auswählen.")
+        return cleaned_data
 
     def clean_bilder(self):
         return self.files.getlist("bilder")
