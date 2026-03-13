@@ -74,9 +74,19 @@ class OrderPositionForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["leistung"].queryset = Service.objects.filter(is_active=True)
-        self.fields["verschmutzungsgrad"].queryset = SoilingLevel.objects.filter(is_active=True)
-        self.fields["zuschlag"].queryset = Surcharge.objects.filter(is_active=True)
+        leistung_qs = Service.objects.filter(is_active=True)
+        soiling_qs = SoilingLevel.objects.filter(is_active=True)
+        surcharge_qs = Surcharge.objects.filter(is_active=True)
+
+        if self.instance and self.instance.pk:
+            leistung_qs = Service.objects.filter(pk=self.instance.leistung_id) | leistung_qs
+            soiling_qs = SoilingLevel.objects.filter(pk=self.instance.verschmutzungsgrad_id) | soiling_qs
+            if self.instance.zuschlag_id:
+                surcharge_qs = Surcharge.objects.filter(pk=self.instance.zuschlag_id) | surcharge_qs
+
+        self.fields["leistung"].queryset = leistung_qs.distinct()
+        self.fields["verschmutzungsgrad"].queryset = soiling_qs.distinct()
+        self.fields["zuschlag"].queryset = surcharge_qs.distinct()
         self.fields["zuschlag"].required = False
 
 
