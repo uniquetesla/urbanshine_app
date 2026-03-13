@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Benutzer löschen | UrbanShine{% endblock %}
+{% block page_title %}Benutzer löschen{% endblock %}
+{% block page_subtitle %}Sicherheitsabfrage vor dauerhafter Löschung{% endblock %}
+{% block content %}
+<section class="glass-card panel full">
+    <h3>Benutzer dauerhaft löschen?</h3>
+    <p>Der Benutzer <strong>{{ object.username }}</strong> wird dauerhaft entfernt. Dieser Schritt kann nicht rückgängig gemacht werden.</p>
+    <form method="post" style="max-width:520px;display:grid;gap:.7rem;">
+        {% csrf_token %}
+        <div>
+            {{ confirmation_form.current_password.label_tag }}
+            {{ confirmation_form.current_password }}
+            {% if confirmation_form.current_password.errors %}<small style="color:#ff9ca4;">{{ confirmation_form.current_password.errors|striptags }}</small>{% endif %}
+        </div>
+        <div style="display:flex;gap:.6rem;">
+            <button class="btn btn-danger" type="submit"><span class="btn-icon" aria-hidden="true">🗑️</span><span>Endgültig löschen</span></button>
+            <a class="btn btn-secondary" href="{% url 'accounts:user_list' %}"><span class="btn-icon" aria-hidden="true">↩️</span><span>Abbrechen</span></a>
+        </div>
+    </form>
+</section>
+{% endblock %}

@@ -9,6 +9,7 @@ from django.views.generic import CreateView, DeleteView, DetailView, ListView, U
 
 from apps.accounts.models import UserRole
 from apps.company.models import Service, SoilingLevel, Surcharge
+from apps.core.security import PasswordProtectedDeleteMixin
 from apps.core.activity import log_activity
 from apps.core.models import ActivitySubject
 from apps.customers.models import Customer
@@ -140,14 +141,16 @@ class OfferUpdateView(EmployeeOnlyMixin, LoginRequiredMixin, UpdateView):
         return response
 
 
-class OfferDeleteView(EmployeeOnlyMixin, LoginRequiredMixin, DeleteView):
+class OfferDeleteView(PasswordProtectedDeleteMixin, LoginRequiredMixin, DeleteView):
     model = Offer
     template_name = "offers/offer_confirm_delete.html"
     success_url = reverse_lazy("offers:offer_list")
+    success_message = "Angebot wurde gelöscht."
 
-    def form_valid(self, form):
-        messages.success(self.request, "Angebot wurde gelöscht.")
-        return super().form_valid(form)
+    def delete(self, request, *args, **kwargs):
+        response = super().delete(request, *args, **kwargs)
+        messages.success(request, self.success_message)
+        return response
 
 
 class OfferDetailView(LoginRequiredMixin, DetailView):

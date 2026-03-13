@@ -13,6 +13,7 @@ from apps.core.models import ActivitySubject
 from apps.customers.models import Customer
 from apps.invoices.services import create_invoice_for_completed_order, create_manual_invoice_for_order
 from apps.company.models import Service, SoilingLevel, Surcharge
+from apps.core.security import PasswordProtectedDeleteMixin
 
 from .forms import OrderForm, OrderPositionFormSet
 from .models import Order, OrderAttachment, OrderStatus, map_order_status_to_position_status
@@ -187,10 +188,16 @@ class OrderUpdateView(EmployeeOnlyMixin, LoginRequiredMixin, UpdateView):
             )
 
 
-class OrderDeleteView(EmployeeOnlyMixin, LoginRequiredMixin, DeleteView):
+class OrderDeleteView(PasswordProtectedDeleteMixin, LoginRequiredMixin, DeleteView):
     model = Order
     template_name = "orders/order_confirm_delete.html"
     success_url = reverse_lazy("orders:order_list")
+    success_message = "Auftrag wurde gelöscht."
+
+    def delete(self, request, *args, **kwargs):
+        response = super().delete(request, *args, **kwargs)
+        messages.success(request, self.success_message)
+        return response
 
 
 class OrderDetailView(LoginRequiredMixin, DetailView):

@@ -7,13 +7,14 @@ from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
 from django.db.models import Sum
 from django.utils import timezone
-from django.views.generic import CreateView, ListView, TemplateView, UpdateView, View
+from django.views.generic import CreateView, DeleteView, FormView, ListView, TemplateView, UpdateView, View
 
 from apps.core.models import ActivityLog
 from apps.invoices.models import Invoice, PaymentStatus
 from apps.orders.models import Order, OrderStatus
+from apps.core.security import PasswordProtectedDeleteMixin
 
-from .forms import LoginForm, UserCreateForm, UserUpdateForm
+from .forms import AdminUserPasswordResetForm, LoginForm, UserCreateForm, UserUpdateForm
 from .models import User, UserRole
 
 
@@ -108,6 +109,51 @@ class UserDeactivateView(UserManagementAccessMixin, View):
         user.save(update_fields=["is_active"])
         messages.success(request, f"Benutzer {user.username} wurde deaktiviert.")
         return HttpResponseRedirect(reverse_lazy("accounts:user_list"))
+
+
+class UserPasswordResetView(UserManagementAccessMixin, FormView):
+    template_name = "accounts/user_password_reset.html"
+    form_class = AdminUserPasswordResetForm
+    success_url = reverse_lazy("accounts:user_list")
+
+    def dispatch(self, request, *args, **kwargs):
+        self.target_user = get_object_or_404(User, pk=kwargs["pk"])
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["user"] = self.target_user
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["target_user"] = self.target_user
+        return context
+
+    def form_valid(self, form):
+        form.save()
+        messages.success(self.request, f"Passwort für {self.target_user.username} wurde erfolgreich neu gesetzt.")
+        return super().form_valid(form)
+
+
+class UserDeleteView(PasswordProtectedDeleteMixin, DeleteView):
+    model = User
+    template_name = "accounts/user_confirm_delete.html"
+    success_url = reverse_lazy("accounts:user_list")
+    success_message = "Benutzer wurde dauerhaft gelöscht."
+    protected_error_message = "Benutzer kann nicht gelöscht werden, weil verknüpfte Pflichtdaten existieren."
+
+    def dispatch(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        if self.object == request.user:
+            messages.error(request, "Sie können Ihr eigenes Konto nicht löschen.")
+            return HttpResponseRedirect(reverse_lazy("accounts:user_list"))
+        return super().dispatch(request, *args, **kwargs)
+
+    def delete(self, request, *args, **kwargs):
+        response = super().delete(request, *args, **kwargs)
+        messages.success(request, self.success_message)
+        return response
 
 
 class LogoutView(LoginRequiredMixin, View):

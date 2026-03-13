@@ -7,10 +7,13 @@
     <h3>Möchten Sie diesen Auftrag wirklich löschen?</h3>
     <p>Auftragsnummer: <strong>{{ object.auftragsnummer }}</strong></p>
     <p>Kunde: <strong>{{ object.kunde.vorname }} {{ object.kunde.nachname }}</strong></p>
-    <form method="post" class="button-row">
+    <form method="post" style="max-width:520px;display:grid;gap:.7rem;">
         {% csrf_token %}
-        <button class="btn btn-danger" type="submit"><span class="btn-icon" aria-hidden="true">🗑️</span><span>Ja, löschen</span></button>
-        <a href="{% url 'orders:order_list' %}" class="btn btn-secondary"><span class="btn-icon" aria-hidden="true">↩️</span><span>Abbrechen</span></a>
+        <div>{{ confirmation_form.current_password.label_tag }}{{ confirmation_form.current_password }}{% if confirmation_form.current_password.errors %}<small style="color:#ff9ca4;">{{ confirmation_form.current_password.errors|striptags }}</small>{% endif %}</div>
+        <div style="display:flex;gap:.6rem;">
+            <button class="btn btn-danger" type="submit"><span class="btn-icon" aria-hidden="true">🗑️</span><span>Ja, löschen</span></button>
+            <a class="btn btn-secondary" href="{% url 'orders:order_detail' object.pk %}"><span class="btn-icon" aria-hidden="true">↩️</span><span>Abbrechen</span></a>
+        </div>
     </form>
 </section>
 {% endblock %}

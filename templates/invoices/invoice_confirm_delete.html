@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Rechnung löschen | UrbanShine{% endblock %}
+{% block page_title %}Rechnung löschen{% endblock %}
+{% block page_subtitle %}Sicherheitsabfrage vor Löschung{% endblock %}
+{% block content %}
+<section class="glass-card panel full">
+    <h3>Rechnung wirklich löschen?</h3>
+    <p>Die Rechnung <strong>{{ object.formatted_rechnungsnummer }}</strong> wird dauerhaft gelöscht.</p>
+    <form method="post" style="max-width:520px;display:grid;gap:.7rem;">
+        {% csrf_token %}
+        <div>{{ confirmation_form.current_password.label_tag }}{{ confirmation_form.current_password }}{% if confirmation_form.current_password.errors %}<small style="color:#ff9ca4;">{{ confirmation_form.current_password.errors|striptags }}</small>{% endif %}</div>
+        <div style="display:flex;gap:.6rem;">
+            <button class="btn btn-danger" type="submit">Endgültig löschen</button>
+            <a class="btn btn-secondary" href="{% url 'invoices:invoice_detail' object.pk %}">Abbrechen</a>
+        </div>
+    </form>
+</section>
+{% endblock %}
