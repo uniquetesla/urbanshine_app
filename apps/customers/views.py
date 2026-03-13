@@ -5,6 +5,8 @@ from django.urls import reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
 from apps.accounts.models import UserRole
+from apps.core.activity import log_activity
+from apps.core.models import ActivitySubject
 
 from .forms import CustomerForm
 from .models import Customer
@@ -52,8 +54,17 @@ class CustomerCreateView(EmployeeOnlyMixin, LoginRequiredMixin, CreateView):
     success_url = reverse_lazy("customers:customer_list")
 
     def form_valid(self, form):
+        response = super().form_valid(form)
+        log_activity(
+            actor=self.request.user,
+            subject_type=ActivitySubject.KUNDE,
+            subject_label=f"{self.object.vorname} {self.object.nachname}",
+            action="Kunde erstellt",
+            details=f"Kundennummer {self.object.kundennummer}",
+            icon="👤",
+        )
         messages.success(self.request, "Kunde wurde erfolgreich angelegt.")
-        return super().form_valid(form)
+        return response
 
 
 class CustomerUpdateView(EmployeeOnlyMixin, LoginRequiredMixin, UpdateView):
@@ -63,8 +74,21 @@ class CustomerUpdateView(EmployeeOnlyMixin, LoginRequiredMixin, UpdateView):
     success_url = reverse_lazy("customers:customer_list")
 
     def form_valid(self, form):
+        old = self.get_object()
+        old_name = f"{old.vorname} {old.nachname}"
+        response = super().form_valid(form)
+        log_activity(
+            actor=self.request.user,
+            subject_type=ActivitySubject.KUNDE,
+            subject_label=f"{self.object.vorname} {self.object.nachname}",
+            action="Kunde bearbeitet",
+            details=f"Kundennummer {self.object.kundennummer}",
+            from_state=old_name,
+            to_state=f"{self.object.vorname} {self.object.nachname}",
+            icon="✏️",
+        )
         messages.success(self.request, "Kunde wurde erfolgreich bearbeitet.")
-        return super().form_valid(form)
+        return response
 
 
 class CustomerDeleteView(EmployeeOnlyMixin, LoginRequiredMixin, DeleteView):

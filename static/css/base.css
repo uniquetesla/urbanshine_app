@@ -245,3 +245,53 @@ th, td { padding: .75rem; border-bottom: 1px solid rgba(255,255,255,.14); text-a
     font-size: .85rem;
     color: var(--muted);
 }
+
+.kpi-card-link {
+    text-decoration: none;
+    color: inherit;
+    transition: transform .2s ease, border-color .2s ease, background .2s ease;
+}
+
+.kpi-card-link:hover,
+.kpi-card-link:focus-visible {
+    transform: translateY(-2px);
+    border-color: rgba(255, 255, 255, 0.4);
+    background: linear-gradient(145deg, rgba(255,255,255,.2), rgba(255,255,255,.08));
+}
+
+.kpi-card-link:active {
+    transform: scale(0.99);
+}
+
+.timeline-list li {
+    border-left: 2px solid rgba(255,255,255,.2);
+    padding-left: .9rem;
+}
+
+.activity-line {
+    display: flex;
+    align-items: flex-start;
+    gap: .65rem;
+}
+
+.activity-icon {
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: rgba(255,255,255,.12);
+}
+
+.empty-state {
+    padding: 1rem;
+    border-radius: 12px;
+    background: rgba(255,255,255,.05);
+    border: 1px dashed rgba(255,255,255,.25);
+}
+
+.empty-state p {
+    margin: .35rem 0 0;
+    color: var(--muted);
+}

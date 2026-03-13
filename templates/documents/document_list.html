@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}Dokumente | UrbanShine{% endblock %}
+{% block page_title %}Firmendokumente{% endblock %}
+{% block page_subtitle %}Interne Dokumente zentral verwalten{% endblock %}
+{% block content %}
+<section class="glass-card panel full">
+    <div class="panel-heading">
+        <h3>Dokumentenübersicht</h3>
+        <a class="btn" href="{% url 'documents:document_create' %}">Dokument hochladen</a>
+    </div>
+
+    <form method="get" class="form-grid" style="margin-top: 1rem;">
+        <div>
+            <label for="id_q">Suche</label>
+            <input id="id_q" type="search" name="q" value="{{ query }}" placeholder="Titel, Beschreibung oder Dateiname">
+        </div>
+        <div>
+            <label for="id_category">Kategorie</label>
+            <select id="id_category" name="category">
+                <option value="">Alle Kategorien</option>
+                {% for value, label in category_choices %}
+                    <option value="{{ value }}" {% if active_category == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div style="display: flex; align-items: end; gap: .5rem;">
+            <button class="btn" type="submit">Filtern</button>
+            <a class="btn btn-secondary" href="{% url 'documents:document_list' %}">Zurücksetzen</a>
+        </div>
+    </form>
+
+    <form method="post" action="{% url 'documents:document_bulk_download' %}">
+        {% csrf_token %}
+        <div class="table-wrap" style="margin-top: 1rem;">
+            <table>
+                <thead>
+                <tr>
+                    <th><input type="checkbox" id="toggle-all-docs"></th>
+                    <th>Titel</th>
+                    <th>Kategorie</th>
+                    <th>Upload-Datum</th>
+                    <th>Hochgeladen von</th>
+                    <th>Aktionen</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for document in documents %}
+                    <tr>
+                        <td><input type="checkbox" name="document_ids" value="{{ document.id }}"></td>
+                        <td>{{ document.title }}</td>
+                        <td>{{ document.get_category_display }}</td>
+                        <td>{{ document.uploaded_at|date:"d.m.Y H:i" }}</td>
+                        <td>{{ document.uploaded_by|default:"System" }}</td>
+                        <td>
+                            <a class="btn btn-secondary" href="{% url 'documents:document_detail' document.pk %}">Details</a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="6">
+                            <div class="empty-state">
+                                <strong>Noch keine Dokumente vorhanden</strong>
+                                <p>Laden Sie das erste Firmendokument hoch, um hier Informationen zu sehen.</p>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if documents %}
+            <div style="margin-top: 1rem; display: flex; gap: .65rem;">
+                <button class="btn" type="submit">Auswahl als ZIP herunterladen</button>
+            </div>
+        {% endif %}
+    </form>
+</section>
+
+<script>
+    const toggle = document.getElementById('toggle-all-docs');
+    if (toggle) {
+        toggle.addEventListener('change', () => {
+            document.querySelectorAll('input[name="document_ids"]').forEach((checkbox) => {
+                checkbox.checked = toggle.checked;
+            });
+        });
+    }
+</script>
+{% endblock %}

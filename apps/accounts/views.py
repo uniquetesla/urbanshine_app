@@ -5,7 +5,13 @@ from django.contrib.auth.views import LoginView
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
+from django.db.models import Sum
+from django.utils import timezone
 from django.views.generic import CreateView, ListView, TemplateView, UpdateView, View
+
+from apps.core.models import ActivityLog
+from apps.invoices.models import Invoice, PaymentStatus
+from apps.orders.models import Order, OrderStatus
 
 from .forms import LoginForm, UserCreateForm, UserUpdateForm
 from .models import User, UserRole
@@ -37,6 +43,21 @@ class DashboardView(LoginRequiredMixin, TemplateView):
 
             return redirect("portal:dashboard")
         return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        today = timezone.localdate()
+        month_start = today.replace(day=1)
+        year_start = today.replace(month=1, day=1)
+
+        context["active_orders"] = Order.objects.exclude(status__in=[OrderStatus.ABGESCHLOSSEN, OrderStatus.ABGERECHNET, OrderStatus.STORNIERT]).count()
+        open_invoices = Invoice.objects.filter(zahlungsstatus__in=[PaymentStatus.OFFEN, PaymentStatus.UEBERFAELLIG, PaymentStatus.TEILWEISE_BEZAHLT])
+        context["open_invoices_count"] = open_invoices.count()
+        context["open_invoices_sum"] = open_invoices.aggregate(total=Sum("betrag"))["total"] or 0
+        context["month_revenue"] = Invoice.objects.filter(rechnungsdatum__gte=month_start, zahlungsstatus=PaymentStatus.BEZAHLT).aggregate(total=Sum("betrag"))["total"] or 0
+        context["year_revenue"] = Invoice.objects.filter(rechnungsdatum__gte=year_start, zahlungsstatus=PaymentStatus.BEZAHLT).aggregate(total=Sum("betrag"))["total"] or 0
+        context["latest_activities"] = ActivityLog.objects.select_related("actor")[:15]
+        return context
 
 
 class UserManagementAccessMixin(LoginRequiredMixin, RoleRequiredMixin):

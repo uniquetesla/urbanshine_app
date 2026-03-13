@@ -37,7 +37,7 @@
                 <a href="{{ appointment_overview_url|default:'/termine/' }}" class="nav-link {% if request.resolver_match.namespace == 'scheduling' %}active{% endif %}">Termine</a>
                 <a href="{% url 'invoices:invoice_list' %}" class="nav-link {% if request.resolver_match.namespace == 'invoices' %}active{% endif %}">Rechnungen</a>
                 <a href="{% url 'offers:offer_list' %}" class="nav-link {% if request.resolver_match.namespace == 'offers' %}active{% endif %}">Angebote</a>
-                <a href="#" class="nav-link">Dokumente</a>
+                {% if request.user.role == 'admin' or request.user.role == 'chef' %}<a href="{% url 'documents:document_list' %}" class="nav-link {% if request.resolver_match.namespace == 'documents' %}active{% endif %}">Dokumente</a>{% endif %}
                 <a href="{% url 'checkout:pos' %}" class="nav-link {% if request.resolver_match.namespace == 'checkout' %}active{% endif %}">Kasse</a>
                 {% if request.user.role == 'admin' or request.user.role == 'chef' %}
                     <a href="{% url 'accounts:user_list' %}" class="nav-link nav-link-admin {% if request.resolver_match.url_name == 'user_list' or request.resolver_match.url_name == 'user_create' or request.resolver_match.url_name == 'user_update' %}active{% endif %}">Admin · Benutzer</a>
