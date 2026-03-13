@@ -35,8 +35,8 @@
         <strong>Leistungspositionen</strong>
         <div class="table-wrap">
             <table>
-                <thead><tr><th>Leistung</th><th>Verschmutzungsgrad</th><th>Zuschlag</th><th>Status</th><th>Preis</th><th>Dauer</th></tr></thead>
-                <tbody>{% for pos in order.positionen.all %}<tr><td>{{ pos.leistung.name }}</td><td>{{ pos.verschmutzungsgrad.name }}</td><td>{{ pos.zuschlag.name|default:'-' }}</td><td>{{ pos.get_status_display }}</td><td>{{ pos.einzelpreis }} €</td><td>{{ pos.geschaetzte_dauer_minuten }} Min.</td></tr>{% empty %}<tr><td colspan="6">Keine Positionen vorhanden.</td></tr>{% endfor %}</tbody>
+                <thead><tr><th>Leistung</th><th>Einheit</th><th>Verschmutzungsgrad</th><th>Zuschlag</th><th>Status</th><th>Preis</th><th>Dauer</th></tr></thead>
+                <tbody>{% for pos in order.positionen.all %}<tr><td>{{ pos.leistung.name }}</td><td>{{ pos.einheit }}</td><td>{{ pos.verschmutzungsgrad.name }}</td><td>{{ pos.zuschlag.name|default:'-' }}</td><td>{{ pos.get_status_display }}</td><td>{{ pos.einzelpreis }} €</td><td>{{ pos.geschaetzte_dauer_minuten }} Min.</td></tr>{% empty %}<tr><td colspan="7">Keine Positionen vorhanden.</td></tr>{% endfor %}</tbody>
             </table>
         </div>
     </div>

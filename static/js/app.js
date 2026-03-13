@@ -13,6 +13,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+
+  const toasts = document.querySelectorAll('[data-toast]');
+  toasts.forEach((toast) => {
+    const removeToast = () => {
+      toast.classList.add('toast-hide');
+      window.setTimeout(() => toast.remove(), 220);
+    };
+
+    const closeBtn = toast.querySelector('[data-toast-close]');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', removeToast);
+    }
+
+    window.setTimeout(removeToast, 4200);
+  });
+
   const servicePrices = JSON.parse(document.getElementById('service-prices-data')?.textContent || '{}');
   const serviceDurations = JSON.parse(document.getElementById('service-durations-data')?.textContent || '{}');
   const soilingMultipliers = JSON.parse(document.getElementById('soiling-multipliers-data')?.textContent || '{}');

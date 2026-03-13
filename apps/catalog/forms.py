@@ -8,7 +8,7 @@ class ArticleForm(forms.ModelForm):
 
     class Meta:
         model = Article
-        fields = ["barcode", "name", "preis", "lagerbestand", "kategorie", "icon", "beschreibung"]
+        fields = ["barcode", "name", "preis", "einheit", "lagerbestand", "kategorie", "icon", "beschreibung"]
         widgets = {
             "beschreibung": forms.Textarea(attrs={"rows": 4}),
         }

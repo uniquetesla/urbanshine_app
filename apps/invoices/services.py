@@ -8,6 +8,7 @@ from django.utils import timezone
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
+from reportlab.lib.utils import simpleSplit
 from reportlab.pdfgen import canvas
 
 from apps.checkout.models import Sale
@@ -102,7 +103,7 @@ def _create_line_items_for_order(invoice: Invoice, order: Order):
                 rechnung=invoice,
                 beschreibung=f"{pos.leistung.name}{suffix}",
                 menge=Decimal("1.00"),
-                einheit="Leistung",
+                einheit=pos.einheit or pos.leistung.unit or "Einheit",
                 einzelpreis=pos.einzelpreis,
                 gesamtpreis=pos.einzelpreis,
                 sortierung=index,
@@ -115,7 +116,7 @@ def _create_line_items_for_order(invoice: Invoice, order: Order):
                     rechnung=invoice,
                     beschreibung=f"Zuschlag: {pos.zuschlag.name}",
                     menge=Decimal("1.00"),
-                    einheit="Zuschlag",
+                    einheit="Position",
                     einzelpreis=surcharge_amount,
                     gesamtpreis=surcharge_amount,
                     sortierung=index * 100,
@@ -134,7 +135,7 @@ def _create_line_items_for_sale(invoice: Invoice, sale: Sale):
             rechnung=invoice,
             beschreibung=pos.artikel.name,
             menge=pos.menge,
-            einheit="Stk.",
+            einheit=pos.artikel.einheit or "Stück",
             einzelpreis=pos.einzelpreis,
             gesamtpreis=pos.gesamtpreis,
             sortierung=index,
@@ -287,56 +288,70 @@ def _build_invoice_pdf(invoice: Invoice, company_settings: CompanySettings | Non
 
     table_y = intro_y - 10 * mm
     row_height = 7 * mm
-    col_pos = left_x
-    col_qty = left_x + 14 * mm
-    col_unit = left_x + 31 * mm
-    col_desc = left_x + 49 * mm
-    col_price = width - 55 * mm
-    col_total = width - 20 * mm
 
-    pdf.setFillColor(colors.HexColor("#f1f3f5"))
-    pdf.rect(left_x, table_y, content_width, row_height, fill=1, stroke=0)
-    pdf.setFillColor(colors.black)
-    pdf.setFont("Helvetica-Bold", 9)
-    pdf.drawString(col_pos + 1.5 * mm, table_y + 2.3 * mm, "Pos.")
-    pdf.drawRightString(col_qty + 15 * mm, table_y + 2.3 * mm, "Menge")
-    pdf.drawString(col_unit + 1 * mm, table_y + 2.3 * mm, "Einheit")
-    pdf.drawString(col_desc + 1 * mm, table_y + 2.3 * mm, "Beschreibung")
-    pdf.drawRightString(col_price + 18 * mm, table_y + 2.3 * mm, "Einzelpreis")
-    pdf.drawRightString(col_total, table_y + 2.3 * mm, "Gesamtpreis")
+    col_pos_w = 12 * mm
+    col_qty_w = 20 * mm
+    col_unit_w = 24 * mm
+    col_price_w = 26 * mm
+    col_total_w = 28 * mm
+    col_desc_w = content_width - (col_pos_w + col_qty_w + col_unit_w + col_price_w + col_total_w)
 
-    y = table_y - 5.8 * mm
-    pdf.setFont("Helvetica", 9)
+    col_pos_x = left_x
+    col_qty_x = col_pos_x + col_pos_w
+    col_unit_x = col_qty_x + col_qty_w
+    col_desc_x = col_unit_x + col_unit_w
+    col_price_x = col_desc_x + col_desc_w
+    col_total_x = col_price_x + col_price_w
+
+    def draw_header(y_pos):
+        pdf.setFillColor(colors.HexColor("#f1f3f5"))
+        pdf.rect(left_x, y_pos, content_width, row_height, fill=1, stroke=0)
+        pdf.setFillColor(colors.black)
+        pdf.setFont("Helvetica-Bold", 8.5)
+        pdf.drawString(col_pos_x + 1.2 * mm, y_pos + 2.3 * mm, "Pos.")
+        pdf.drawRightString(col_qty_x + col_qty_w - 1.1 * mm, y_pos + 2.3 * mm, "Menge")
+        pdf.drawString(col_unit_x + 1.0 * mm, y_pos + 2.3 * mm, "Einheit")
+        pdf.drawString(col_desc_x + 1.0 * mm, y_pos + 2.3 * mm, "Beschreibung")
+        pdf.drawRightString(col_price_x + col_price_w - 1.0 * mm, y_pos + 2.3 * mm, "Einzelpreis")
+        pdf.drawRightString(col_total_x + col_total_w - 1.0 * mm, y_pos + 2.3 * mm, "Gesamtpreis")
+
+    draw_header(table_y)
+
+    y = table_y - 5.5 * mm
+    pdf.setFont("Helvetica", 8.7)
+    line_height = 4.1 * mm
+
     for idx, item in enumerate(invoice.positionen.all(), start=1):
-        if y <= 55 * mm:
+        desc_lines = simpleSplit(item.beschreibung, "Helvetica", 8.7, col_desc_w - 2 * mm) or [""]
+        unit_lines = simpleSplit(item.einheit or "", "Helvetica", 8.7, col_unit_w - 2 * mm) or [""]
+        row_lines = max(len(desc_lines), len(unit_lines))
+        row_bottom = y - ((row_lines - 1) * line_height)
+
+        if row_bottom <= 55 * mm:
             _draw_footer(pdf, width, company_settings)
             pdf.showPage()
             y = height - 30 * mm
             pdf.setFont("Helvetica-Bold", 10)
             pdf.drawString(left_x, y, f"Rechnung {invoice.formatted_rechnungsnummer} – Fortsetzung")
             y -= 8 * mm
-            pdf.setFillColor(colors.HexColor("#f1f3f5"))
-            pdf.rect(left_x, y, content_width, row_height, fill=1, stroke=0)
-            pdf.setFillColor(colors.black)
-            pdf.setFont("Helvetica-Bold", 9)
-            pdf.drawString(col_pos + 1.5 * mm, y + 2.3 * mm, "Pos.")
-            pdf.drawRightString(col_qty + 15 * mm, y + 2.3 * mm, "Menge")
-            pdf.drawString(col_unit + 1 * mm, y + 2.3 * mm, "Einheit")
-            pdf.drawString(col_desc + 1 * mm, y + 2.3 * mm, "Beschreibung")
-            pdf.drawRightString(col_price + 18 * mm, y + 2.3 * mm, "Einzelpreis")
-            pdf.drawRightString(col_total, y + 2.3 * mm, "Gesamtpreis")
-            y -= 5.8 * mm
-            pdf.setFont("Helvetica", 9)
+            draw_header(y)
+            y -= 5.5 * mm
+            pdf.setFont("Helvetica", 8.7)
+            row_bottom = y - ((row_lines - 1) * line_height)
 
-        pdf.drawRightString(col_pos + 8 * mm, y, str(idx))
-        pdf.drawRightString(col_qty + 15 * mm, y, _format_quantity(item.menge))
-        pdf.drawString(col_unit + 1 * mm, y, item.einheit)
-        pdf.drawString(col_desc + 1 * mm, y, item.beschreibung[:52])
-        pdf.drawRightString(col_price + 18 * mm, y, _format_euro(item.einzelpreis))
-        pdf.drawRightString(col_total, y, _format_euro(item.gesamtpreis))
+        pdf.drawRightString(col_pos_x + col_pos_w - 1.0 * mm, y, str(idx))
+        pdf.drawRightString(col_qty_x + col_qty_w - 1.0 * mm, y, _format_quantity(item.menge))
+        for line_index in range(row_lines):
+            if line_index < len(unit_lines):
+                pdf.drawString(col_unit_x + 1.0 * mm, y - line_index * line_height, unit_lines[line_index])
+            if line_index < len(desc_lines):
+                pdf.drawString(col_desc_x + 1.0 * mm, y - line_index * line_height, desc_lines[line_index])
+
+        pdf.drawRightString(col_price_x + col_price_w - 1.0 * mm, y, _format_euro(item.einzelpreis))
+        pdf.drawRightString(col_total_x + col_total_w - 1.0 * mm, y, _format_euro(item.gesamtpreis))
         pdf.setStrokeColor(colors.HexColor("#e3e3e3"))
-        pdf.line(left_x, y - 1.8 * mm, left_x + content_width, y - 1.8 * mm)
-        y -= 6 * mm
+        pdf.line(left_x, row_bottom - 1.8 * mm, left_x + content_width, row_bottom - 1.8 * mm)
+        y = row_bottom - 4.4 * mm
 
     y -= 4 * mm
     pdf.setFont("Helvetica-Bold", 12)

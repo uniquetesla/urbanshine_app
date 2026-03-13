@@ -28,12 +28,12 @@
         {{ position_formset.management_form }}
         <div class="table-wrap">
             <table>
-                <thead><tr><th>Leistung</th><th>Verschmutzungsgrad</th><th>Zuschlag</th><th>Menge</th><th>Einzelpreis</th><th>Gesamt</th><th>Entfernen</th></tr></thead>
+                <thead><tr><th>Leistung</th><th>Einheit</th><th>Verschmutzungsgrad</th><th>Zuschlag</th><th>Menge</th><th>Einzelpreis</th><th>Gesamt</th><th>Entfernen</th></tr></thead>
                 <tbody>
                 {% for pform in position_formset %}
                     <tr class="offer-position-row" data-form-index="{{ forloop.counter0 }}">
                         <td>{{ pform.leistung }}{% if pform.leistung.errors %}<small style="color:#ff9ca4;display:block;">{{ pform.leistung.errors|striptags }}</small>{% endif %}</td>
-                        <td>{{ pform.verschmutzungsgrad }}{% if pform.verschmutzungsgrad.errors %}<small style="color:#ff9ca4;display:block;">{{ pform.verschmutzungsgrad.errors|striptags }}</small>{% endif %}</td>
+                        <td>{{ pform.einheit }}{% if pform.einheit.errors %}<small style="color:#ff9ca4;display:block;">{{ pform.einheit.errors|striptags }}</small>{% endif %}</td><td>{{ pform.verschmutzungsgrad }}{% if pform.verschmutzungsgrad.errors %}<small style="color:#ff9ca4;display:block;">{{ pform.verschmutzungsgrad.errors|striptags }}</small>{% endif %}</td>
                         <td>{{ pform.zuschlag }}{% if pform.zuschlag.errors %}<small style="color:#ff9ca4;display:block;">{{ pform.zuschlag.errors|striptags }}</small>{% endif %}</td>
                         <td>{{ pform.menge }}{% if pform.menge.errors %}<small style="color:#ff9ca4;display:block;">{{ pform.menge.errors|striptags }}</small>{% endif %}</td>
                         <td><strong data-role="row-price">{{ pform.instance.einzelpreis|default_if_none:'0'|floatformat:2 }} €</strong></td>

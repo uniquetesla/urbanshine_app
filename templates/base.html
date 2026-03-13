@@ -63,9 +63,14 @@
 
         <main class="content-area">
             {% if messages %}
-                <ul class="messages glass-card">
-                    {% for message in messages %}<li>{{ message }}</li>{% endfor %}
-                </ul>
+                <div class="toast-stack" aria-live="polite" aria-atomic="true">
+                    {% for message in messages %}
+                        <div class="toast toast-{{ message.tags|default:'info' }}" data-toast>
+                            <button type="button" class="toast-close" data-toast-close aria-label="Meldung schließen">×</button>
+                            <p>{{ message }}</p>
+                        </div>
+                    {% endfor %}
+                </div>
             {% endif %}
 {% else %}
 <main class="auth-layout">

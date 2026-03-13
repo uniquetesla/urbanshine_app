@@ -57,7 +57,7 @@ class OfferForm(forms.ModelForm):
 class OfferItemForm(forms.ModelForm):
     class Meta:
         model = OfferItem
-        fields = ["leistung", "verschmutzungsgrad", "zuschlag", "menge"]
+        fields = ["leistung", "verschmutzungsgrad", "zuschlag", "menge", "einheit"]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -77,6 +77,8 @@ class OfferItemForm(forms.ModelForm):
         self.fields["verschmutzungsgrad"].queryset = soiling_qs.distinct()
         self.fields["zuschlag"].queryset = surcharge_qs.distinct()
         self.fields["zuschlag"].required = False
+        self.fields["einheit"].required = False
+        self.fields["einheit"].initial = self.fields["einheit"].initial or "Einheit"
         self.fields["menge"].initial = self.fields["menge"].initial or 1
 
 

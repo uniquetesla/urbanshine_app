@@ -25,6 +25,7 @@
                 <th>Barcode</th>
                 <th>Artikel</th>
                 <th>Kategorie</th>
+                <th>Einheit</th>
                 <th>Preis</th>
                 <th>Lagerbestand</th>
                 <th>Beschreibung</th>
@@ -41,6 +42,7 @@
                         {{ article.name }}
                     </td>
                     <td>{{ article.kategorie }}</td>
+                    <td>{{ article.einheit }}</td>
                     <td>{{ article.preis }} €</td>
                     <td>{{ article.lagerbestand }}</td>
                     <td>{{ article.beschreibung|default:'-'|truncatechars:90 }}</td>
@@ -51,7 +53,7 @@
                 </tr>
             {% empty %}
                 <tr>
-                    <td colspan="8">Keine Artikel vorhanden.</td>
+                    <td colspan="9">Keine Artikel vorhanden.</td>
                 </tr>
             {% endfor %}
             </tbody>

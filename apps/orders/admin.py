@@ -24,8 +24,8 @@ class OrderAdmin(admin.ModelAdmin):
 
 @admin.register(OrderPosition)
 class OrderPositionAdmin(admin.ModelAdmin):
-    list_display = ("auftrag", "leistung", "status", "einzelpreis", "geschaetzte_dauer_minuten")
-    list_filter = ("status", "leistung", "verschmutzungsgrad")
+    list_display = ("auftrag", "leistung", "einheit", "status", "einzelpreis", "geschaetzte_dauer_minuten")
+    list_filter = ("status", "leistung", "verschmutzungsgrad", "einheit")
 
 
 @admin.register(OrderImage)
