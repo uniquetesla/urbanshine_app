@@ -6,7 +6,7 @@
 <section class="glass-card panel full">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:.7rem;flex-wrap:wrap;">
         <h3>Alle Benutzer</h3>
-        <a href="{% url 'accounts:user_create' %}" class="btn">Neuer Benutzer</a>
+        {% if request.user.role == "admin" %}<a href="{% url 'accounts:user_create' %}" class="btn">Neuer Benutzer</a>{% endif %}
     </div>
 
     <div class="table-wrap">
@@ -28,12 +28,18 @@
                     <td>{{ user.get_role_display }}</td>
                     <td>{% if user.is_active %}Aktiv{% else %}Deaktiviert{% endif %}</td>
                     <td class="table-actions">
+                        {% if request.user.role == "admin" %}
                         <a class="btn btn-secondary action-icon" aria-label="Bearbeiten" title="Bearbeiten" href="{% url 'accounts:user_update' user.pk %}"><span class="btn-icon" aria-hidden="true">🛠️</span><span class="btn-text">Bearbeiten</span></a>
                         {% if user.is_active %}
                         <form method="post" action="{% url 'accounts:user_deactivate' user.pk %}" style="display:inline;">
                             {% csrf_token %}
                             <button class="btn btn-danger action-icon" aria-label="Deaktivieren" title="Deaktivieren" type="submit"><span class="btn-icon" aria-hidden="true">⛔</span><span class="btn-text">Deaktivieren</span></button>
                         </form>
+                        {% endif %}
+                        {% endif %}
+                        <a class="btn action-icon" aria-label="Passwort neu setzen" title="Passwort neu setzen" href="{% url 'accounts:user_password_reset' user.pk %}"><span class="btn-icon" aria-hidden="true">🔐</span><span class="btn-text">Passwort neu setzen</span></a>
+                        {% if user != request.user %}
+                        <a class="btn btn-danger action-icon" aria-label="Löschen" title="Löschen" href="{% url 'accounts:user_delete' user.pk %}"><span class="btn-icon" aria-hidden="true">🗑️</span><span class="btn-text">Löschen</span></a>
                         {% endif %}
                     </td>
                 </tr>

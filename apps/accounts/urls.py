@@ -6,7 +6,9 @@ from .views import (
     UrbanShineLoginView,
     UserCreateView,
     UserDeactivateView,
+    UserDeleteView,
     UserListView,
+    UserPasswordResetView,
     UserUpdateView,
 )
 
@@ -20,4 +22,6 @@ urlpatterns = [
     path("users/new/", UserCreateView.as_view(), name="user_create"),
     path("users/<int:pk>/edit/", UserUpdateView.as_view(), name="user_update"),
     path("users/<int:pk>/deactivate/", UserDeactivateView.as_view(), name="user_deactivate"),
+    path("users/<int:pk>/passwort/", UserPasswordResetView.as_view(), name="user_password_reset"),
+    path("users/<int:pk>/loeschen/", UserDeleteView.as_view(), name="user_delete"),
 ]

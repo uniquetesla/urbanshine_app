@@ -21,6 +21,9 @@
             {% if invoice.pdf_datei %}
                 <a href="{% url 'invoices:invoice_pdf' invoice.pk %}" class="btn"><span class="btn-icon" aria-hidden="true">⬇️</span><span>PDF herunterladen</span></a>
             {% endif %}
+            {% if request.user.role == 'admin' or request.user.role == 'chef' %}
+                <a href="{% url 'invoices:invoice_delete' invoice.pk %}" class="btn btn-danger"><span class="btn-icon" aria-hidden="true">🗑️</span><span>Löschen</span></a>
+            {% endif %}
             <a href="{% url 'invoices:invoice_list' %}" class="btn btn-secondary"><span class="btn-icon" aria-hidden="true">←</span><span>Zurück zur Liste</span></a>
         </div>
     </div>

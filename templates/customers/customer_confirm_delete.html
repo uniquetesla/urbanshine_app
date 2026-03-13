@@ -6,10 +6,13 @@
 <section class="glass-card panel full">
     <h3>Kunde wirklich löschen?</h3>
     <p>Der Kunde <strong>{{ object.vorname }} {{ object.nachname }}</strong> (Nr. {{ object.formatted_kundennummer }}) wird dauerhaft entfernt.</p>
-    <form method="post" style="display:flex;gap:.6rem;">
+    <form method="post" style="max-width:520px;display:grid;gap:.7rem;">
         {% csrf_token %}
-        <button class="btn btn-danger" type="submit"><span class="btn-icon" aria-hidden="true">🗑️</span><span>Ja, löschen</span></button>
-        <a class="btn btn-secondary" href="{% url 'customers:customer_list' %}"><span class="btn-icon" aria-hidden="true">↩️</span><span>Abbrechen</span></a>
+        <div>{{ confirmation_form.current_password.label_tag }}{{ confirmation_form.current_password }}{% if confirmation_form.current_password.errors %}<small style="color:#ff9ca4;">{{ confirmation_form.current_password.errors|striptags }}</small>{% endif %}</div>
+        <div style="display:flex;gap:.6rem;">
+            <button class="btn btn-danger" type="submit"><span class="btn-icon" aria-hidden="true">🗑️</span><span>Ja, löschen</span></button>
+            <a class="btn btn-secondary" href="{% url 'customers:customer_detail' object.pk %}"><span class="btn-icon" aria-hidden="true">↩️</span><span>Abbrechen</span></a>
+        </div>
     </form>
 </section>
 {% endblock %}

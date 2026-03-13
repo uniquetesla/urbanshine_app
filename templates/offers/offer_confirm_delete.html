@@ -2,4 +2,16 @@
 {% block title %}Angebot löschen | UrbanShine{% endblock %}
 {% block page_title %}Angebot löschen{% endblock %}
 {% block page_subtitle %}Datensatz endgültig entfernen{% endblock %}
-{% block content %}<section class="glass-card panel" style="max-width:720px;"><p>Soll das Angebot {{ object.formatted_angebotsnummer }} wirklich gelöscht werden?</p><form method="post">{% csrf_token %}<div class="button-row"><button class="btn btn-danger" type="submit">Löschen</button><a class="btn btn-secondary" href="{% url 'offers:offer_detail' object.pk %}">Abbrechen</a></div></form></section>{% endblock %}
+{% block content %}
+<section class="glass-card panel" style="max-width:720px;">
+    <p>Soll das Angebot {{ object.formatted_angebotsnummer }} wirklich gelöscht werden?</p>
+    <form method="post" style="max-width:520px;display:grid;gap:.7rem;">
+        {% csrf_token %}
+        <div>{{ confirmation_form.current_password.label_tag }}{{ confirmation_form.current_password }}{% if confirmation_form.current_password.errors %}<small style="color:#ff9ca4;">{{ confirmation_form.current_password.errors|striptags }}</small>{% endif %}</div>
+        <div style="display:flex;gap:.6rem;">
+            <button class="btn btn-danger" type="submit"><span class="btn-icon" aria-hidden="true">🗑️</span><span>Ja, löschen</span></button>
+            <a class="btn btn-secondary" href="{% url 'offers:offer_detail' object.pk %}"><span class="btn-icon" aria-hidden="true">↩️</span><span>Abbrechen</span></a>
+        </div>
+    </form>
+</section>
+{% endblock %}

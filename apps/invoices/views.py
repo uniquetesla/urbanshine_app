@@ -4,10 +4,12 @@ from django.db.models import Q
 from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404, redirect
 from django.views import View
-from django.views.generic import DetailView, ListView
+from django.urls import reverse_lazy
+from django.views.generic import DeleteView, DetailView, ListView
 
 from apps.accounts.models import UserRole
 from apps.customers.models import Customer
+from apps.core.security import PasswordProtectedDeleteMixin
 
 from .forms import MarkInvoicePaidForm
 from .models import Invoice, PaymentStatus
@@ -112,3 +114,15 @@ class InvoiceDownloadPdfView(LoginRequiredMixin, View):
         if not invoice.pdf_datei:
             raise Http404("Für diese Rechnung ist keine PDF-Datei vorhanden.")
         return FileResponse(invoice.pdf_datei.open("rb"), as_attachment=True, filename=invoice.pdf_datei.name.split("/")[-1])
+
+
+class InvoiceDeleteView(PasswordProtectedDeleteMixin, LoginRequiredMixin, DeleteView):
+    model = Invoice
+    template_name = "invoices/invoice_confirm_delete.html"
+    success_url = reverse_lazy("invoices:invoice_list")
+    success_message = "Rechnung wurde gelöscht."
+
+    def delete(self, request, *args, **kwargs):
+        response = super().delete(request, *args, **kwargs)
+        messages.success(request, self.success_message)
+        return response

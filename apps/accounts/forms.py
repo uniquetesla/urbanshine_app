@@ -1,5 +1,5 @@
 from django import forms
-from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
+from django.contrib.auth.forms import AuthenticationForm, SetPasswordForm, UserCreationForm
 
 from .models import User
 
@@ -41,3 +41,18 @@ class UserUpdateForm(forms.ModelForm):
             "role": "Rolle",
             "is_active": "Aktiv",
         }
+
+
+class AdminUserPasswordResetForm(SetPasswordForm):
+    """Passwort-Neuvergabe durch berechtigte interne Benutzer."""
+
+    new_password1 = forms.CharField(
+        label="Neues Passwort",
+        strip=False,
+        widget=forms.PasswordInput(attrs={"autocomplete": "new-password"}),
+    )
+    new_password2 = forms.CharField(
+        label="Neues Passwort bestätigen",
+        strip=False,
+        widget=forms.PasswordInput(attrs={"autocomplete": "new-password"}),
+    )

@@ -8,6 +8,7 @@ from apps.accounts.models import UserRole
 from apps.core.activity import log_activity
 from apps.core.models import ActivitySubject
 from apps.core.number_sequences import parse_sequence_value
+from apps.core.security import PasswordProtectedDeleteMixin
 
 from .forms import CustomerForm
 from .models import Customer
@@ -95,14 +96,16 @@ class CustomerUpdateView(EmployeeOnlyMixin, LoginRequiredMixin, UpdateView):
         return response
 
 
-class CustomerDeleteView(EmployeeOnlyMixin, LoginRequiredMixin, DeleteView):
+class CustomerDeleteView(PasswordProtectedDeleteMixin, LoginRequiredMixin, DeleteView):
     model = Customer
     template_name = "customers/customer_confirm_delete.html"
     success_url = reverse_lazy("customers:customer_list")
+    success_message = "Kunde wurde erfolgreich gelöscht."
 
-    def form_valid(self, form):
-        messages.success(self.request, "Kunde wurde erfolgreich gelöscht.")
-        return super().form_valid(form)
+    def delete(self, request, *args, **kwargs):
+        response = super().delete(request, *args, **kwargs)
+        messages.success(request, self.success_message)
+        return response
 
 
 class CustomerDetailView(LoginRequiredMixin, DetailView):
