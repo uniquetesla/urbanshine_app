@@ -2,12 +2,14 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.db import transaction
 from django.db.models import F, Q
+from django.http import JsonResponse
 from django.urls import reverse_lazy
+from django.views import View
 from django.views.generic import CreateView, DeleteView, ListView, TemplateView, UpdateView
 
 from apps.accounts.models import UserRole
 
-from .forms import ArticleForm, GoodsReceiptForm
+from .forms import ArticleForm
 from .models import Article, GoodsReceipt
 
 
@@ -76,20 +78,55 @@ class ArticleDeleteView(EmployeeOnlyMixin, LoginRequiredMixin, DeleteView):
 class GoodsReceiptView(EmployeeOnlyMixin, LoginRequiredMixin, TemplateView):
     template_name = "catalog/goods_receipt.html"
 
-    def post(self, request, *args, **kwargs):
-        form = GoodsReceiptForm(request.POST)
-        if not form.is_valid():
-            messages.error(request, "Bitte Barcode und Menge korrekt eingeben.")
-            return self.render_to_response(self.get_context_data(form=form))
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["receipts"] = GoodsReceipt.objects.select_related("artikel", "gebucht_von")[:30]
+        return context
 
-        barcode = form.cleaned_data["barcode"]
-        qty = form.cleaned_data["menge"]
-        note = form.cleaned_data["notiz"]
-        article = Article.objects.filter(barcode=barcode).first()
 
+class GoodsReceiptLookupView(EmployeeOnlyMixin, LoginRequiredMixin, View):
+    def post(self, request, *_args, **_kwargs):
+        code = (request.POST.get("code") or "").strip()
+        if not code:
+            return JsonResponse({"ok": False, "message": "Bitte Barcode oder Artikelnummer scannen."}, status=400)
+
+        query = Q(barcode__iexact=code)
+        if code.isdigit():
+            query |= Q(artikelnummer=int(code))
+
+        article = Article.objects.filter(query).order_by("id").first()
         if not article:
-            messages.error(request, "Kein Artikel mit diesem Barcode gefunden.")
-            return self.render_to_response(self.get_context_data(form=form))
+            return JsonResponse({"ok": False, "message": "Kein Artikel mit dieser Nummer gefunden."}, status=404)
+
+        return JsonResponse(
+            {
+                "ok": True,
+                "article": {
+                    "id": article.pk,
+                    "name": article.name,
+                    "artikelnummer": article.formatted_artikelnummer,
+                    "barcode": article.barcode or "-",
+                    "stock": article.lagerbestand,
+                },
+            }
+        )
+
+
+class GoodsReceiptBookView(EmployeeOnlyMixin, LoginRequiredMixin, View):
+    def post(self, request, *_args, **_kwargs):
+        article_id = request.POST.get("article_id")
+        try:
+            qty = int(request.POST.get("menge") or 0)
+        except ValueError:
+            qty = 0
+        note = (request.POST.get("notiz") or "").strip()
+
+        if qty <= 0:
+            return JsonResponse({"ok": False, "message": "Bitte eine gültige Menge angeben."}, status=400)
+
+        article = Article.objects.filter(pk=article_id).first()
+        if not article:
+            return JsonResponse({"ok": False, "message": "Artikel wurde nicht gefunden."}, status=404)
 
         with transaction.atomic():
             Article.objects.filter(pk=article.pk).update(lagerbestand=F("lagerbestand") + qty)
@@ -97,17 +134,16 @@ class GoodsReceiptView(EmployeeOnlyMixin, LoginRequiredMixin, TemplateView):
             GoodsReceipt.objects.create(
                 artikel=article,
                 artikelnummer=article.formatted_artikelnummer,
-                barcode=article.barcode,
+                barcode=article.barcode or "",
                 menge=qty,
                 notiz=note,
                 gebucht_von=request.user,
             )
 
-        messages.success(request, f"Wareneingang gebucht: {article.name} +{qty}. Neuer Bestand: {article.lagerbestand}.")
-        return self.render_to_response(self.get_context_data(form=GoodsReceiptForm()))
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["form"] = kwargs.get("form") or GoodsReceiptForm()
-        context["receipts"] = GoodsReceipt.objects.select_related("artikel", "gebucht_von")[:30]
-        return context
+        return JsonResponse(
+            {
+                "ok": True,
+                "message": f"Wareneingang gebucht: {article.name} +{qty}. Neuer Bestand: {article.lagerbestand}.",
+                "stock": article.lagerbestand,
+            }
+        )

@@ -39,12 +39,12 @@
             <tbody>
             {% for order in unassigned_orders %}
                 <tr>
-                    <td>{{ order.formatted_auftragsnummer }}</td>
+                    <td><a class="table-link" href="{% url 'orders:order_detail' order.pk %}">{{ order.formatted_auftragsnummer }}</a></td>
                     <td>{{ order.kunde.vorname }} {{ order.kunde.nachname }}</td>
                     <td>{{ order.get_status_display }}</td>
                     <td>{{ order.termin|date:"d.m.Y H:i"|default:"Nicht gesetzt" }}</td>
                     <td>{% for employee in order.mitarbeiter.all %}{{ employee.get_full_name|default:employee.username }}{% if not forloop.last %}, {% endif %}{% empty %}Nicht zugeordnet{% endfor %}</td>
-                    <td><a class="btn btn-secondary" href="{% url 'orders:order_update' order.pk %}"><span class="btn-icon" aria-hidden="true">📅</span><span>Planung bearbeiten</span></a></td>
+                    <td><a class="btn btn-secondary action-icon" aria-label="Planung bearbeiten" title="Planung bearbeiten" href="{% url 'orders:order_update' order.pk %}"><span class="btn-icon" aria-hidden="true">📅</span><span class="btn-text">Planung bearbeiten</span></a></td>
                 </tr>
             {% empty %}
                 <tr><td colspan="6">Keine offenen Zuordnungen.</td></tr>

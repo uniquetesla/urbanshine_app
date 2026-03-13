@@ -2,17 +2,23 @@
 {% block title %}Anmeldung | UrbanShine{% endblock %}
 {% block content %}
 <div class="glass-card login-card">
-    <h1>UrbanShine Platform Login</h1>
+    <div class="login-brand">
+        {% if company_settings and company_settings.logo %}
+            <img src="{{ company_settings.logo.url }}" alt="{{ company_settings.company_name|default:'UrbanShine' }}" class="login-logo">
+        {% else %}
+            <h1>{{ company_settings.company_name|default:'UrbanShine' }}</h1>
+        {% endif %}
+    </div>
     <p class="subtitle">Bitte melden Sie sich mit Ihren Zugangsdaten an.</p>
 
     {% if form.errors %}
         <ul class="messages"><li>Benutzername oder Passwort ist ungültig.</li></ul>
     {% endif %}
 
-    <form method="post">
+    <form method="post" class="form-grid">
         {% csrf_token %}
-        <div style="margin-bottom:1rem;">{{ form.username.label_tag }}{{ form.username }}</div>
-        <div style="margin-bottom:1rem;">{{ form.password.label_tag }}{{ form.password }}</div>
+        <div>{{ form.username.label_tag }}{{ form.username }}</div>
+        <div>{{ form.password.label_tag }}{{ form.password }}</div>
         <button class="btn" type="submit"><span class="btn-icon" aria-hidden="true">🔐</span><span>Anmelden</span></button>
     </form>
 </div>

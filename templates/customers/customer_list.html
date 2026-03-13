@@ -31,7 +31,7 @@
             <tbody>
             {% for customer in customers %}
                 <tr>
-                    <td>{{ customer.kundennummer }}</td>
+                    <td><a class="table-link" href="{% url 'customers:customer_detail' customer.pk %}">{{ customer.kundennummer }}</a></td>
                     <td>{{ customer.vorname }} {{ customer.nachname }}</td>
                     <td>{{ customer.strasse }} {{ customer.hausnummer }}, {{ customer.plz }} {{ customer.ort }}</td>
                     <td>
@@ -39,9 +39,9 @@
                         {{ customer.email|default:"-" }}
                     </td>
                     <td class="table-actions">
-                        <a class="btn btn-secondary" href="{% url 'customers:customer_detail' customer.pk %}"><span class="btn-icon" aria-hidden="true">🔎</span><span>Details</span></a>
-                        <a class="btn btn-secondary" href="{% url 'customers:customer_update' customer.pk %}"><span class="btn-icon" aria-hidden="true">✏️</span><span>Bearbeiten</span></a>
-                        <a class="btn btn-danger" href="{% url 'customers:customer_delete' customer.pk %}"><span class="btn-icon" aria-hidden="true">🗑️</span><span>Löschen</span></a>
+                        <a class="btn btn-secondary action-icon" aria-label="Details" title="Details" href="{% url 'customers:customer_detail' customer.pk %}"><span class="btn-icon" aria-hidden="true">🔎</span><span class="btn-text">Details</span></a>
+                        <a class="btn btn-secondary action-icon" aria-label="Bearbeiten" title="Bearbeiten" href="{% url 'customers:customer_update' customer.pk %}"><span class="btn-icon" aria-hidden="true">🛠️</span><span class="btn-text">Bearbeiten</span></a>
+                        <a class="btn btn-danger action-icon" aria-label="Löschen" title="Löschen" href="{% url 'customers:customer_delete' customer.pk %}"><span class="btn-icon" aria-hidden="true">🗑️</span><span class="btn-text">Löschen</span></a>
                     </td>
                 </tr>
             {% empty %}

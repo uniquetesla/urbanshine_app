@@ -10,8 +10,8 @@
             <li>
                 <strong>{{ item }}</strong>
                 <div class="table-actions">
-                    <a class="btn btn-secondary btn-compact" href="{% url 'company:master_data_update' type item.pk %}">Bearbeiten</a>
-                    <form method="post" action="{% url 'company:master_data_delete' type item.pk %}" class="action-form">{% csrf_token %}<button class="btn btn-danger btn-compact" type="submit">Löschen</button></form>
+                    <a class="btn btn-secondary action-icon" aria-label="Bearbeiten" title="Bearbeiten" href="{% url 'company:master_data_update' type item.pk %}"><span class="btn-icon" aria-hidden="true">🛠️</span><span class="btn-text">Bearbeiten</span></a>
+                    <form method="post" action="{% url 'company:master_data_delete' type item.pk %}" class="action-form">{% csrf_token %}<button class="btn btn-danger action-icon" aria-label="Löschen" title="Löschen" type="submit"><span class="btn-icon" aria-hidden="true">🗑️</span><span class="btn-text">Löschen</span></button></form>
                 </div>
             </li>
         {% empty %}<li>Keine Einträge vorhanden.</li>{% endfor %}

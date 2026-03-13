@@ -1,29 +1,40 @@
 {% extends "base.html" %}
 {% block title %}Wareneingang | UrbanShine{% endblock %}
 {% block page_title %}Wareneingang{% endblock %}
-{% block page_subtitle %}Barcode scannen, Menge buchen und Bestand direkt erhöhen{% endblock %}
+{% block page_subtitle %}Scanner-Workflow: Barcode scannen → Menge eingeben → sofort buchen{% endblock %}
 {% block content %}
-<section class="dashboard-layout">
-    <div class="glass-card panel full">
-        <h3>Schneller Wareneingang</h3>
-        <form method="post" class="form-grid touch-form">{% csrf_token %}
-            {% for field in form %}
-                <div>
-                    {{ field.label_tag }}
-                    {{ field }}
-                    {% if field.errors %}<small style="color:#ff9ca4;">{{ field.errors|striptags }}</small>{% endif %}
-                </div>
-            {% endfor %}
-            <div style="display:flex;align-items:flex-end;">
-                <button class="btn btn-touch" type="submit">Wareneingang buchen</button>
+<section class="glass-card panel full receipt-scan-panel">
+    <h3>Barcode / Artikelnummer scannen</h3>
+    <p class="subtitle">Nur ein Feld: Scanner eingeben lassen und mit Enter bestätigen.</p>
+    <form id="goods-receipt-scan-form" method="post" action="{% url 'catalog:goods_receipt_lookup' %}">
+        {% csrf_token %}
+        <label for="scan-code">Barcode oder Artikelnummer</label>
+        <input id="scan-code" name="code" type="text" autocomplete="off" autofocus placeholder="z. B. 4006381333931 oder ART-000123">
+    </form>
+</section>
+
+<div class="receipt-overlay" id="receiptOverlay" aria-hidden="true">
+    <section class="glass-card panel receipt-modal" role="dialog" aria-modal="true" aria-labelledby="receiptModalTitle">
+        <h3 id="receiptModalTitle">Wareneingang buchen</h3>
+        <div id="receiptArticleInfo" class="subtitle"></div>
+        <form id="goods-receipt-book-form" action="{% url 'catalog:goods_receipt_book' %}" method="post" class="form-grid">
+            {% csrf_token %}
+            <input type="hidden" name="article_id" id="receipt-article-id">
+            <div>
+                <label for="receipt-qty">Menge</label>
+                <input id="receipt-qty" name="menge" type="number" min="1" step="1" value="1" required>
+            </div>
+            <div>
+                <label for="receipt-note">Notiz (optional)</label>
+                <input id="receipt-note" name="notiz" type="text" maxlength="255">
+            </div>
+            <div class="button-row">
+                <button type="submit" class="btn btn-success"><span class="btn-icon" aria-hidden="true">✅</span><span>Bestätigen</span></button>
+                <button type="button" id="receiptCancel" class="btn btn-secondary"><span class="btn-icon" aria-hidden="true">✖</span><span>Abbrechen</span></button>
             </div>
         </form>
-    </div>
-    <aside class="glass-card quick-actions">
-        <h3>Hinweis</h3>
-        <p class="subtitle">Scannerfreundlich: Cursor startet im Barcode-Feld. Nach jeder Buchung kannst du direkt den nächsten Artikel scannen.</p>
-    </aside>
-</section>
+    </section>
+</div>
 
 <section class="glass-card panel full" style="margin-top:1rem;">
     <h3>Letzte Buchungen</h3>

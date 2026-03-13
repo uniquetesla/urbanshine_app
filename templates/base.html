@@ -12,16 +12,20 @@
 <div class="app-shell" data-sidebar-open="true">
     <aside class="sidebar" id="sidebar">
         <div class="brand">
-            <span class="brand-dot"></span>
+            {% if company_settings and company_settings.logo %}
+                <img src="{{ company_settings.logo.url }}" alt="{{ company_settings.company_name|default:'UrbanShine' }}" class="brand-logo">
+            {% else %}
+                <span class="brand-dot" aria-hidden="true"></span>
+            {% endif %}
             <div>
-                <strong>UrbanShine</strong>
+                <strong>{{ company_settings.company_name|default:'UrbanShine' }}</strong>
                 <small>Operations Suite</small>
             </div>
         </div>
 
         <nav class="sidebar-nav" aria-label="Hauptnavigation">
             {% if request.user.role == 'stammkunde' %}
-                <a href="{% url 'portal:dashboard' %}" class="nav-link {% if request.resolver_match.namespace == 'portal' %}active{% endif %}">Kundenportal</a>
+                <a href="{% url 'portal:dashboard' %}" class="nav-link {% if request.resolver_match.namespace == 'portal' %}active{% endif %}"><span class="nav-icon" aria-hidden="true">🏠</span><span>Kundenportal</span></a>
             {% else %}
                 {% url 'accounts:dashboard' as dashboard_url %}
                 {% url 'orders:order_list' as order_list_url %}
@@ -29,20 +33,23 @@
                 {% url 'catalog:article_list' as article_list_url %}
                 {% url 'employees:employee_list' as employee_list_url %}
                 {% url 'scheduling:appointment_overview' as appointment_overview_url %}
-                <a href="{{ dashboard_url|default:'/accounts/dashboard/' }}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">Dashboard</a>
-                <a href="{{ order_list_url|default:'/auftraege/' }}" class="nav-link {% if request.resolver_match.namespace == 'orders' %}active{% endif %}">Aufträge</a>
-                <a href="{{ customer_list_url|default:'/kunden/' }}" class="nav-link {% if request.resolver_match.namespace == 'customers' %}active{% endif %}">Kunden</a>
-                <a href="{{ article_list_url|default:'/artikel/' }}" class="nav-link {% if request.resolver_match.namespace == 'catalog' and request.resolver_match.url_name != 'goods_receipt' %}active{% endif %}">Produkte</a>
-                <a href="{% url 'catalog:goods_receipt' %}" class="nav-link {% if request.resolver_match.namespace == 'catalog' and request.resolver_match.url_name == 'goods_receipt' %}active{% endif %}">Wareneingang</a>
-                <a href="{{ employee_list_url|default:'/mitarbeiter/' }}" class="nav-link {% if request.resolver_match.namespace == 'employees' %}active{% endif %}">Mitarbeiter</a>
-                <a href="{{ appointment_overview_url|default:'/termine/' }}" class="nav-link {% if request.resolver_match.namespace == 'scheduling' %}active{% endif %}">Termine</a>
-                <a href="{% url 'invoices:invoice_list' %}" class="nav-link {% if request.resolver_match.namespace == 'invoices' %}active{% endif %}">Rechnungen</a>
-                <a href="{% url 'offers:offer_list' %}" class="nav-link {% if request.resolver_match.namespace == 'offers' %}active{% endif %}">Angebote</a>
-                {% if request.user.role == 'admin' or request.user.role == 'chef' %}<a href="{% url 'documents:document_list' %}" class="nav-link {% if request.resolver_match.namespace == 'documents' %}active{% endif %}">Dokumente</a>{% endif %}
-                <a href="{% url 'checkout:pos' %}" class="nav-link {% if request.resolver_match.namespace == 'checkout' %}active{% endif %}">Kasse</a>
+                <a href="{{ dashboard_url|default:'/accounts/dashboard/' }}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"><span class="nav-icon" aria-hidden="true">📊</span><span>Dashboard</span></a>
+                <a href="{{ order_list_url|default:'/auftraege/' }}" class="nav-link {% if request.resolver_match.namespace == 'orders' %}active{% endif %}"><span class="nav-icon" aria-hidden="true">🧾</span><span>Aufträge</span></a>
+                <a href="{{ customer_list_url|default:'/kunden/' }}" class="nav-link {% if request.resolver_match.namespace == 'customers' %}active{% endif %}"><span class="nav-icon" aria-hidden="true">👥</span><span>Kunden</span></a>
+                <a href="{{ article_list_url|default:'/artikel/' }}" class="nav-link {% if request.resolver_match.namespace == 'catalog' and request.resolver_match.url_name != 'goods_receipt' %}active{% endif %}"><span class="nav-icon" aria-hidden="true">📦</span><span>Artikel</span></a>
+                <a href="{% url 'catalog:goods_receipt' %}" class="nav-link {% if request.resolver_match.namespace == 'catalog' and request.resolver_match.url_name == 'goods_receipt' %}active{% endif %}"><span class="nav-icon" aria-hidden="true">📥</span><span>Wareneingang</span></a>
+                <a href="{{ employee_list_url|default:'/mitarbeiter/' }}" class="nav-link {% if request.resolver_match.namespace == 'employees' %}active{% endif %}"><span class="nav-icon" aria-hidden="true">🧑‍🔧</span><span>Mitarbeiter</span></a>
+                <a href="{{ appointment_overview_url|default:'/termine/' }}" class="nav-link {% if request.resolver_match.namespace == 'scheduling' %}active{% endif %}"><span class="nav-icon" aria-hidden="true">📅</span><span>Termine</span></a>
+                <a href="{% url 'invoices:invoice_list' %}" class="nav-link {% if request.resolver_match.namespace == 'invoices' %}active{% endif %}"><span class="nav-icon" aria-hidden="true">💶</span><span>Rechnungen</span></a>
+                <a href="{% url 'offers:offer_list' %}" class="nav-link {% if request.resolver_match.namespace == 'offers' %}active{% endif %}"><span class="nav-icon" aria-hidden="true">📝</span><span>Angebote</span></a>
+                {% if request.user.role == 'admin' or request.user.role == 'chef' %}<a href="{% url 'documents:document_list' %}" class="nav-link {% if request.resolver_match.namespace == 'documents' %}active{% endif %}"><span class="nav-icon" aria-hidden="true">📁</span><span>Dokumente</span></a>{% endif %}
+                <a href="{% url 'checkout:pos' %}" class="nav-link {% if request.resolver_match.namespace == 'checkout' %}active{% endif %}"><span class="nav-icon" aria-hidden="true">💳</span><span>Kasse</span></a>
                 {% if request.user.role == 'admin' or request.user.role == 'chef' %}
-                    <a href="{% url 'accounts:user_list' %}" class="nav-link nav-link-admin {% if request.resolver_match.url_name == 'user_list' or request.resolver_match.url_name == 'user_create' or request.resolver_match.url_name == 'user_update' %}active{% endif %}">Admin · Benutzer</a>
-                    <a href="{% url 'company:master_data' %}" class="nav-link nav-link-admin {% if request.resolver_match.namespace == 'company' %}active{% endif %}">Admin · Stammdaten</a>
+                    <details class="sidebar-group" {% if request.resolver_match.namespace == 'company' or request.resolver_match.url_name == 'user_list' or request.resolver_match.url_name == 'user_create' or request.resolver_match.url_name == 'user_update' %}open{% endif %}>
+                        <summary><span class="nav-icon" aria-hidden="true">⚙️</span><span>Admin</span></summary>
+                        <a href="{% url 'company:master_data' %}" class="nav-link nav-link-admin {% if request.resolver_match.namespace == 'company' %}active{% endif %}"><span class="nav-icon" aria-hidden="true">🧩</span><span>Stammdaten &amp; Einstellungen</span></a>
+                        <a href="{% url 'accounts:user_list' %}" class="nav-link nav-link-admin {% if request.resolver_match.url_name == 'user_list' or request.resolver_match.url_name == 'user_create' or request.resolver_match.url_name == 'user_update' %}active{% endif %}"><span class="nav-icon" aria-hidden="true">🛡️</span><span>Benutzer &amp; Rollen</span></a>
+                    </details>
                 {% endif %}
             {% endif %}
         </nav>
