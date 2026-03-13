@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Dokumentdetails | UrbanShine{% endblock %}
+{% block page_title %}Dokumentdetails{% endblock %}
+{% block page_subtitle %}Dateiinformationen und Aktionen{% endblock %}
+{% block content %}
+<section class="glass-card panel full">
+    <h3>{{ document.title }}</h3>
+    <p>{{ document.description|default:"Keine Beschreibung hinterlegt." }}</p>
+    <ul class="activity-list">
+        <li><strong>Kategorie</strong><p>{{ document.get_category_display }}</p></li>
+        <li><strong>Upload-Datum</strong><p>{{ document.uploaded_at|date:"d.m.Y H:i" }}</p></li>
+        <li><strong>Hochgeladen von</strong><p>{{ document.uploaded_by|default:"System" }}</p></li>
+        <li><strong>Datei</strong><p>{{ document.file.name|cut:"company_documents/" }}</p></li>
+    </ul>
+    <div style="margin-top: 1rem; display: flex; gap: .6rem; flex-wrap: wrap;">
+        <a class="btn" href="{% url 'documents:document_download' document.pk %}">Datei herunterladen</a>
+        <a class="btn btn-secondary" href="{% url 'documents:document_update' document.pk %}">Bearbeiten</a>
+        <a class="btn btn-danger" href="{% url 'documents:document_delete' document.pk %}">Löschen</a>
+        <a class="btn btn-secondary" href="{% url 'documents:document_list' %}">Zurück zur Liste</a>
+    </div>
+</section>
+{% endblock %}

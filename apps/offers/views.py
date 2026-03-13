@@ -6,6 +6,8 @@ from django.views import View
 from django.views.generic import DetailView, ListView
 
 from apps.accounts.models import UserRole
+from apps.core.activity import log_activity
+from apps.core.models import ActivitySubject
 from apps.customers.models import Customer
 from apps.orders.models import Order, OrderStatus
 
@@ -54,6 +56,14 @@ class OfferCreateView(EmployeeOnlyMixin, LoginRequiredMixin, View):
             offer = form.save()
             formset.instance = offer
             formset.save()
+            log_activity(
+                actor=request.user,
+                subject_type=ActivitySubject.ANGEBOT,
+                subject_label=f"Angebot A-{offer.angebotsnummer:05d}",
+                action="Angebot erstellt",
+                details=offer.titel,
+                icon="💼",
+            )
             messages.success(request, "Angebot wurde erstellt.")
             return redirect("offers:offer_detail", pk=offer.pk)
         return self._render(request, form, formset)

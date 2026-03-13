@@ -7,6 +7,8 @@ from django.views import View
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
 from apps.accounts.models import UserRole
+from apps.core.activity import log_activity
+from apps.core.models import ActivitySubject
 from apps.customers.models import Customer
 from apps.invoices.services import create_invoice_for_completed_order
 
@@ -67,6 +69,15 @@ class OrderCreateView(EmployeeOnlyMixin, LoginRequiredMixin, CreateView):
     def form_valid(self, form):
         response = super().form_valid(form)
         self._save_images(form)
+        log_activity(
+            actor=self.request.user,
+            subject_type=ActivitySubject.AUFTRAG,
+            subject_label=f"Auftrag #{self.object.auftragsnummer}",
+            action="Auftrag erstellt",
+            details=self.object.auftragsart,
+            to_state=self.object.get_status_display(),
+            icon="🧽",
+        )
         messages.success(self.request, "Auftrag wurde erfolgreich angelegt.")
         return response
 
@@ -86,9 +97,29 @@ class OrderUpdateView(EmployeeOnlyMixin, LoginRequiredMixin, UpdateView):
         response = super().form_valid(form)
         self._save_images(form)
         if old_status != self.object.status and self.object.status == OrderStatus.ABGESCHLOSSEN:
+            invoice_exists = self.object.rechnungen.exists()
             invoice = create_invoice_for_completed_order(self.object)
-            if invoice:
+            if invoice and not invoice_exists:
                 messages.success(self.request, f"Rechnung R-{invoice.rechnungsnummer:05d} wurde erstellt.")
+                log_activity(
+                    actor=self.request.user,
+                    subject_type=ActivitySubject.RECHNUNG,
+                    subject_label=f"Rechnung R-{invoice.rechnungsnummer:05d}",
+                    action="Rechnung erstellt",
+                    details=f"Zu Auftrag #{self.object.auftragsnummer}",
+                    icon="🧾",
+                )
+
+        log_activity(
+            actor=self.request.user,
+            subject_type=ActivitySubject.AUFTRAG,
+            subject_label=f"Auftrag #{self.object.auftragsnummer}",
+            action="Auftrag bearbeitet",
+            details=self.object.auftragsart,
+            from_state=dict(OrderStatus.choices).get(old_status, old_status),
+            to_state=self.object.get_status_display(),
+            icon="🔧",
+        )
         messages.success(self.request, "Auftrag wurde erfolgreich bearbeitet.")
         return response
 
@@ -135,8 +166,29 @@ class OrderQuickStatusUpdateView(EmployeeOnlyMixin, LoginRequiredMixin, View):
         order.save(update_fields=["status", "updated_at"])
 
         if old_status != new_status and new_status == OrderStatus.ABGESCHLOSSEN:
+            invoice_exists = order.rechnungen.exists()
             invoice = create_invoice_for_completed_order(order)
-            if invoice:
+            if invoice and not invoice_exists:
                 messages.success(request, f"Rechnung R-{invoice.rechnungsnummer:05d} wurde erstellt.")
+                log_activity(
+                    actor=request.user,
+                    subject_type=ActivitySubject.RECHNUNG,
+                    subject_label=f"Rechnung R-{invoice.rechnungsnummer:05d}",
+                    action="Rechnung erstellt",
+                    details=f"Zu Auftrag #{order.auftragsnummer}",
+                    icon="🧾",
+                )
+
+        if old_status != new_status:
+            log_activity(
+                actor=request.user,
+                subject_type=ActivitySubject.AUFTRAG,
+                subject_label=f"Auftrag #{order.auftragsnummer}",
+                action="Auftragsstatus geändert",
+                details=order.auftragsart,
+                from_state=dict(OrderStatus.choices).get(old_status, old_status),
+                to_state=order.get_status_display(),
+                icon="🔄",
+            )
         messages.success(request, f"Status für Auftrag {order.auftragsnummer} aktualisiert.")
         return redirect(request.POST.get("next") or "orders:order_list")

@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Dokument bearbeiten | UrbanShine{% endblock %}
+{% block page_title %}Firmendokument{% endblock %}
+{% block page_subtitle %}Dokument hochladen oder bearbeiten{% endblock %}
+{% block content %}
+<section class="glass-card panel full">
+    <h3>{% if object %}Dokument bearbeiten{% else %}Neues Dokument hochladen{% endif %}</h3>
+    <form method="post" enctype="multipart/form-data" class="form-grid" style="margin-top: 1rem;">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <div>
+            <button class="btn" type="submit">Speichern</button>
+            <a class="btn btn-secondary" href="{% url 'documents:document_list' %}">Abbrechen</a>
+        </div>
+    </form>
+</section>
+{% endblock %}

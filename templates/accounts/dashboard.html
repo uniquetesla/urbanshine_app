@@ -5,58 +5,64 @@
 {% block content %}
 <section class="dashboard-layout">
     <div class="dashboard-grid">
-        <article class="glass-card kpi-card">
+        <a class="glass-card kpi-card kpi-card-link" href="{% url 'orders:order_list' %}">
             <h3>Aktive Aufträge</h3>
-            <strong>128</strong>
-            <p class="kpi-trend">+8.4% seit letzter Woche</p>
-        </article>
-        <article class="glass-card kpi-card">
+            <strong>{{ active_orders }}</strong>
+            <p class="kpi-trend">Aktuell offene und laufende Aufträge</p>
+        </a>
+        <a class="glass-card kpi-card kpi-card-link" href="{% url 'invoices:invoice_list' %}">
             <h3>Offene Rechnungen</h3>
-            <strong>42</strong>
-            <p class="kpi-trend kpi-trend--warning">7 heute fällig</p>
-        </article>
-        <article class="glass-card kpi-card">
+            <strong>{{ open_invoices_count }}</strong>
+            <p class="kpi-trend kpi-trend--warning">Nicht vollständig bezahlt</p>
+        </a>
+        <a class="glass-card kpi-card kpi-card-link" href="{% url 'invoices:invoice_list' %}">
             <h3>Offene Summen</h3>
-            <strong>€ 24.860</strong>
-            <p class="kpi-trend kpi-trend--warning">-3.1% zum Vormonat</p>
-        </article>
+            <strong>{{ open_invoices_sum }} €</strong>
+            <p class="kpi-trend kpi-trend--warning">Offener Forderungsbestand</p>
+        </a>
         <article class="glass-card kpi-card">
             <h3>Monatsumsatz</h3>
-            <strong>€ 98.450</strong>
-            <p class="kpi-trend">+12.2% im Vergleich</p>
+            <strong>{{ month_revenue }} €</strong>
+            <p class="kpi-trend">Bezahlte Rechnungen im aktuellen Monat</p>
         </article>
         <article class="glass-card kpi-card">
             <h3>Jahresumsatz</h3>
-            <strong>€ 1.240.300</strong>
-            <p class="kpi-trend">+18.6% YoY</p>
+            <strong>{{ year_revenue }} €</strong>
+            <p class="kpi-trend">Bezahlte Rechnungen im aktuellen Jahr</p>
         </article>
 
         <article class="glass-card panel panel-activity">
             <div class="panel-heading">
                 <h3>Letzte Aktivitäten</h3>
-                <span>Live-Feed</span>
+                <span>Neu → Alt</span>
             </div>
-            <ul class="activity-list">
-                <li>
-                    <strong>Auftrag #A-391</strong>
-                    <p>Fahrzeugaufbereitung abgeschlossen · vor 12 Min</p>
-                </li>
-                <li>
-                    <strong>Rechnung #R-812</strong>
-                    <p>Zahlungseingang verbucht · vor 34 Min</p>
-                </li>
-                <li>
-                    <strong>Kunde Müller GmbH</strong>
-                    <p>Neues Angebot erstellt · vor 51 Min</p>
-                </li>
-                <li>
-                    <strong>Kasse</strong>
-                    <p>Schichtwechsel protokolliert · vor 1 Std</p>
-                </li>
-            </ul>
+            {% if latest_activities %}
+                <ul class="activity-list timeline-list">
+                    {% for activity in latest_activities %}
+                        <li>
+                            <div class="activity-line">
+                                <span class="activity-icon">{{ activity.icon }}</span>
+                                <div>
+                                    <strong>{{ activity.subject_label }} · {{ activity.get_subject_type_display }}</strong>
+                                    <p>{{ activity.action }}{% if activity.details %} · {{ activity.details }}{% endif %}</p>
+                                    {% if activity.from_state or activity.to_state %}
+                                        <p>Von <em>{{ activity.from_state|default:"-" }}</em> zu <em>{{ activity.to_state|default:"-" }}</em></p>
+                                    {% endif %}
+                                    <p>{{ activity.actor|default:"System" }} · {{ activity.created_at|date:"d.m.Y H:i" }}</p>
+                                </div>
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <div class="empty-state">
+                    <strong>Noch keine Aktivitäten vorhanden</strong>
+                    <p>Sobald Aufträge, Kunden, Rechnungen, Angebote oder Dokumente bearbeitet werden, erscheinen sie hier.</p>
+                </div>
+            {% endif %}
         </article>
 
-        <article class="glass-card panel full">
+        <article class="glass-card panel full admin-area">
             <h3>Admin-Bereich</h3>
             {% if request.user.role == 'admin' or request.user.role == 'chef' %}
                 <p>Sie haben erweiterten Zugriff auf die Benutzerverwaltung und rollenbasierte Freigaben.</p>
@@ -69,15 +75,13 @@
 
     <aside class="glass-card quick-actions">
         <h3>Schnellaktionen</h3>
-        <details>
-            <summary>Neuer Auftrag</summary>
-            <p>Lege in wenigen Schritten einen neuen Auftrag mit Fahrzeug- und Leistungsdaten an.</p>
-            <a class="btn" href="{% url 'orders:order_create' %}">Auftrag starten</a>
-        </details>
-        <a class="btn btn-secondary" href="{% url 'employees:employee_list' %}">Mitarbeiterplanung</a>
-        <a class="btn btn-secondary" href="{% url 'scheduling:appointment_overview' %}">Terminplanung</a>
+        <a class="btn" href="{% url 'orders:order_create' %}">Neuer Auftrag</a>
         <a class="btn btn-secondary" href="{% url 'customers:customer_create' %}">Neuer Kunde</a>
-        <a class="btn btn-secondary" href="{% url 'checkout:pos' %}">Kasse öffnen</a>
+        <a class="btn btn-secondary" href="{% url 'offers:offer_create' %}">Neues Angebot</a>
+        <a class="btn btn-secondary" href="{% url 'invoices:invoice_list' %}">Rechnungen öffnen</a>
+        {% if request.user.role == 'admin' or request.user.role == 'chef' %}
+            <a class="btn btn-secondary" href="{% url 'documents:document_list' %}">Firmendokumente</a>
+        {% endif %}
     </aside>
 </section>
 {% endblock %}
