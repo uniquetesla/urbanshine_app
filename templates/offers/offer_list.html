@@ -9,6 +9,11 @@
         <a href="{% url 'offers:offer_create' %}" class="btn">Angebot erstellen</a>
     </div>
 
+    <form method="get" style="margin-bottom:1rem;display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;">
+        <input type="search" name="q" value="{{ query }}" placeholder="Suche nach Nr., Kunde, Titel, Leistung, Status..." style="min-width:280px;">
+        <button class="btn btn-secondary" type="submit">Suchen</button>
+    </form>
+
     <div class="table-wrap">
         <table>
             <thead>
@@ -24,22 +29,22 @@
             <tbody>
             {% for offer in offers %}
                 <tr>
-                    <td>A-{{ offer.angebotsnummer|stringformat:"05d" }}</td>
+                    <td>{{ offer.formatted_angebotsnummer }}</td>
                     <td>{{ offer.kunde.vorname }} {{ offer.kunde.nachname }}</td>
                     <td>{{ offer.titel }}</td>
                     <td>{{ offer.get_status_display }}</td>
-                    <td>{{ offer.gesamtpreis }} €</td>
+                    <td>{{ offer.gesamtpreis|floatformat:2 }} €</td>
                     <td>
                         <a class="btn btn-secondary" href="{% url 'offers:offer_detail' offer.pk %}">Details</a>
                         {% if offer.umgewandelter_auftrag %}
                             <a class="btn" href="{% url 'orders:order_detail' offer.umgewandelter_auftrag.pk %}">Auftrag</a>
+                        {% else %}
+                            <a class="btn" href="{% url 'offers:offer_update' offer.pk %}">Bearbeiten</a>
                         {% endif %}
                     </td>
                 </tr>
             {% empty %}
-                <tr>
-                    <td colspan="6">Noch keine Angebote vorhanden.</td>
-                </tr>
+                <tr><td colspan="6">Noch keine Angebote vorhanden.</td></tr>
             {% endfor %}
             </tbody>
         </table>

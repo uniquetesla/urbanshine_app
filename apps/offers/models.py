@@ -1,10 +1,10 @@
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 
 from django.db import models
+from django.db.models import Sum
 
 from apps.core.models import NumberSequenceType
 from apps.core.number_sequences import format_sequence, next_sequence_value
-from django.db.models import Sum
 
 
 class OfferStatus(models.TextChoices):
@@ -50,23 +50,52 @@ class Offer(models.Model):
             self.angebotsnummer = next_sequence_value(NumberSequenceType.ANGEBOT)
         super().save(*args, **kwargs)
 
+    @staticmethod
+    def _money(value):
+        return Decimal(value or "0.00").quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
     @property
     def zwischensumme(self):
         total = self.positionen.aggregate(total=Sum("gesamtpreis"))["total"]
-        return total or Decimal("0.00")
+        return self._money(total)
 
     @property
     def rabatt_betrag(self):
-        return (self.zwischensumme * self.rabatt_prozent) / Decimal("100")
+        rabatt = (self.zwischensumme * self.rabatt_prozent) / Decimal("100")
+        return self._money(rabatt)
 
     @property
     def gesamtpreis(self):
-        return self.zwischensumme - self.rabatt_betrag
+        return self._money(self.zwischensumme - self.rabatt_betrag)
 
 
 class OfferItem(models.Model):
     angebot = models.ForeignKey(Offer, on_delete=models.CASCADE, related_name="positionen", verbose_name="Angebot")
     bezeichnung = models.CharField(max_length=200, verbose_name="Bezeichnung")
+    leistung = models.ForeignKey(
+        "company.Service",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="angebotspositionen",
+        verbose_name="Leistung",
+    )
+    verschmutzungsgrad = models.ForeignKey(
+        "company.SoilingLevel",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="angebotspositionen",
+        verbose_name="Verschmutzungsgrad",
+    )
+    zuschlag = models.ForeignKey(
+        "company.Surcharge",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="angebotspositionen",
+        verbose_name="Zuschlag",
+    )
     menge = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("1.00"), verbose_name="Menge")
     einzelpreis = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Einzelpreis (€)")
     gesamtpreis = models.DecimalField(max_digits=10, decimal_places=2, editable=False, verbose_name="Gesamtpreis (€)")
@@ -79,6 +108,21 @@ class OfferItem(models.Model):
     def __str__(self):
         return f"{self.bezeichnung} ({self.menge} × {self.einzelpreis} €)"
 
+    def calculate_price(self):
+        if not self.leistung or not self.verschmutzungsgrad:
+            return self.einzelpreis or Decimal("0.00")
+
+        price = self.leistung.price * self.verschmutzungsgrad.multiplier
+        if self.zuschlag:
+            if self.zuschlag.is_percentage:
+                price += (price * self.zuschlag.amount) / Decimal("100")
+            else:
+                price += self.zuschlag.amount
+        return price.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
     def save(self, *args, **kwargs):
-        self.gesamtpreis = self.menge * self.einzelpreis
+        if self.leistung and self.verschmutzungsgrad:
+            self.bezeichnung = self.leistung.name
+            self.einzelpreis = self.calculate_price()
+        self.gesamtpreis = (self.menge * self.einzelpreis).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
         super().save(*args, **kwargs)
