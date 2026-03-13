@@ -226,7 +226,16 @@ def _build_invoice_pdf(invoice: Invoice, company_settings: CompanySettings | Non
     if company_settings and company_settings.logo:
         logo_path = Path(company_settings.logo.path)
         if logo_path.exists():
-            pdf.drawImage(str(logo_path), left_x, top_y - 15 * mm, width=32 * mm, height=15 * mm, preserveAspectRatio=True, anchor='nw')
+            pdf.drawImage(
+                str(logo_path),
+                left_x,
+                top_y - 15 * mm,
+                width=32 * mm,
+                height=15 * mm,
+                preserveAspectRatio=True,
+                anchor="nw",
+                mask="auto",
+            )
 
     y = top_y - 18 * mm
     pdf.setFont("Helvetica-Bold", 10)
