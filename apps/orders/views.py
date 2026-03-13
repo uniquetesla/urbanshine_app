@@ -1,5 +1,6 @@
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
@@ -12,7 +13,7 @@ from apps.core.models import ActivitySubject
 from apps.customers.models import Customer
 from apps.invoices.services import create_invoice_for_completed_order
 
-from .forms import OrderForm
+from .forms import OrderForm, OrderPositionFormSet
 from .models import Order, OrderImage, OrderStatus
 
 
@@ -33,7 +34,7 @@ class OrderListView(LoginRequiredMixin, ListView):
     context_object_name = "orders"
 
     def get_queryset(self):
-        queryset = Order.objects.select_related("kunde").prefetch_related("mitarbeiter").order_by("-auftragsnummer")
+        queryset = Order.objects.select_related("kunde", "order_type").prefetch_related("mitarbeiter").order_by("-auftragsnummer")
 
         if self.request.user.role == UserRole.STAMMKUNDE:
             customer = _customer_for_user(self.request.user)
@@ -48,9 +49,9 @@ class OrderListView(LoginRequiredMixin, ListView):
                 | Q(kunde__vorname__icontains=query)
                 | Q(kunde__nachname__icontains=query)
                 | Q(auftragsart__icontains=query)
-                | Q(leistungen__icontains=query)
+                | Q(positionen__leistung__name__icontains=query)
                 | Q(status__icontains=query)
-            )
+            ).distinct()
         return queryset
 
     def get_context_data(self, **kwargs):
@@ -64,11 +65,27 @@ class OrderCreateView(EmployeeOnlyMixin, LoginRequiredMixin, CreateView):
     model = Order
     form_class = OrderForm
     template_name = "orders/order_form.html"
-    success_url = reverse_lazy("orders:order_list")
+
+    def get_success_url(self):
+        return reverse_lazy("orders:order_detail", kwargs={"pk": self.object.pk})
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["position_formset"] = kwargs.get("position_formset") or OrderPositionFormSet(self.request.POST or None)
+        return context
 
     def form_valid(self, form):
-        response = super().form_valid(form)
-        self._save_images(form)
+        position_formset = OrderPositionFormSet(self.request.POST)
+        if not position_formset.is_valid():
+            return self.render_to_response(self.get_context_data(form=form, position_formset=position_formset))
+
+        with transaction.atomic():
+            response = super().form_valid(form)
+            position_formset.instance = self.object
+            position_formset.save()
+            self.object.recalculate_totals(save=True)
+            self._save_files(form)
+
         log_activity(
             actor=self.request.user,
             subject_type=ActivitySubject.AUFTRAG,
@@ -81,34 +98,43 @@ class OrderCreateView(EmployeeOnlyMixin, LoginRequiredMixin, CreateView):
         messages.success(self.request, "Auftrag wurde erfolgreich angelegt.")
         return response
 
-    def _save_images(self, form):
-        for image in form.cleaned_data.get("bilder", []):
-            OrderImage.objects.create(auftrag=self.object, bild=image)
+    def _save_files(self, form):
+        for file_obj in form.cleaned_data.get("bilder", []):
+            OrderImage.objects.create(auftrag=self.object, bild=file_obj)
 
 
 class OrderUpdateView(EmployeeOnlyMixin, LoginRequiredMixin, UpdateView):
     model = Order
     form_class = OrderForm
     template_name = "orders/order_form.html"
-    success_url = reverse_lazy("orders:order_list")
+
+    def get_success_url(self):
+        return reverse_lazy("orders:order_detail", kwargs={"pk": self.object.pk})
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["position_formset"] = kwargs.get("position_formset") or OrderPositionFormSet(
+            self.request.POST or None, instance=self.object
+        )
+        return context
 
     def form_valid(self, form):
         old_status = self.get_object().status
-        response = super().form_valid(form)
-        self._save_images(form)
+        position_formset = OrderPositionFormSet(self.request.POST, instance=self.object)
+        if not position_formset.is_valid():
+            return self.render_to_response(self.get_context_data(form=form, position_formset=position_formset))
+
+        with transaction.atomic():
+            response = super().form_valid(form)
+            position_formset.save()
+            self.object.recalculate_totals(save=True)
+            self._save_files(form)
+
         if old_status != self.object.status and self.object.status == OrderStatus.ABGESCHLOSSEN:
             invoice_exists = self.object.rechnungen.exists()
             invoice = create_invoice_for_completed_order(self.object)
             if invoice and not invoice_exists:
                 messages.success(self.request, f"Rechnung R-{invoice.rechnungsnummer:05d} wurde erstellt.")
-                log_activity(
-                    actor=self.request.user,
-                    subject_type=ActivitySubject.RECHNUNG,
-                    subject_label=f"Rechnung R-{invoice.rechnungsnummer:05d}",
-                    action="Rechnung erstellt",
-                    details=f"Zu Auftrag #{self.object.auftragsnummer}",
-                    icon="🧾",
-                )
 
         log_activity(
             actor=self.request.user,
@@ -123,19 +149,15 @@ class OrderUpdateView(EmployeeOnlyMixin, LoginRequiredMixin, UpdateView):
         messages.success(self.request, "Auftrag wurde erfolgreich bearbeitet.")
         return response
 
-    def _save_images(self, form):
-        for image in form.cleaned_data.get("bilder", []):
-            OrderImage.objects.create(auftrag=self.object, bild=image)
+    def _save_files(self, form):
+        for file_obj in form.cleaned_data.get("bilder", []):
+            OrderImage.objects.create(auftrag=self.object, bild=file_obj)
 
 
 class OrderDeleteView(EmployeeOnlyMixin, LoginRequiredMixin, DeleteView):
     model = Order
     template_name = "orders/order_confirm_delete.html"
     success_url = reverse_lazy("orders:order_list")
-
-    def form_valid(self, form):
-        messages.success(self.request, "Auftrag wurde erfolgreich gelöscht.")
-        return super().form_valid(form)
 
 
 class OrderDetailView(LoginRequiredMixin, DetailView):
@@ -144,7 +166,12 @@ class OrderDetailView(LoginRequiredMixin, DetailView):
     context_object_name = "order"
 
     def get_queryset(self):
-        queryset = super().get_queryset().select_related("kunde").prefetch_related("mitarbeiter", "bilder")
+        queryset = (
+            super()
+            .get_queryset()
+            .select_related("kunde", "order_type")
+            .prefetch_related("mitarbeiter", "bilder", "positionen__leistung", "positionen__verschmutzungsgrad", "positionen__zuschlag")
+        )
         if self.request.user.role == UserRole.STAMMKUNDE:
             customer = _customer_for_user(self.request.user)
             if not customer:
@@ -164,31 +191,5 @@ class OrderQuickStatusUpdateView(EmployeeOnlyMixin, LoginRequiredMixin, View):
         old_status = order.status
         order.status = new_status
         order.save(update_fields=["status", "updated_at"])
-
-        if old_status != new_status and new_status == OrderStatus.ABGESCHLOSSEN:
-            invoice_exists = order.rechnungen.exists()
-            invoice = create_invoice_for_completed_order(order)
-            if invoice and not invoice_exists:
-                messages.success(request, f"Rechnung R-{invoice.rechnungsnummer:05d} wurde erstellt.")
-                log_activity(
-                    actor=request.user,
-                    subject_type=ActivitySubject.RECHNUNG,
-                    subject_label=f"Rechnung R-{invoice.rechnungsnummer:05d}",
-                    action="Rechnung erstellt",
-                    details=f"Zu Auftrag #{order.auftragsnummer}",
-                    icon="🧾",
-                )
-
-        if old_status != new_status:
-            log_activity(
-                actor=request.user,
-                subject_type=ActivitySubject.AUFTRAG,
-                subject_label=f"Auftrag #{order.auftragsnummer}",
-                action="Auftragsstatus geändert",
-                details=order.auftragsart,
-                from_state=dict(OrderStatus.choices).get(old_status, old_status),
-                to_state=order.get_status_display(),
-                icon="🔄",
-            )
         messages.success(request, f"Status für Auftrag {order.auftragsnummer} aktualisiert.")
         return redirect(request.POST.get("next") or "orders:order_list")

@@ -6,69 +6,29 @@
 <section class="glass-card panel full">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:.7rem;flex-wrap:wrap;">
         <h3>{{ order.kunde.vorname }} {{ order.kunde.nachname }}</h3>
-        <div style="display:flex;gap:.5rem;">
-            <a href="{% url 'orders:order_update' order.pk %}" class="btn btn-secondary">Bearbeiten</a>
-            <a href="{% url 'orders:order_list' %}" class="btn btn-secondary">Zurück zur Liste</a>
-        </div>
+        <div style="display:flex;gap:.5rem;"><a href="{% url 'orders:order_update' order.pk %}" class="btn btn-secondary">Bearbeiten</a><a href="{% url 'orders:order_list' %}" class="btn btn-secondary">Zurück zur Liste</a></div>
     </div>
 
     <div class="form-grid" style="margin-top:1rem;">
-        <div><strong>Auftragsart</strong><br>{{ order.auftragsart }}</div>
-        <div>
-            <strong>Status</strong><br>
-            <form method="post" action="{% url 'orders:order_quick_status' order.pk %}" style="display:flex;gap:.4rem;align-items:center;margin-top:.2rem;">
-                {% csrf_token %}
-                <input type="hidden" name="next" value="{% url 'orders:order_detail' order.pk %}">
-                <select name="status" onchange="this.form.submit()">
-                    {% for value, label in order._meta.get_field('status').choices %}
-                        <option value="{{ value }}" {% if order.status == value %}selected{% endif %}>{{ label }}</option>
-                    {% endfor %}
-                </select>
-            </form>
-        </div>
-        <div><strong>Verschmutzungsgrad</strong><br>{{ order.get_verschmutzungsgrad_display }}</div>
+        <div><strong>Auftragsart</strong><br>{{ order.order_type.name|default:order.auftragsart }}</div>
+        <div><strong>Status</strong><br>{{ order.get_status_display }}</div>
         <div><strong>Termin</strong><br>{{ order.termin|date:"d.m.Y H:i"|default:"-" }}</div>
-        <div><strong>Zuschläge</strong><br>{{ order.zuschlaege }} €</div>
         <div><strong>Gesamtpreis</strong><br>{{ order.gesamtpreis }} €</div>
+        <div><strong>Gesamtzeit</strong><br>{{ order.gesamtzeit_formatiert }}</div>
     </div>
 
     <div style="margin-top:1rem;">
-        <strong>Leistungen</strong>
-        <p>{{ order.leistungen|linebreaksbr }}</p>
-    </div>
-
-    <div style="margin-top:1rem;">
-        <strong>Preisberechnung</strong>
-        <p>{{ order.preisberechnung|linebreaksbr }}</p>
-    </div>
-
-    <div style="margin-top:1rem;">
-        <strong>Interne Notizen</strong>
-        <p>{{ order.interne_notizen|default:"Keine internen Notizen."|linebreaksbr }}</p>
-    </div>
-
-    <div style="margin-top:1rem;">
-        <strong>Zugeordnete Mitarbeiter</strong>
-        <ul>
-            {% for user in order.mitarbeiter.all %}
-                <li>{{ user.get_full_name|default:user.username }}</li>
-            {% empty %}
-                <li>Keine Mitarbeiter zugeordnet.</li>
-            {% endfor %}
-        </ul>
-    </div>
-
-    <div style="margin-top:1rem;">
-        <strong>Bilder</strong>
-        <div style="display:flex;flex-wrap:wrap;gap:.8rem;margin-top:.6rem;">
-            {% for image in order.bilder.all %}
-                <a href="{{ image.bild.url }}" target="_blank" rel="noopener">
-                    <img src="{{ image.bild.url }}" alt="Auftragsbild" style="width:160px;height:160px;object-fit:cover;border-radius:10px;">
-                </a>
-            {% empty %}
-                <p>Keine Bilder hochgeladen.</p>
-            {% endfor %}
+        <strong>Leistungspositionen</strong>
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>Leistung</th><th>Verschmutzungsgrad</th><th>Zuschlag</th><th>Status</th><th>Preis</th><th>Dauer</th></tr></thead>
+                <tbody>{% for pos in order.positionen.all %}<tr><td>{{ pos.leistung.name }}</td><td>{{ pos.verschmutzungsgrad.name }}</td><td>{{ pos.zuschlag.name|default:'-' }}</td><td>{{ pos.get_status_display }}</td><td>{{ pos.einzelpreis }} €</td><td>{{ pos.geschaetzte_dauer_minuten }} Min.</td></tr>{% empty %}<tr><td colspan="6">Keine Positionen vorhanden.</td></tr>{% endfor %}</tbody>
+            </table>
         </div>
     </div>
+
+    <div style="margin-top:1rem;"><strong>Interne Notizen</strong><p>{{ order.interne_notizen|default:"Keine internen Notizen."|linebreaksbr }}</p></div>
+
+    <div style="margin-top:1rem;"><strong>Dateien</strong><ul>{% for file in order.bilder.all %}<li><a href="{{ file.bild.url }}" target="_blank" rel="noopener">{{ file.bild.name }}</a></li>{% empty %}<li>Keine Dateien hochgeladen.</li>{% endfor %}</ul></div>
 </section>
 {% endblock %}

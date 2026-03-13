@@ -26,7 +26,7 @@
                 <th>Auftragsart</th>
                 <th>Status</th>
                 <th>Termin</th>
-                <th>Preis</th>
+                <th>Preis</th><th>Zeit</th>
                 <th>Aktionen</th>
             </tr>
             </thead>
@@ -35,7 +35,7 @@
                 <tr>
                     <td><a href="{% url 'orders:order_detail' order.pk %}">#{{ order.auftragsnummer }}</a></td>
                     <td>{{ order.kunde.vorname }} {{ order.kunde.nachname }}</td>
-                    <td>{{ order.auftragsart }}</td>
+                    <td>{{ order.order_type.name|default:order.auftragsart }}</td>
                     <td>
                         <form method="post" action="{% url 'orders:order_quick_status' order.pk %}" style="display:flex;gap:.3rem;align-items:center;">
                             {% csrf_token %}
@@ -49,6 +49,7 @@
                     </td>
                     <td>{{ order.termin|date:"d.m.Y H:i"|default:"-" }}</td>
                     <td>{{ order.gesamtpreis }} €</td>
+                    <td>{{ order.gesamtzeit_formatiert }}</td>
                     <td style="display:flex;gap:.4rem;flex-wrap:wrap;">
                         <a class="btn btn-secondary" href="{% url 'orders:order_detail' order.pk %}">Details</a>
                         <a class="btn btn-secondary" href="{% url 'orders:order_update' order.pk %}">Bearbeiten</a>
@@ -57,7 +58,7 @@
                 </tr>
             {% empty %}
                 <tr>
-                    <td colspan="7">Keine Aufträge gefunden.</td>
+                    <td colspan="8">Keine Aufträge gefunden.</td>
                 </tr>
             {% endfor %}
             </tbody>
