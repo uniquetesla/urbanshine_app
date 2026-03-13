@@ -95,35 +95,32 @@ def _create_line_items_for_order(invoice: Invoice, order: Order):
         return
 
     positions = order.positionen.select_related("leistung", "zuschlag", "verschmutzungsgrad")
-    line_items = []
     for index, pos in enumerate(positions, start=1):
+        base_amount = (pos.leistung.price * pos.verschmutzungsgrad.multiplier).quantize(Decimal("0.01"))
         suffix = f" ({pos.verschmutzungsgrad.name})" if pos.verschmutzungsgrad else ""
-        line_items.append(
-            InvoiceLineItem(
-                rechnung=invoice,
-                beschreibung=f"{pos.leistung.name}{suffix}",
-                menge=Decimal("1.00"),
-                einheit=pos.einheit or pos.leistung.unit or "Einheit",
-                einzelpreis=pos.einzelpreis,
-                gesamtpreis=pos.einzelpreis,
-                sortierung=index,
-            )
+        main_item = InvoiceLineItem.objects.create(
+            rechnung=invoice,
+            beschreibung=f"{pos.leistung.name}{suffix}",
+            menge=Decimal("1.00"),
+            einheit=pos.einheit or pos.leistung.unit or "Einheit",
+            einzelpreis=base_amount,
+            gesamtpreis=base_amount,
+            sortierung=index,
+            positionscode=str(index),
         )
         if pos.zuschlag and pos.zuschlag.amount > 0:
             surcharge_amount = _surcharge_amount_for_position(pos)
-            line_items.append(
-                InvoiceLineItem(
-                    rechnung=invoice,
-                    beschreibung=f"Zuschlag: {pos.zuschlag.name}",
-                    menge=Decimal("1.00"),
-                    einheit="Position",
-                    einzelpreis=surcharge_amount,
-                    gesamtpreis=surcharge_amount,
-                    sortierung=index * 100,
-                )
+            InvoiceLineItem.objects.create(
+                rechnung=invoice,
+                parent=main_item,
+                beschreibung=pos.zuschlag.name,
+                menge=Decimal("1.00"),
+                einheit="Position",
+                einzelpreis=surcharge_amount,
+                gesamtpreis=surcharge_amount,
+                sortierung=(index * 100) + 1,
+                positionscode=f"{index}.1",
             )
-
-    InvoiceLineItem.objects.bulk_create(line_items)
 
 
 def _create_line_items_for_sale(invoice: Invoice, sale: Sale):
@@ -139,6 +136,7 @@ def _create_line_items_for_sale(invoice: Invoice, sale: Sale):
             einzelpreis=pos.einzelpreis,
             gesamtpreis=pos.gesamtpreis,
             sortierung=index,
+            positionscode=str(index),
         )
         for index, pos in enumerate(sale.positionen.select_related("artikel"), start=1)
     ]
@@ -321,8 +319,10 @@ def _build_invoice_pdf(invoice: Invoice, company_settings: CompanySettings | Non
     pdf.setFont("Helvetica", 8.7)
     line_height = 4.1 * mm
 
-    for idx, item in enumerate(invoice.positionen.all(), start=1):
-        desc_lines = simpleSplit(item.beschreibung, "Helvetica", 8.7, col_desc_w - 2 * mm) or [""]
+    for item in invoice.positionen.select_related("parent").all():
+        prefix = item.positionscode or "-"
+        description = f"↳ {item.beschreibung}" if item.parent_id else item.beschreibung
+        desc_lines = simpleSplit(description, "Helvetica", 8.7, col_desc_w - 2 * mm) or [""]
         unit_lines = simpleSplit(item.einheit or "", "Helvetica", 8.7, col_unit_w - 2 * mm) or [""]
         row_lines = max(len(desc_lines), len(unit_lines))
         row_bottom = y - ((row_lines - 1) * line_height)
@@ -339,7 +339,7 @@ def _build_invoice_pdf(invoice: Invoice, company_settings: CompanySettings | Non
             pdf.setFont("Helvetica", 8.7)
             row_bottom = y - ((row_lines - 1) * line_height)
 
-        pdf.drawRightString(col_pos_x + col_pos_w - 1.0 * mm, y, str(idx))
+        pdf.drawRightString(col_pos_x + col_pos_w - 1.0 * mm, y, prefix)
         pdf.drawRightString(col_qty_x + col_qty_w - 1.0 * mm, y, _format_quantity(item.menge))
         for line_index in range(row_lines):
             if line_index < len(unit_lines):

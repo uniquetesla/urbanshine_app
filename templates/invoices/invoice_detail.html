@@ -42,19 +42,20 @@
         <div class="table-wrap" style="margin-top:.5rem;">
             <table>
                 <thead>
-                    <tr><th>Beschreibung</th><th>Menge</th><th>Einheit</th><th>Einzelpreis</th><th>Gesamtpreis</th></tr>
+                    <tr><th>Pos.</th><th>Beschreibung</th><th>Menge</th><th>Einheit</th><th>Einzelpreis</th><th>Gesamtpreis</th></tr>
                 </thead>
                 <tbody>
                 {% for item in invoice.positionen.all %}
                     <tr>
-                        <td>{{ item.beschreibung }}</td>
+                        <td>{{ item.positionscode|default:"-" }}</td>
+                        <td>{% if item.parent_id %}<span style="opacity:.85;">↳ {{ item.beschreibung }}</span>{% else %}{{ item.beschreibung }}{% endif %}</td>
                         <td>{{ item.menge|floatformat:2 }}</td>
                         <td>{{ item.einheit }}</td>
                         <td>{{ item.einzelpreis|floatformat:2 }} €</td>
                         <td>{{ item.gesamtpreis|floatformat:2 }} €</td>
                     </tr>
                 {% empty %}
-                    <tr><td colspan="5">Keine Rechnungspositionen vorhanden.</td></tr>
+                    <tr><td colspan="6">Keine Rechnungspositionen vorhanden.</td></tr>
                 {% endfor %}
                 </tbody>
             </table>

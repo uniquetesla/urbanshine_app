@@ -10,8 +10,8 @@ from django.views.generic import TemplateView
 
 from apps.accounts.models import UserRole
 from apps.catalog.models import Article
-from apps.customers.models import Customer
 from apps.core.number_sequences import parse_sequence_value
+from apps.customers.models import Customer
 from apps.invoices.services import create_invoice_for_sale
 
 from .models import PaymentMethod, Sale, SaleItem
@@ -49,12 +49,16 @@ class CheckoutView(EmployeeOnlyMixin, LoginRequiredMixin, TemplateView):
             if not barcode:
                 messages.error(request, "Bitte Barcode eingeben.")
                 return redirect("checkout:pos")
-            article = Article.objects.filter(barcode=barcode).first()
+
+            article = Article.objects.filter(
+                Q(barcode=barcode) | Q(artikelnummer=parse_sequence_value(barcode) or -1)
+            ).first()
             if not article:
                 messages.error(request, "Kein Artikel zu diesem Barcode gefunden.")
                 return redirect("checkout:pos")
+
             self._add_to_cart(str(article.id), 1)
-            messages.success(request, f"{article.name} wurde per Barcode hinzugefügt.")
+            messages.success(request, f"{article.name} wurde in den Warenkorb übernommen.")
             return redirect("checkout:pos")
 
         if action == "update" and article_id:
@@ -115,10 +119,7 @@ class CheckoutView(EmployeeOnlyMixin, LoginRequiredMixin, TemplateView):
         article_ids = [int(article_id) for article_id in cart.keys()]
         invoice = None
         with transaction.atomic():
-            articles = {
-                article.id: article
-                for article in Article.objects.select_for_update().filter(id__in=article_ids)
-            }
+            articles = {article.id: article for article in Article.objects.select_for_update().filter(id__in=article_ids)}
             for article_id, qty in cart.items():
                 article = articles.get(int(article_id))
                 if not article:
@@ -215,18 +216,21 @@ class CheckoutView(EmployeeOnlyMixin, LoginRequiredMixin, TemplateView):
                 continue
             line_total = article.preis * qty
             total += line_total
-            cart_items.append({"article": article, "quantity": qty, "line_total": line_total})
+            cart_items.append(
+                {
+                    "article": article,
+                    "quantity": qty,
+                    "line_total": line_total,
+                }
+            )
 
         sales_queryset = Sale.objects.select_related("kunde", "mitarbeiter").prefetch_related("positionen__artikel")[:20]
-        sales = [
-            {"sale": sale, "invoice": getattr(sale, "rechnung", None)}
-            for sale in sales_queryset
-        ]
+        sales = [{"sale": sale, "invoice": getattr(sale, "rechnung", None)} for sale in sales_queryset]
 
         context.update(
             {
                 "query": query,
-                "articles": article_queryset,
+                "articles": article_queryset[:120],
                 "cart_items": cart_items,
                 "cart_total": total,
                 "payment_methods": PaymentMethod.choices,

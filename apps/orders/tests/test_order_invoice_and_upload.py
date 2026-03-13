@@ -6,7 +6,7 @@ from apps.accounts.models import User, UserRole
 from apps.company.models import OrderType, Service, SoilingLevel
 from apps.customers.models import Customer
 from apps.invoices.models import Invoice
-from apps.orders.models import Order, OrderImage, OrderStatus
+from apps.orders.models import Order, OrderAttachment, OrderStatus
 
 
 class OrderUploadAndInvoiceTests(TestCase):
@@ -46,13 +46,13 @@ class OrderUploadAndInvoiceTests(TestCase):
     def test_create_order_with_file_upload(self):
         file_obj = SimpleUploadedFile("foto.txt", b"upload-test", content_type="text/plain")
         payload = self._payload()
-        payload["bilder"] = [file_obj]
+        payload["anhaenge"] = [file_obj]
 
         response = self.client.post(reverse("orders:order_create"), data=payload)
 
         self.assertEqual(response.status_code, 302)
         order = Order.objects.first()
-        self.assertTrue(OrderImage.objects.filter(auftrag=order).exists())
+        self.assertTrue(OrderAttachment.objects.filter(auftrag=order).exists())
 
     def test_manual_invoice_creation_from_order(self):
         order = Order.objects.create(kunde=self.customer, order_type=self.order_type, auftragsart="Außen", gesamtpreis="120.00")

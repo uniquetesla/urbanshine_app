@@ -15,7 +15,7 @@ from apps.invoices.services import create_invoice_for_completed_order, create_ma
 from apps.company.models import Service, SoilingLevel, Surcharge
 
 from .forms import OrderForm, OrderPositionFormSet
-from .models import Order, OrderImage, OrderStatus, map_order_status_to_position_status
+from .models import Order, OrderAttachment, OrderStatus, map_order_status_to_position_status
 
 
 def _customer_for_user(user):
@@ -111,8 +111,13 @@ class OrderCreateView(EmployeeOnlyMixin, LoginRequiredMixin, CreateView):
         return response
 
     def _save_files(self):
-        for file_obj in self.request.FILES.getlist("bilder"):
-            OrderImage.objects.create(auftrag=self.object, bild=file_obj)
+        for file_obj in self.request.FILES.getlist("anhaenge"):
+            OrderAttachment.objects.create(
+                auftrag=self.object,
+                datei=file_obj,
+                original_name=getattr(file_obj, "name", ""),
+                uploaded_by=self.request.user,
+            )
 
 
 class OrderUpdateView(EmployeeOnlyMixin, LoginRequiredMixin, UpdateView):
@@ -173,8 +178,13 @@ class OrderUpdateView(EmployeeOnlyMixin, LoginRequiredMixin, UpdateView):
         return response
 
     def _save_files(self):
-        for file_obj in self.request.FILES.getlist("bilder"):
-            OrderImage.objects.create(auftrag=self.object, bild=file_obj)
+        for file_obj in self.request.FILES.getlist("anhaenge"):
+            OrderAttachment.objects.create(
+                auftrag=self.object,
+                datei=file_obj,
+                original_name=getattr(file_obj, "name", ""),
+                uploaded_by=self.request.user,
+            )
 
 
 class OrderDeleteView(EmployeeOnlyMixin, LoginRequiredMixin, DeleteView):
@@ -193,7 +203,7 @@ class OrderDetailView(LoginRequiredMixin, DetailView):
             super()
             .get_queryset()
             .select_related("kunde", "order_type")
-            .prefetch_related("mitarbeiter", "bilder", "rechnungen", "positionen__leistung", "positionen__verschmutzungsgrad", "positionen__zuschlag")
+            .prefetch_related("mitarbeiter", "anhaenge", "rechnungen", "positionen__leistung", "positionen__verschmutzungsgrad", "positionen__zuschlag")
         )
         if self.request.user.role == UserRole.STAMMKUNDE:
             customer = _customer_for_user(self.request.user)
@@ -201,6 +211,20 @@ class OrderDetailView(LoginRequiredMixin, DetailView):
                 return queryset.none()
             return queryset.filter(kunde=customer)
         return queryset
+
+
+
+
+class OrderAttachmentDeleteView(EmployeeOnlyMixin, LoginRequiredMixin, View):
+    def post(self, request, pk, attachment_pk):
+        order = get_object_or_404(Order, pk=pk)
+        attachment = get_object_or_404(OrderAttachment, pk=attachment_pk, auftrag=order)
+        attachment.delete()
+        messages.success(request, "Anhang wurde entfernt.")
+        next_url = request.POST.get("next")
+        if next_url:
+            return redirect(next_url)
+        return redirect("orders:order_update", pk=order.pk)
 
 
 class OrderCreateInvoiceView(EmployeeOnlyMixin, LoginRequiredMixin, View):

@@ -178,15 +178,33 @@ class OrderPosition(models.Model):
         super().save(*args, **kwargs)
 
 
-class OrderImage(models.Model):
-    auftrag = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="bilder", verbose_name="Auftrag")
-    bild = models.FileField(upload_to="orders/", verbose_name="Datei")
+class OrderAttachment(models.Model):
+    auftrag = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="anhaenge", verbose_name="Auftrag")
+    datei = models.FileField(upload_to="orders/attachments/%Y/%m/", verbose_name="Datei")
+    original_name = models.CharField(max_length=255, blank=True, verbose_name="Dateiname")
+    uploaded_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="hochgeladene_auftragsanhaenge",
+        verbose_name="Hochgeladen von",
+    )
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ["-uploaded_at"]
-        verbose_name = "Auftragsdatei"
-        verbose_name_plural = "Auftragsdateien"
+        verbose_name = "Auftragsanhang"
+        verbose_name_plural = "Auftragsanhänge"
 
     def __str__(self):
-        return f"Datei zu Auftrag {self.auftrag.auftragsnummer}"
+        return self.display_name
+
+    @property
+    def display_name(self):
+        return self.original_name or self.datei.name.rsplit("/", 1)[-1]
+
+    @property
+    def is_image(self):
+        name = self.display_name.lower()
+        return name.endswith((".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp", ".svg"))

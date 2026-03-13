@@ -80,6 +80,8 @@ class Invoice(models.Model):
 
 class InvoiceLineItem(models.Model):
     rechnung = models.ForeignKey(Invoice, on_delete=models.CASCADE, related_name="positionen", verbose_name="Rechnung")
+    parent = models.ForeignKey("self", on_delete=models.CASCADE, null=True, blank=True, related_name="unterpositionen", verbose_name="Hauptposition")
+    positionscode = models.CharField(max_length=20, blank=True, verbose_name="Positionscode")
     beschreibung = models.CharField(max_length=255, verbose_name="Beschreibung")
     menge = models.DecimalField(max_digits=10, decimal_places=2, default=1, verbose_name="Menge")
     einheit = models.CharField(max_length=30, default="Stk.", verbose_name="Einheit")

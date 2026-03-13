@@ -18,7 +18,7 @@
                 {% if form.kunden_suche.errors %}<small style="color:#ff9ca4;">{{ form.kunden_suche.errors|striptags }}</small>{% endif %}
             </div>
             {% for field in form %}
-                {% if field.name != 'kunden_suche' and field.name != 'kunde' and field.name != 'bilder' %}
+                {% if field.name != 'kunden_suche' and field.name != 'kunde' and field.name != 'anhaenge' %}
                     <div>{{ field.label_tag }}{{ field }}{% if field.errors %}<small style="color:#ff9ca4;">{{ field.errors|striptags }}</small>{% endif %}</div>
                 {% endif %}
             {% endfor %}
@@ -48,22 +48,34 @@
             </table>
         </div>
 
-
-
         <div style="margin-top:1rem;">
-            <label for="id_bilder"><strong>Dateien Upload</strong></label>
-            {{ form.bilder }}
-            {% if form.bilder.errors %}<small style="color:#ff9ca4;display:block;">{{ form.bilder.errors|striptags }}</small>{% endif %}
+            <label for="id_anhaenge"><strong>Dateien / Fotos</strong></label>
+            {{ form.anhaenge }}
+            {% if form.anhaenge.errors %}<small style="color:#ff9ca4;display:block;">{{ form.anhaenge.errors|striptags }}</small>{% endif %}
         </div>
 
         <p style="margin-top:1rem;"><strong>Gesamtsumme (Vorschau):</strong> <span id="order-total-price">{{ object.gesamtpreis|default:'0.00' }} €</span></p>
         <p><strong>Geschätzte Gesamtzeit:</strong> <span id="order-total-duration">{{ object.gesamtzeit_minuten|default:0 }} Min.</span></p>
         <p><strong>Hinweis:</strong> Der Gesamtpreis und die Gesamtzeit werden serverseitig aus den Positionen berechnet.</p>
 
-        {% if object and object.bilder.exists %}
-            <div style="margin-top:1rem;"><strong>Bereits hochgeladene Dateien</strong><ul>
-                {% for file in object.bilder.all %}<li><a href="{{ file.bild.url }}" target="_blank" rel="noopener">{{ file.bild.name }}</a></li>{% endfor %}
-            </ul></div>
+        {% if object and object.anhaenge.exists %}
+            <div style="margin-top:1rem;">
+                <strong>Bereits hochgeladene Dateien</strong>
+                <div class="order-attachments-grid" style="margin-top:.5rem;">
+                    {% for attachment in object.anhaenge.all %}
+                        <article class="order-attachment-card">
+                            {% if attachment.is_image %}<img src="{{ attachment.datei.url }}" alt="{{ attachment.display_name }}">{% endif %}
+                            <p><a href="{{ attachment.datei.url }}" target="_blank" rel="noopener">{{ attachment.display_name }}</a></p>
+                            <small>{{ attachment.uploaded_at|date:"d.m.Y H:i" }}</small>
+                            <form method="post" action="{% url 'orders:order_attachment_delete' object.pk attachment.pk %}" style="margin-top:.45rem;">
+                                {% csrf_token %}
+                                <input type="hidden" name="next" value="{% url 'orders:order_update' object.pk %}">
+                                <button class="btn btn-danger btn-compact" type="submit">Löschen</button>
+                            </form>
+                        </article>
+                    {% endfor %}
+                </div>
+            </div>
         {% endif %}
 
         <div class="button-row"><button class="btn" type="submit"><span class="btn-icon" aria-hidden="true">💾</span><span>Speichern</span></button><a href="{% url 'orders:order_list' %}" class="btn btn-secondary"><span class="btn-icon" aria-hidden="true">←</span><span>Zurück</span></a></div>
