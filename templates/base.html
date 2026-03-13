@@ -32,7 +32,8 @@
                 <a href="{{ dashboard_url|default:'/accounts/dashboard/' }}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">Dashboard</a>
                 <a href="{{ order_list_url|default:'/auftraege/' }}" class="nav-link {% if request.resolver_match.namespace == 'orders' %}active{% endif %}">Aufträge</a>
                 <a href="{{ customer_list_url|default:'/kunden/' }}" class="nav-link {% if request.resolver_match.namespace == 'customers' %}active{% endif %}">Kunden</a>
-                <a href="{{ article_list_url|default:'/artikel/' }}" class="nav-link {% if request.resolver_match.namespace == 'catalog' %}active{% endif %}">Produkte</a>
+                <a href="{{ article_list_url|default:'/artikel/' }}" class="nav-link {% if request.resolver_match.namespace == 'catalog' and request.resolver_match.url_name != 'goods_receipt' %}active{% endif %}">Produkte</a>
+                <a href="{% url 'catalog:goods_receipt' %}" class="nav-link {% if request.resolver_match.namespace == 'catalog' and request.resolver_match.url_name == 'goods_receipt' %}active{% endif %}">Wareneingang</a>
                 <a href="{{ employee_list_url|default:'/mitarbeiter/' }}" class="nav-link {% if request.resolver_match.namespace == 'employees' %}active{% endif %}">Mitarbeiter</a>
                 <a href="{{ appointment_overview_url|default:'/termine/' }}" class="nav-link {% if request.resolver_match.namespace == 'scheduling' %}active{% endif %}">Termine</a>
                 <a href="{% url 'invoices:invoice_list' %}" class="nav-link {% if request.resolver_match.namespace == 'invoices' %}active{% endif %}">Rechnungen</a>

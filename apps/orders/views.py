@@ -155,7 +155,7 @@ class OrderUpdateView(EmployeeOnlyMixin, LoginRequiredMixin, UpdateView):
             invoice_exists = self.object.rechnungen.exists()
             invoice = create_invoice_for_completed_order(self.object)
             if invoice and not invoice_exists:
-                messages.success(self.request, f"Rechnung R-{invoice.rechnungsnummer:05d} wurde erstellt.")
+                messages.success(self.request, f"Rechnung {invoice.formatted_rechnungsnummer} wurde erstellt.")
 
         log_activity(
             actor=self.request.user,
@@ -206,11 +206,11 @@ class OrderCreateInvoiceView(EmployeeOnlyMixin, LoginRequiredMixin, View):
         order = get_object_or_404(Order.objects.select_related("kunde"), pk=pk)
         existing_invoice = order.rechnungen.first()
         if existing_invoice:
-            messages.info(request, f"Für Auftrag {order.auftragsnummer} existiert bereits eine Rechnung.")
+            messages.info(request, f"Für Auftrag {order.formatted_auftragsnummer} existiert bereits eine Rechnung.")
             return redirect(request.POST.get("next") or "orders:order_list")
 
         invoice = create_manual_invoice_for_order(order)
-        messages.success(request, f"Rechnung R-{invoice.rechnungsnummer:05d} wurde erstellt.")
+        messages.success(request, f"Rechnung {invoice.formatted_rechnungsnummer} wurde erstellt.")
         return redirect(request.POST.get("next") or "orders:order_list")
 
 
@@ -224,7 +224,7 @@ class OrderQuickStatusUpdateView(EmployeeOnlyMixin, LoginRequiredMixin, View):
 
         order.status = new_status
         order.save(update_fields=["status", "updated_at"])
-        messages.success(request, f"Status für Auftrag {order.auftragsnummer} aktualisiert.")
+        messages.success(request, f"Status für Auftrag {order.formatted_auftragsnummer} aktualisiert.")
         return redirect(request.POST.get("next") or "orders:order_list")
 
 

@@ -5,6 +5,7 @@ from django.forms import BaseInlineFormSet, inlineformset_factory
 from apps.accounts.models import UserRole
 from apps.company.models import OrderType, Service, SoilingLevel, Surcharge
 from apps.customers.models import Customer
+from apps.core.number_sequences import parse_sequence_value
 
 from .models import Order, OrderPosition
 
@@ -35,12 +36,12 @@ class OrderForm(forms.ModelForm):
             role__in=[UserRole.ADMIN, UserRole.CHEF, UserRole.MITARBEITER]
         )
         self.customer_suggestions = [
-            f"{customer.kundennummer} · {customer.vorname} {customer.nachname}"
+            f"{customer.formatted_kundennummer} · {customer.vorname} {customer.nachname}"
             for customer in Customer.objects.order_by("nachname", "vorname")
         ]
         if self.instance and self.instance.pk:
             self.fields["kunden_suche"].initial = (
-                f"{self.instance.kunde.kundennummer} · " f"{self.instance.kunde.vorname} {self.instance.kunde.nachname}"
+                f"{self.instance.kunde.formatted_kundennummer} · " f"{self.instance.kunde.vorname} {self.instance.kunde.nachname}"
             )
 
     def clean_kunden_suche(self):
@@ -49,8 +50,9 @@ class OrderForm(forms.ModelForm):
             raise ValidationError("Bitte einen Kunden auswählen.")
 
         kundennummer_raw = value.split("·", 1)[0].strip()
-        if kundennummer_raw.isdigit():
-            customer = Customer.objects.filter(kundennummer=int(kundennummer_raw)).first()
+        kundennummer = parse_sequence_value(kundennummer_raw)
+        if kundennummer is not None:
+            customer = Customer.objects.filter(kundennummer=kundennummer).first()
             if customer:
                 self.cleaned_data["kunde"] = customer
                 return value

@@ -1,4 +1,7 @@
 from django import forms
+from django.forms import modelformset_factory
+
+from apps.core.models import NumberSequence
 
 from .models import CompanySettings, OrderType, Price, Service, SoilingLevel, Surcharge
 
@@ -37,3 +40,15 @@ class CompanySettingsForm(forms.ModelForm):
     class Meta:
         model = CompanySettings
         fields = ["company_name", "address", "phone", "email", "logo", "invoice_generation_enabled"]
+
+
+class NumberSequenceForm(forms.ModelForm):
+    class Meta:
+        model = NumberSequence
+        fields = ["sequence_type", "prefix", "separator", "start_value", "padding", "last_value"]
+        widgets = {
+            "sequence_type": forms.Select(attrs={"disabled": "disabled"}),
+        }
+
+
+NumberSequenceFormSet = modelformset_factory(NumberSequence, form=NumberSequenceForm, extra=0)

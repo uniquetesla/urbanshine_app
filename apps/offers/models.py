@@ -1,7 +1,10 @@
 from decimal import Decimal
 
 from django.db import models
-from django.db.models import Max, Sum
+
+from apps.core.models import NumberSequenceType
+from apps.core.number_sequences import format_sequence, next_sequence_value
+from django.db.models import Sum
 
 
 class OfferStatus(models.TextChoices):
@@ -36,12 +39,15 @@ class Offer(models.Model):
         verbose_name_plural = "Angebote"
 
     def __str__(self):
-        return f"A-{self.angebotsnummer:05d} · {self.kunde}"
+        return f"{self.formatted_angebotsnummer} · {self.kunde}"
+
+    @property
+    def formatted_angebotsnummer(self):
+        return format_sequence(NumberSequenceType.ANGEBOT, self.angebotsnummer)
 
     def save(self, *args, **kwargs):
         if not self.angebotsnummer:
-            last_number = Offer.objects.aggregate(last=Max("angebotsnummer"))["last"] or 0
-            self.angebotsnummer = last_number + 1
+            self.angebotsnummer = next_sequence_value(NumberSequenceType.ANGEBOT)
         super().save(*args, **kwargs)
 
     @property

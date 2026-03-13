@@ -1,12 +1,13 @@
 {% extends "base.html" %}
 {% block title %}{% if object %}Artikel bearbeiten{% else %}Artikel anlegen{% endif %} | UrbanShine{% endblock %}
 {% block page_title %}{% if object %}Artikel bearbeiten{% else %}Artikel anlegen{% endif %}{% endblock %}
-{% block page_subtitle %}Artikelstammdaten pflegen{% endblock %}
+{% block page_subtitle %}Artikelstammdaten inklusive Artikelnummer und Barcode pflegen{% endblock %}
 {% block content %}
 <section class="glass-card panel full">
     <form method="post">
         {% csrf_token %}
         <div class="form-grid">
+            {% if object %}<div><label>Artikelnummer</label><input type="text" value="{{ object.formatted_artikelnummer }}" disabled></div>{% endif %}
             {% for field in form %}
                 <div>
                     {{ field.label_tag }}

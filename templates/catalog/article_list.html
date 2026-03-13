@@ -6,11 +6,11 @@
 <section class="glass-card panel full">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:.7rem;flex-wrap:wrap;margin-bottom:1rem;">
         <h3>Alle Artikel</h3>
-        <a href="{% url 'catalog:article_create' %}" class="btn">Artikel anlegen</a>
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap;"><a href="{% url 'catalog:goods_receipt' %}" class="btn btn-secondary">Wareneingang</a><a href="{% url 'catalog:article_create' %}" class="btn">Artikel anlegen</a></div>
     </div>
 
     <form method="get" style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1rem;">
-        <input type="search" name="q" value="{{ query }}" placeholder="Suche nach Name, Kategorie oder Beschreibung">
+        <input type="search" name="q" value="{{ query }}" placeholder="Suche nach Artikelnummer, Barcode, Name, Kategorie oder Beschreibung">
         <button class="btn" type="submit">Suchen</button>
         {% if query %}
             <a class="btn btn-secondary" href="{% url 'catalog:article_list' %}">Zurücksetzen</a>
@@ -21,6 +21,8 @@
         <table>
             <thead>
             <tr>
+                <th>Artikelnummer</th>
+                <th>Barcode</th>
                 <th>Artikel</th>
                 <th>Kategorie</th>
                 <th>Preis</th>
@@ -32,6 +34,8 @@
             <tbody>
             {% for article in articles %}
                 <tr>
+                    <td>{{ article.formatted_artikelnummer }}</td>
+                    <td>{{ article.barcode }}</td>
                     <td>
                         <span class="icon-chip">{{ article.get_icon_display }}</span><br>
                         {{ article.name }}
@@ -47,7 +51,7 @@
                 </tr>
             {% empty %}
                 <tr>
-                    <td colspan="6">Keine Artikel vorhanden.</td>
+                    <td colspan="8">Keine Artikel vorhanden.</td>
                 </tr>
             {% endfor %}
             </tbody>

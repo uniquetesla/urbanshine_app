@@ -100,6 +100,28 @@
         </ul>
     </section>
 
+
+    <section class="glass-card panel admin-area">
+        <h3>Nummernkreise</h3>
+        <form method="post" class="form-grid">{% csrf_token %}
+            <input type="hidden" name="action" value="number_sequences">
+            {{ number_sequence_formset.management_form }}
+            {% for form in number_sequence_formset %}
+                <div class="glass-card" style="padding:.8rem;">
+                    {{ form.id }}
+                    <p><strong>{{ form.instance.get_sequence_type_display }}</strong></p>
+                    <label>Prefix</label>{{ form.prefix }}
+                    <label>Trennzeichen</label>{{ form.separator }}
+                    <label>Startwert</label>{{ form.start_value }}
+                    <label>Stellenanzahl</label>{{ form.padding }}
+                    <label>Letzte Nummer</label>{{ form.last_value }}
+                    {{ form.sequence_type.as_hidden }}
+                </div>
+            {% endfor %}
+            <div style="grid-column:1/-1;"><button class="btn" type="submit">Nummernkreise speichern</button></div>
+        </form>
+    </section>
+
     <section class="glass-card panel admin-area">
         <h3>Firmendaten &amp; Rechnungseinstellung</h3>
         <form method="post" enctype="multipart/form-data" class="form-grid">{% csrf_token %}

@@ -34,7 +34,7 @@
             {% for order in orders %}
                 {% with order.rechnungen.first as invoice %}
                 <tr>
-                    <td><a href="{% url 'orders:order_detail' order.pk %}">#{{ order.auftragsnummer }}</a></td>
+                    <td><a href="{% url 'orders:order_detail' order.pk %}">{{ order.formatted_auftragsnummer }}</a></td>
                     <td>{{ order.kunde.vorname }} {{ order.kunde.nachname }}</td>
                     <td>{{ order.order_type.name|default:order.auftragsart }}</td>
                     <td>
@@ -60,7 +60,7 @@
                             <form method="post" action="{% url 'orders:order_create_invoice' order.pk %}" style="display:inline;">
                                 {% csrf_token %}
                                 <input type="hidden" name="next" value="{% url 'orders:order_list' %}">
-                                <button class="btn" type="submit">Rechnung erstellen</button>
+                                <button class="btn btn-action" type="submit">Rechnung erstellen</button>
                             </form>
                         {% endif %}
                         <a class="btn btn-danger" href="{% url 'orders:order_delete' order.pk %}">Löschen</a>

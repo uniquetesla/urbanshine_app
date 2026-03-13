@@ -11,6 +11,7 @@ from django.views.generic import TemplateView
 from apps.accounts.models import UserRole
 from apps.catalog.models import Article
 from apps.customers.models import Customer
+from apps.core.number_sequences import parse_sequence_value
 from apps.invoices.services import create_invoice_for_sale
 
 from .models import PaymentMethod, Sale, SaleItem
@@ -41,6 +42,19 @@ class CheckoutView(EmployeeOnlyMixin, LoginRequiredMixin, TemplateView):
         if action == "add" and article_id:
             self._add_to_cart(article_id, quantity)
             messages.success(request, "Artikel wurde dem Warenkorb hinzugefügt.")
+            return redirect("checkout:pos")
+
+        if action == "scan":
+            barcode = (request.POST.get("barcode") or "").strip()
+            if not barcode:
+                messages.error(request, "Bitte Barcode eingeben.")
+                return redirect("checkout:pos")
+            article = Article.objects.filter(barcode=barcode).first()
+            if not article:
+                messages.error(request, "Kein Artikel zu diesem Barcode gefunden.")
+                return redirect("checkout:pos")
+            self._add_to_cart(str(article.id), 1)
+            messages.success(request, f"{article.name} wurde per Barcode hinzugefügt.")
             return redirect("checkout:pos")
 
         if action == "update" and article_id:
@@ -156,8 +170,9 @@ class CheckoutView(EmployeeOnlyMixin, LoginRequiredMixin, TemplateView):
             return None
 
         kundennummer_raw = value.split("·", 1)[0].strip()
-        if kundennummer_raw.isdigit():
-            customer = Customer.objects.filter(kundennummer=int(kundennummer_raw)).first()
+        kundennummer = parse_sequence_value(kundennummer_raw)
+        if kundennummer is not None:
+            customer = Customer.objects.filter(kundennummer=kundennummer).first()
             if customer:
                 return customer
 
@@ -173,7 +188,11 @@ class CheckoutView(EmployeeOnlyMixin, LoginRequiredMixin, TemplateView):
         article_queryset = Article.objects.order_by("name")
         if query:
             article_queryset = article_queryset.filter(
-                Q(name__icontains=query) | Q(kategorie__icontains=query) | Q(beschreibung__icontains=query)
+                Q(name__icontains=query)
+                | Q(kategorie__icontains=query)
+                | Q(beschreibung__icontains=query)
+                | Q(barcode__icontains=query)
+                | Q(artikelnummer__icontains=query)
             )
 
         cart = self._get_cart()
@@ -204,7 +223,7 @@ class CheckoutView(EmployeeOnlyMixin, LoginRequiredMixin, TemplateView):
                 "cart_total": total,
                 "payment_methods": PaymentMethod.choices,
                 "customer_suggestions": [
-                    f"{customer.kundennummer} · {customer.vorname} {customer.nachname}"
+                    f"{customer.formatted_kundennummer} · {customer.vorname} {customer.nachname}"
                     for customer in Customer.objects.order_by("nachname", "vorname")
                 ],
                 "sales": sales,
@@ -226,5 +245,5 @@ class SaleCreateInvoiceView(EmployeeOnlyMixin, LoginRequiredMixin, View):
             messages.error(request, "Für diesen Verkauf konnte keine Rechnung erstellt werden.")
             return redirect("checkout:pos")
 
-        messages.success(request, f"Rechnung R-{invoice.rechnungsnummer:05d} für Verkauf #{sale.verkaufsnummer} erstellt.")
+        messages.success(request, f"Rechnung {invoice.formatted_rechnungsnummer} für Verkauf #{sale.verkaufsnummer} erstellt.")
         return redirect("checkout:pos")
