@@ -7,7 +7,7 @@
     {% if customer %}
         <article class="glass-card panel full">
             <h3>Ihre Kundendaten</h3>
-            <p><strong>{{ customer.vorname }} {{ customer.nachname }}</strong> · Kundennummer {{ customer.kundennummer }}</p>
+            <p><strong>{{ customer.vorname }} {{ customer.nachname }}</strong> · Kundennummer {{ customer.formatted_kundennummer }}</p>
             <p>{{ customer.strasse }} {{ customer.hausnummer }}, {{ customer.plz }} {{ customer.ort }}</p>
         </article>
 

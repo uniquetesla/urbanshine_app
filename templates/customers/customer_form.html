@@ -5,7 +5,7 @@
 {% block content %}
 <section class="glass-card panel full">
     {% if object %}
-        <p><strong>Kundennummer:</strong> {{ object.kundennummer }}</p>
+        <p><strong>Kundennummer:</strong> {{ object.formatted_kundennummer }}</p>
     {% endif %}
     <form method="post">
         {% csrf_token %}

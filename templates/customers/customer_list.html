@@ -31,7 +31,7 @@
             <tbody>
             {% for customer in customers %}
                 <tr>
-                    <td><a class="table-link" href="{% url 'customers:customer_detail' customer.pk %}">{{ customer.kundennummer }}</a></td>
+                    <td><a class="table-link" href="{% url 'customers:customer_detail' customer.pk %}">{{ customer.formatted_kundennummer }}</a></td>
                     <td>{{ customer.vorname }} {{ customer.nachname }}</td>
                     <td>{{ customer.strasse }} {{ customer.hausnummer }}, {{ customer.plz }} {{ customer.ort }}</td>
                     <td>

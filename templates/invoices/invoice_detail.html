@@ -32,7 +32,7 @@
         <div><strong>Fällig am</strong><br>{{ invoice.faellig_am|date:"d.m.Y"|default:"-" }}</div>
         <div><strong>Bezahlt am</strong><br>{{ invoice.bezahlt_am|date:"d.m.Y"|default:"-" }}</div>
         <div><strong>Betrag</strong><br>{{ invoice.betrag|floatformat:2 }} €</div>
-        <div><strong>Kundennummer</strong><br>{{ invoice.kunde.kundennummer }}</div>
+        <div><strong>Kundennummer</strong><br>{{ invoice.kunde.formatted_kundennummer }}</div>
         <div><strong>Auftrag</strong><br>{% if invoice.auftrag %}{{ invoice.auftrag.formatted_auftragsnummer }}{% else %}-{% endif %}</div>
         <div><strong>Verkauf</strong><br>{% if invoice.verkauf %}#{{ invoice.verkauf.verkaufsnummer }}{% else %}-{% endif %}</div>
     </div>

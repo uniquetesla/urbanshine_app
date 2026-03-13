@@ -59,9 +59,14 @@ class NumberSequenceForm(forms.ModelForm):
     class Meta:
         model = NumberSequence
         fields = ["sequence_type", "prefix", "separator", "start_value", "padding", "last_value"]
-        widgets = {
-            "sequence_type": forms.Select(attrs={"disabled": "disabled"}),
-        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Beim Bearbeiten darf der Nummernkreis-Typ nicht geändert werden.
+        # Das Feld bleibt sichtbar, wird aber serverseitig als disabled behandelt,
+        # damit kein Pflichtfeld-Fehler beim Speichern entsteht.
+        if self.instance and self.instance.pk:
+            self.fields["sequence_type"].disabled = True
 
 
 NumberSequenceFormSet = modelformset_factory(NumberSequence, form=NumberSequenceForm, extra=0)
