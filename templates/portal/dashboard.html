@@ -45,7 +45,7 @@
                 {% for offer in offers %}
                     <li>
                         <strong>A-{{ offer.angebotsnummer|stringformat:"05d" }} · {{ offer.titel }}</strong>
-                        <p>Status: {{ offer.get_status_display }} · {{ offer.gesamtpreis }} €</p>
+                        <p>Status: {{ offer.get_status_display }} · {{ offer.gesamtpreis|floatformat:2 }} €</p>
                     </li>
                 {% empty %}
                     <li><p>Aktuell sind keine Angebote vorhanden.</p></li>

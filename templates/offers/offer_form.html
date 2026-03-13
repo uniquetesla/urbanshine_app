@@ -1,57 +1,59 @@
 {% extends "base.html" %}
-{% block title %}Angebot erstellen | UrbanShine{% endblock %}
-{% block page_title %}Angebot erstellen{% endblock %}
-{% block page_subtitle %}Positionen und Rabatt direkt erfassen{% endblock %}
+{% block title %}{% if object %}Angebot bearbeiten{% else %}Angebot erstellen{% endif %} | UrbanShine{% endblock %}
+{% block page_title %}{% if object %}Angebot bearbeiten{% else %}Angebot erstellen{% endif %}{% endblock %}
+{% block page_subtitle %}Praxisnahe Angebotsanlage mit Leistungspositionen{% endblock %}
 {% block content %}
 <section class="glass-card panel full">
-    <h3>Neues Angebot</h3>
-    <form method="post">
+    <form method="post" id="offer-form">
         {% csrf_token %}
-        {{ form.non_field_errors }}
+        {% if form.non_field_errors %}<div class="messages"><li>{{ form.non_field_errors|striptags }}</li></div>{% endif %}
+        {% if position_formset.non_form_errors %}<div class="messages"><li>{{ position_formset.non_form_errors|striptags }}</li></div>{% endif %}
 
-        <div style="display:grid;gap:1rem;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));">
+        <div class="form-grid">
+            <div>
+                {{ form.kunden_suche.label_tag }}
+                <input type="text" name="kunden_suche" id="id_kunden_suche" list="kunden-vorschlaege" value="{{ form.kunden_suche.value|default:'' }}" required>
+                <datalist id="kunden-vorschlaege">{% for customer in form.customer_suggestions %}<option value="{{ customer }}"></option>{% endfor %}</datalist>
+                {{ form.kunde }}
+                {% if form.kunden_suche.errors %}<small style="color:#ff9ca4;">{{ form.kunden_suche.errors|striptags }}</small>{% endif %}
+            </div>
             {% for field in form %}
-                <div>
-                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                    {{ field }}
-                    {{ field.errors }}
-                </div>
+                {% if field.name != 'kunden_suche' and field.name != 'kunde' %}
+                    <div>{{ field.label_tag }}{{ field }}{% if field.errors %}<small style="color:#ff9ca4;">{{ field.errors|striptags }}</small>{% endif %}</div>
+                {% endif %}
             {% endfor %}
         </div>
 
-        <h4 style="margin-top:1.2rem;">Positionen</h4>
-        {{ formset.management_form }}
-        <div style="display:grid;gap:.7rem;">
-            {% for item_form in formset %}
-                <div class="glass-card" style="padding:.8rem;display:grid;gap:.5rem;grid-template-columns:2fr 1fr 1fr auto;align-items:end;">
-                    {% for hidden in item_form.hidden_fields %}{{ hidden }}{% endfor %}
-                    <div>
-                        <label>{{ item_form.bezeichnung.label }}</label>
-                        {{ item_form.bezeichnung }}
-                        {{ item_form.bezeichnung.errors }}
-                    </div>
-                    <div>
-                        <label>{{ item_form.menge.label }}</label>
-                        {{ item_form.menge }}
-                        {{ item_form.menge.errors }}
-                    </div>
-                    <div>
-                        <label>{{ item_form.einzelpreis.label }}</label>
-                        {{ item_form.einzelpreis }}
-                        {{ item_form.einzelpreis.errors }}
-                    </div>
-                    <div>
-                        <label>{{ item_form.DELETE.label }}</label>
-                        {{ item_form.DELETE }}
-                    </div>
-                </div>
-            {% endfor %}
+        <h3 style="margin-top:1rem;">Leistungspositionen</h3>
+        {{ position_formset.management_form }}
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>Leistung</th><th>Verschmutzungsgrad</th><th>Zuschlag</th><th>Menge</th><th>Einzelpreis</th><th>Gesamt</th><th>Entfernen</th></tr></thead>
+                <tbody>
+                {% for pform in position_formset %}
+                    <tr class="offer-position-row" data-form-index="{{ forloop.counter0 }}">
+                        <td>{{ pform.leistung }}{% if pform.leistung.errors %}<small style="color:#ff9ca4;display:block;">{{ pform.leistung.errors|striptags }}</small>{% endif %}</td>
+                        <td>{{ pform.verschmutzungsgrad }}{% if pform.verschmutzungsgrad.errors %}<small style="color:#ff9ca4;display:block;">{{ pform.verschmutzungsgrad.errors|striptags }}</small>{% endif %}</td>
+                        <td>{{ pform.zuschlag }}{% if pform.zuschlag.errors %}<small style="color:#ff9ca4;display:block;">{{ pform.zuschlag.errors|striptags }}</small>{% endif %}</td>
+                        <td>{{ pform.menge }}{% if pform.menge.errors %}<small style="color:#ff9ca4;display:block;">{{ pform.menge.errors|striptags }}</small>{% endif %}</td>
+                        <td><strong data-role="row-price">{{ pform.instance.einzelpreis|default_if_none:'0'|floatformat:2 }} €</strong></td>
+                        <td><strong data-role="row-total">{{ pform.instance.gesamtpreis|default_if_none:'0'|floatformat:2 }} €</strong></td>
+                        <td>{% if pform.instance.pk %}{{ pform.DELETE }}{% endif %}{{ pform.id }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
         </div>
 
-        <div style="margin-top:1rem;display:flex;gap:.5rem;">
-            <button type="submit" class="btn">Speichern</button>
-            <a href="{% url 'offers:offer_list' %}" class="btn btn-secondary">Abbrechen</a>
-        </div>
+        <p style="margin-top:1rem;"><strong>Zwischensumme (Vorschau):</strong> <span id="offer-subtotal-price">{{ object.zwischensumme|default:'0'|floatformat:2 }} €</span></p>
+        <p><strong>Rabatt:</strong> <span id="offer-discount-amount">{{ object.rabatt_betrag|default:'0'|floatformat:2 }} €</span></p>
+        <p><strong>Gesamtpreis (Vorschau):</strong> <span id="offer-total-price">{{ object.gesamtpreis|default:'0'|floatformat:2 }} €</span></p>
+        <p><strong>Hinweis:</strong> Der Gesamtpreis wird serverseitig aus den Positionen und dem Rabatt berechnet.</p>
+
+        <div style="margin-top:1rem;display:flex;gap:.6rem;"><button class="btn" type="submit">Speichern</button><a href="{% url 'offers:offer_list' %}" class="btn btn-secondary">Zurück</a></div>
     </form>
 </section>
+{{ service_prices|json_script:"service-prices-data" }}
+{{ soiling_multipliers|json_script:"soiling-multipliers-data" }}
+{{ surcharge_values|json_script:"surcharge-values-data" }}
 {% endblock %}

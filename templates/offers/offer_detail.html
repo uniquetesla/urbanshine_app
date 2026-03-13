@@ -1,51 +1,55 @@
 {% extends "base.html" %}
-{% block title %}Angebot {{ offer.angebotsnummer }} | UrbanShine{% endblock %}
+{% block title %}Angebot {{ offer.formatted_angebotsnummer }} | UrbanShine{% endblock %}
 {% block page_title %}Angebotsdetails{% endblock %}
-{% block page_subtitle %}Positionen, Rabatt und Umwandlung in Auftrag{% endblock %}
+{% block page_subtitle %}Leistungspositionen, Rabatt und Umwandlung in Auftrag{% endblock %}
 {% block content %}
 <section class="glass-card panel full">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:.8rem;flex-wrap:wrap;">
-        <h3>A-{{ offer.angebotsnummer|stringformat:"05d" }} · {{ offer.titel }}</h3>
-        <a href="{% url 'offers:offer_list' %}" class="btn btn-secondary">Zurück</a>
+        <h3>{{ offer.formatted_angebotsnummer }} · {{ offer.titel }}</h3>
+        <div style="display:flex;gap:.5rem;">
+            {% if not offer.umgewandelter_auftrag %}<a href="{% url 'offers:offer_update' offer.pk %}" class="btn">Bearbeiten</a>{% endif %}
+            <a href="{% url 'offers:offer_list' %}" class="btn btn-secondary">Zurück</a>
+        </div>
     </div>
 
-    <p><strong>Kunde:</strong> {{ offer.kunde }}</p>
-    <p><strong>Status:</strong> {{ offer.get_status_display }}</p>
-    <p><strong>Beschreibung:</strong> {{ offer.beschreibung|default:"-" }}</p>
+    <div class="form-grid" style="margin-top:1rem;">
+        <div><strong>Kunde</strong><br>{{ offer.kunde }}</div>
+        <div><strong>Status</strong><br>{{ offer.get_status_display }}</div>
+        <div><strong>Rabatt</strong><br>{{ offer.rabatt_prozent|floatformat:2 }} %</div>
+    </div>
+
+    <div style="margin-top:1rem;"><strong>Beschreibung</strong><p>{{ offer.beschreibung|default:"-"|linebreaksbr }}</p></div>
 
     <div class="table-wrap">
         <table>
             <thead>
-            <tr>
-                <th>Bezeichnung</th>
-                <th>Menge</th>
-                <th>Einzelpreis</th>
-                <th>Gesamt</th>
-            </tr>
+            <tr><th>Leistung</th><th>Verschmutzungsgrad</th><th>Zuschlag</th><th>Menge</th><th>Einzelpreis</th><th>Gesamt</th></tr>
             </thead>
             <tbody>
             {% for item in offer.positionen.all %}
                 <tr>
-                    <td>{{ item.bezeichnung }}</td>
-                    <td>{{ item.menge }}</td>
-                    <td>{{ item.einzelpreis }} €</td>
-                    <td>{{ item.gesamtpreis }} €</td>
+                    <td>{{ item.leistung.name|default:item.bezeichnung }}</td>
+                    <td>{{ item.verschmutzungsgrad.name|default:'-' }}</td>
+                    <td>{{ item.zuschlag.name|default:'-' }}</td>
+                    <td>{{ item.menge|floatformat:2 }}</td>
+                    <td>{{ item.einzelpreis|floatformat:2 }} €</td>
+                    <td>{{ item.gesamtpreis|floatformat:2 }} €</td>
                 </tr>
             {% empty %}
-                <tr><td colspan="4">Keine Positionen vorhanden.</td></tr>
+                <tr><td colspan="6">Keine Positionen vorhanden.</td></tr>
             {% endfor %}
             </tbody>
         </table>
     </div>
 
     <div style="margin-top:1rem;">
-        <p>Zwischensumme: <strong>{{ offer.zwischensumme }} €</strong></p>
-        <p>Rabatt ({{ offer.rabatt_prozent }}%): <strong>-{{ offer.rabatt_betrag }} €</strong></p>
-        <p>Gesamt: <strong>{{ offer.gesamtpreis }} €</strong></p>
+        <p>Zwischensumme: <strong>{{ offer.zwischensumme|floatformat:2 }} €</strong></p>
+        <p>Rabatt ({{ offer.rabatt_prozent|floatformat:2 }}%): <strong>-{{ offer.rabatt_betrag|floatformat:2 }} €</strong></p>
+        <p>Gesamt: <strong>{{ offer.gesamtpreis|floatformat:2 }} €</strong></p>
     </div>
 
     {% if offer.umgewandelter_auftrag %}
-        <a class="btn" href="{% url 'orders:order_detail' offer.umgewandelter_auftrag.pk %}">Zum Auftrag #{{ offer.umgewandelter_auftrag.auftragsnummer }}</a>
+        <a class="btn" href="{% url 'orders:order_detail' offer.umgewandelter_auftrag.pk %}">Zum Auftrag {{ offer.umgewandelter_auftrag.formatted_auftragsnummer }}</a>
     {% else %}
         <form method="post" action="{% url 'offers:offer_convert' offer.pk %}">
             {% csrf_token %}
