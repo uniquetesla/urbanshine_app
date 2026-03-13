@@ -29,6 +29,9 @@ class DashboardView(LoginRequiredMixin, TemplateView):
     template_name = "accounts/dashboard.html"
 
     def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return self.handle_no_permission()
+
         if request.user.role == UserRole.STAMMKUNDE:
             from django.shortcuts import redirect
 
