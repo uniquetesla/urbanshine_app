@@ -16,97 +16,40 @@
             </form>
         </div>
 
-        <div class="table-wrap">
-            <table>
-                <thead>
+        <div class="table-wrap"><table><thead><tr><th>Artikel</th><th>Kategorie</th><th>Preis</th><th>Lagerbestand</th><th>Auswahl</th></tr></thead><tbody>
+            {% for article in articles %}
                 <tr>
-                    <th>Artikel</th>
-                    <th>Kategorie</th>
-                    <th>Preis</th>
-                    <th>Lagerbestand</th>
-                    <th>Auswahl</th>
+                    <td>{{ article.name }}</td><td>{{ article.kategorie }}</td><td>{{ article.preis }} €</td><td>{{ article.lagerbestand }}</td>
+                    <td><form method="post" style="display:flex;gap:.5rem;align-items:center;">{% csrf_token %}<input type="hidden" name="action" value="add"><input type="hidden" name="article_id" value="{{ article.id }}"><input type="number" name="quantity" min="1" value="1" style="width:90px;"><button class="btn" type="submit" {% if article.lagerbestand == 0 %}disabled{% endif %}>Auswählen</button></form></td>
                 </tr>
-                </thead>
-                <tbody>
-                {% for article in articles %}
-                    <tr>
-                        <td>{{ article.name }}</td>
-                        <td>{{ article.kategorie }}</td>
-                        <td>{{ article.preis }} €</td>
-                        <td>{{ article.lagerbestand }}</td>
-                        <td>
-                            <form method="post" style="display:flex;gap:.5rem;align-items:center;">{% csrf_token %}
-                                <input type="hidden" name="action" value="add">
-                                <input type="hidden" name="article_id" value="{{ article.id }}">
-                                <input type="number" name="quantity" min="1" value="1" style="width:90px;">
-                                <button class="btn" type="submit" {% if article.lagerbestand == 0 %}disabled{% endif %}>Auswählen</button>
-                            </form>
-                        </td>
-                    </tr>
-                {% empty %}
-                    <tr><td colspan="5">Keine Artikel gefunden.</td></tr>
-                {% endfor %}
-                </tbody>
-            </table>
-        </div>
+            {% empty %}
+                <tr><td colspan="5">Keine Artikel gefunden.</td></tr>
+            {% endfor %}
+        </tbody></table></div>
     </div>
 
     <aside class="glass-card quick-actions">
         <h3>Warenkorb</h3>
         {% if cart_items %}
-            <div class="table-wrap">
-                <table>
-                    <thead>
-                    <tr>
-                        <th>Artikel</th>
-                        <th>Menge</th>
-                        <th>Summe</th>
-                        <th></th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {% for item in cart_items %}
-                        <tr>
-                            <td>{{ item.article.name }}</td>
-                            <td>
-                                <form method="post" style="display:flex;gap:.4rem;align-items:center;">{% csrf_token %}
-                                    <input type="hidden" name="action" value="update">
-                                    <input type="hidden" name="article_id" value="{{ item.article.id }}">
-                                    <input type="number" name="quantity" min="0" value="{{ item.quantity }}" style="width:80px;">
-                                    <button class="btn btn-secondary" type="submit">Ändern</button>
-                                </form>
-                            </td>
-                            <td>{{ item.line_total }} €</td>
-                            <td>
-                                <form method="post">{% csrf_token %}
-                                    <input type="hidden" name="action" value="remove">
-                                    <input type="hidden" name="article_id" value="{{ item.article.id }}">
-                                    <button class="btn btn-danger" type="submit">Entfernen</button>
-                                </form>
-                            </td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+            <div class="table-wrap"><table><thead><tr><th>Artikel</th><th>Menge</th><th>Summe</th><th></th></tr></thead><tbody>
+            {% for item in cart_items %}
+                <tr>
+                    <td>{{ item.article.name }}</td>
+                    <td><form method="post" style="display:flex;gap:.4rem;align-items:center;">{% csrf_token %}<input type="hidden" name="action" value="update"><input type="hidden" name="article_id" value="{{ item.article.id }}"><input type="number" name="quantity" min="0" value="{{ item.quantity }}" style="width:80px;"><button class="btn btn-secondary" type="submit">Ändern</button></form></td>
+                    <td>{{ item.line_total }} €</td>
+                    <td><form method="post">{% csrf_token %}<input type="hidden" name="action" value="remove"><input type="hidden" name="article_id" value="{{ item.article.id }}"><button class="btn btn-danger" type="submit">Entfernen</button></form></td>
+                </tr>
+            {% endfor %}
+            </tbody></table></div>
             <p><strong>Gesamt: {{ cart_total }} €</strong></p>
 
             <form method="post" style="display:grid;gap:.6rem;">{% csrf_token %}
                 <input type="hidden" name="action" value="checkout">
                 <label for="customer_search">Kunde</label>
                 <input type="text" name="customer_search" id="customer_search" list="kunden-vorschlaege" placeholder="Kundennummer oder Name" required>
-                <datalist id="kunden-vorschlaege">
-                    {% for customer in customer_suggestions %}
-                        <option value="{{ customer }}"></option>
-                    {% endfor %}
-                </datalist>
+                <datalist id="kunden-vorschlaege">{% for customer in customer_suggestions %}<option value="{{ customer }}"></option>{% endfor %}</datalist>
                 <label for="payment_method">Zahlungsart</label>
-                <select name="payment_method" id="payment_method" required>
-                    <option value="">Bitte wählen</option>
-                    {% for value, label in payment_methods %}
-                        <option value="{{ value }}">{{ label }}</option>
-                    {% endfor %}
-                </select>
+                <select name="payment_method" id="payment_method" required><option value="">Bitte wählen</option>{% for value, label in payment_methods %}<option value="{{ value }}">{{ label }}</option>{% endfor %}</select>
                 <button class="btn" type="submit">Verkauf abschließen</button>
             </form>
             <a class="btn btn-secondary" href="{% url 'checkout:pos' %}?clear=1">Warenkorb leeren</a>
@@ -114,5 +57,26 @@
             <p>Der Warenkorb ist leer.</p>
         {% endif %}
     </aside>
+</section>
+
+<section class="glass-card panel full" style="margin-top:1rem;">
+    <h3>Letzte Verkäufe</h3>
+    <div class="table-wrap"><table><thead><tr><th>Nr.</th><th>Datum</th><th>Kunde</th><th>Zahlungsart</th><th>Summe</th><th>Rechnung</th><th>Aktion</th></tr></thead><tbody>
+        {% for row in sales %}
+            {% with sale=row.sale invoice=row.invoice %}
+            <tr>
+                <td>#{{ sale.verkaufsnummer }}</td>
+                <td>{{ sale.created_at|date:"d.m.Y H:i" }}</td>
+                <td>{{ sale.kunde.vorname }} {{ sale.kunde.nachname }}</td>
+                <td>{{ sale.get_zahlungsart_display }}</td>
+                <td>{{ sale.gesamtbetrag }} €</td>
+                <td>{% if invoice %}<a href="{% url 'invoices:invoice_detail' invoice.pk %}">R-{{ invoice.rechnungsnummer|stringformat:"05d" }}</a>{% else %}-{% endif %}</td>
+                <td>{% if invoice %}<a class="btn btn-secondary" href="{% url 'invoices:invoice_detail' invoice.pk %}">Rechnung ansehen</a>{% else %}<form method="post" action="{% url 'checkout:sale_create_invoice' sale.pk %}">{% csrf_token %}<button class="btn" type="submit">Rechnung erstellen</button></form>{% endif %}</td>
+            </tr>
+            {% endwith %}
+        {% empty %}
+            <tr><td colspan="7">Noch keine Verkäufe vorhanden.</td></tr>
+        {% endfor %}
+    </tbody></table></div>
 </section>
 {% endblock %}

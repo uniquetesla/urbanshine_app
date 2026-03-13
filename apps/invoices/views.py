@@ -23,7 +23,7 @@ class InvoiceListView(LoginRequiredMixin, ListView):
     context_object_name = "invoices"
 
     def get_queryset(self):
-        queryset = Invoice.objects.select_related("kunde", "auftrag")
+        queryset = Invoice.objects.select_related("kunde", "auftrag", "verkauf")
 
         if self.request.user.role == UserRole.STAMMKUNDE:
             customer = _customer_for_user(self.request.user)
@@ -54,7 +54,7 @@ class InvoiceDetailView(LoginRequiredMixin, DetailView):
     context_object_name = "invoice"
 
     def get_queryset(self):
-        queryset = super().get_queryset().select_related("kunde", "auftrag")
+        queryset = super().get_queryset().select_related("kunde", "auftrag", "verkauf")
         if self.request.user.role == UserRole.STAMMKUNDE:
             customer = _customer_for_user(self.request.user)
             if not customer:

@@ -15,7 +15,7 @@ class MultiFileInput(forms.ClearableFileInput):
 
 class OrderForm(forms.ModelForm):
     kunden_suche = forms.CharField(label="Kunde suchen", required=True)
-    bilder = forms.FileField(required=False, widget=MultiFileInput(), label="Dateien Upload")
+    bilder = forms.FileField(required=False, widget=MultiFileInput(attrs={"multiple": True}), label="Dateien Upload")
 
     class Meta:
         model = Order

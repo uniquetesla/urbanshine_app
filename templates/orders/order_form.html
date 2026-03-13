@@ -18,7 +18,7 @@
                 {% if form.kunden_suche.errors %}<small style="color:#ff9ca4;">{{ form.kunden_suche.errors|striptags }}</small>{% endif %}
             </div>
             {% for field in form %}
-                {% if field.name != 'kunden_suche' and field.name != 'kunde' %}
+                {% if field.name != 'kunden_suche' and field.name != 'kunde' and field.name != 'bilder' %}
                     <div>{{ field.label_tag }}{{ field }}{% if field.errors %}<small style="color:#ff9ca4;">{{ field.errors|striptags }}</small>{% endif %}</div>
                 {% endif %}
             {% endfor %}
@@ -46,6 +46,14 @@
                 {% endfor %}
                 </tbody>
             </table>
+        </div>
+
+
+
+        <div style="margin-top:1rem;">
+            <label for="id_bilder"><strong>Dateien Upload</strong></label>
+            {{ form.bilder }}
+            {% if form.bilder.errors %}<small style="color:#ff9ca4;display:block;">{{ form.bilder.errors|striptags }}</small>{% endif %}
         </div>
 
         <p style="margin-top:1rem;"><strong>Gesamtsumme (Vorschau):</strong> <span id="order-total-price">{{ object.gesamtpreis|default:'0.00' }} €</span></p>

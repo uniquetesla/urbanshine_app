@@ -11,7 +11,7 @@ from apps.accounts.models import UserRole
 from apps.core.activity import log_activity
 from apps.core.models import ActivitySubject
 from apps.customers.models import Customer
-from apps.invoices.services import create_invoice_for_completed_order
+from apps.invoices.services import create_invoice_for_completed_order, create_manual_invoice_for_order
 from apps.company.models import Service, SoilingLevel, Surcharge
 
 from .forms import OrderForm, OrderPositionFormSet
@@ -35,7 +35,7 @@ class OrderListView(LoginRequiredMixin, ListView):
     context_object_name = "orders"
 
     def get_queryset(self):
-        queryset = Order.objects.select_related("kunde", "order_type").prefetch_related("mitarbeiter").order_by("-auftragsnummer")
+        queryset = Order.objects.select_related("kunde", "order_type").prefetch_related("mitarbeiter", "rechnungen").order_by("-auftragsnummer")
 
         if self.request.user.role == UserRole.STAMMKUNDE:
             customer = _customer_for_user(self.request.user)
@@ -70,6 +70,11 @@ class OrderCreateView(EmployeeOnlyMixin, LoginRequiredMixin, CreateView):
     def get_success_url(self):
         return reverse_lazy("orders:order_detail", kwargs={"pk": self.object.pk})
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["files"] = self.request.FILES or None
+        return kwargs
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["position_formset"] = kwargs.get("position_formset") or OrderPositionFormSet(self.request.POST or None)
@@ -90,7 +95,7 @@ class OrderCreateView(EmployeeOnlyMixin, LoginRequiredMixin, CreateView):
             position_formset.instance = self.object
             position_formset.save()
             self.object.recalculate_totals(save=True)
-            self._save_files(form)
+            self._save_files()
 
         log_activity(
             actor=self.request.user,
@@ -104,8 +109,8 @@ class OrderCreateView(EmployeeOnlyMixin, LoginRequiredMixin, CreateView):
         messages.success(self.request, "Auftrag wurde erfolgreich angelegt.")
         return response
 
-    def _save_files(self, form):
-        for file_obj in form.cleaned_data.get("bilder", []):
+    def _save_files(self):
+        for file_obj in self.request.FILES.getlist("bilder"):
             OrderImage.objects.create(auftrag=self.object, bild=file_obj)
 
 
@@ -116,6 +121,11 @@ class OrderUpdateView(EmployeeOnlyMixin, LoginRequiredMixin, UpdateView):
 
     def get_success_url(self):
         return reverse_lazy("orders:order_detail", kwargs={"pk": self.object.pk})
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["files"] = self.request.FILES or None
+        return kwargs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -139,7 +149,7 @@ class OrderUpdateView(EmployeeOnlyMixin, LoginRequiredMixin, UpdateView):
             response = super().form_valid(form)
             position_formset.save()
             self.object.recalculate_totals(save=True)
-            self._save_files(form)
+            self._save_files()
 
         if old_status != self.object.status and self.object.status == OrderStatus.ABGESCHLOSSEN:
             invoice_exists = self.object.rechnungen.exists()
@@ -160,8 +170,8 @@ class OrderUpdateView(EmployeeOnlyMixin, LoginRequiredMixin, UpdateView):
         messages.success(self.request, "Auftrag wurde erfolgreich bearbeitet.")
         return response
 
-    def _save_files(self, form):
-        for file_obj in form.cleaned_data.get("bilder", []):
+    def _save_files(self):
+        for file_obj in self.request.FILES.getlist("bilder"):
             OrderImage.objects.create(auftrag=self.object, bild=file_obj)
 
 
@@ -181,7 +191,7 @@ class OrderDetailView(LoginRequiredMixin, DetailView):
             super()
             .get_queryset()
             .select_related("kunde", "order_type")
-            .prefetch_related("mitarbeiter", "bilder", "positionen__leistung", "positionen__verschmutzungsgrad", "positionen__zuschlag")
+            .prefetch_related("mitarbeiter", "bilder", "rechnungen", "positionen__leistung", "positionen__verschmutzungsgrad", "positionen__zuschlag")
         )
         if self.request.user.role == UserRole.STAMMKUNDE:
             customer = _customer_for_user(self.request.user)
@@ -189,6 +199,19 @@ class OrderDetailView(LoginRequiredMixin, DetailView):
                 return queryset.none()
             return queryset.filter(kunde=customer)
         return queryset
+
+
+class OrderCreateInvoiceView(EmployeeOnlyMixin, LoginRequiredMixin, View):
+    def post(self, request, pk):
+        order = get_object_or_404(Order.objects.select_related("kunde"), pk=pk)
+        existing_invoice = order.rechnungen.first()
+        if existing_invoice:
+            messages.info(request, f"Für Auftrag {order.auftragsnummer} existiert bereits eine Rechnung.")
+            return redirect(request.POST.get("next") or "orders:order_list")
+
+        invoice = create_manual_invoice_for_order(order)
+        messages.success(request, f"Rechnung R-{invoice.rechnungsnummer:05d} wurde erstellt.")
+        return redirect(request.POST.get("next") or "orders:order_list")
 
 
 class OrderQuickStatusUpdateView(EmployeeOnlyMixin, LoginRequiredMixin, View):
@@ -199,7 +222,6 @@ class OrderQuickStatusUpdateView(EmployeeOnlyMixin, LoginRequiredMixin, View):
             messages.error(request, "Ungültiger Status.")
             return redirect(request.POST.get("next") or "orders:order_list")
 
-        old_status = order.status
         order.status = new_status
         order.save(update_fields=["status", "updated_at"])
         messages.success(request, f"Status für Auftrag {order.auftragsnummer} aktualisiert.")

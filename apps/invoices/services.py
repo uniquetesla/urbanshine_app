@@ -1,4 +1,3 @@
-from decimal import Decimal
 from io import BytesIO
 from pathlib import Path
 
@@ -9,6 +8,7 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
 from reportlab.pdfgen import canvas
 
+from apps.checkout.models import Sale
 from apps.company.models import CompanySettings
 from apps.orders.models import Order, OrderStatus
 
@@ -34,6 +34,45 @@ def create_invoice_for_completed_order(order: Order) -> Invoice | None:
 
     if not invoice.pdf_datei:
         _build_invoice_pdf(invoice, settings)
+    return invoice
+
+
+def create_manual_invoice_for_order(order: Order) -> Invoice:
+    settings = CompanySettings.objects.first()
+    invoice = Invoice.objects.filter(auftrag=order).first()
+    if invoice:
+        return invoice
+
+    invoice = Invoice.objects.create(
+        kunde=order.kunde,
+        auftrag=order,
+        betrag=order.gesamtpreis,
+        notizen="Gemäß § 19 UStG wird keine Umsatzsteuer berechnet.",
+    )
+    _build_invoice_pdf(invoice, settings)
+    return invoice
+
+
+def create_invoice_for_sale(sale: Sale) -> Invoice | None:
+    if not sale.kunde:
+        return None
+
+    settings = CompanySettings.objects.first()
+    invoice = Invoice.objects.filter(verkauf=sale).first()
+    if invoice:
+        return invoice
+
+    notes = [f"Kassenverkauf #{sale.verkaufsnummer}", "Positionen:"]
+    for pos in sale.positionen.select_related("artikel"):
+        notes.append(f"- {pos.artikel.name}: {pos.menge} × {pos.einzelpreis} € = {pos.gesamtpreis} €")
+
+    invoice = Invoice.objects.create(
+        kunde=sale.kunde,
+        verkauf=sale,
+        betrag=sale.gesamtbetrag,
+        notizen="\n".join(notes),
+    )
+    _build_invoice_pdf(invoice, settings)
     return invoice
 
 
@@ -82,6 +121,8 @@ def _build_invoice_pdf(invoice: Invoice, company_settings: CompanySettings | Non
     y -= 6 * mm
     if invoice.auftrag:
         pdf.drawString(15 * mm, y, f"Auftrag: {invoice.auftrag.auftragsnummer}")
+    elif invoice.verkauf:
+        pdf.drawString(15 * mm, y, f"Verkauf: {invoice.verkauf.verkaufsnummer}")
 
     y -= 10 * mm
     pdf.setFillColor(colors.HexColor("#f2f2f2"))
@@ -93,7 +134,12 @@ def _build_invoice_pdf(invoice: Invoice, company_settings: CompanySettings | Non
 
     y -= 10 * mm
     pdf.setFont("Helvetica", 10)
-    position_text = invoice.auftrag.auftragsart if invoice.auftrag else "Leistung"
+    if invoice.auftrag:
+        position_text = invoice.auftrag.auftragsart
+    elif invoice.verkauf:
+        position_text = f"Kassenverkauf #{invoice.verkauf.verkaufsnummer}"
+    else:
+        position_text = "Leistung"
     pdf.drawString(18 * mm, y, position_text)
     pdf.drawRightString(width - 18 * mm, y, f"{invoice.betrag:.2f} €")
 
