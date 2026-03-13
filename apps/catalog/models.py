@@ -24,6 +24,7 @@ class Article(models.Model):
     barcode = models.CharField(max_length=64, unique=True, null=True, blank=True, verbose_name="Barcode")
     name = models.CharField(max_length=120, verbose_name="Name")
     preis = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Preis")
+    einheit = models.CharField(max_length=30, default="Stück", verbose_name="Einheit")
     lagerbestand = models.PositiveIntegerField(default=0, verbose_name="Lagerbestand")
     kategorie = models.CharField(max_length=80, verbose_name="Kategorie")
     icon = models.CharField(max_length=30, choices=ICON_CHOICES, verbose_name="Icon")

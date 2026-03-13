@@ -2,7 +2,7 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
-from django.views.generic import TemplateView, View
+from django.views.generic import TemplateView, UpdateView, View
 
 from apps.accounts.models import UserRole
 from apps.core.models import NumberSequence, NumberSequenceType
@@ -18,6 +18,15 @@ from .forms import (
     SurchargeForm,
 )
 from .models import CompanySettings, OrderType, Price, Service, SoilingLevel, Surcharge
+
+
+MASTER_DATA_CONFIG = {
+    "service": {"model": Service, "form": ServiceForm, "success": "Leistung gespeichert."},
+    "price": {"model": Price, "form": PriceForm, "success": "Preis gespeichert."},
+    "order_type": {"model": OrderType, "form": OrderTypeForm, "success": "Auftragsart gespeichert."},
+    "soiling_level": {"model": SoilingLevel, "form": SoilingLevelForm, "success": "Verschmutzungsgrad gespeichert."},
+    "surcharge": {"model": Surcharge, "form": SurchargeForm, "success": "Zuschlag gespeichert."},
+}
 
 
 class MasterDataAccessMixin(LoginRequiredMixin, UserPassesTestMixin):
@@ -59,13 +68,6 @@ class MasterDataView(MasterDataAccessMixin, TemplateView):
 
     def post(self, request, *args, **kwargs):
         action = request.POST.get("action")
-        form_map = {
-            "service": (ServiceForm, "Leistung gespeichert."),
-            "price": (PriceForm, "Preis gespeichert."),
-            "order_type": (OrderTypeForm, "Auftragsart gespeichert."),
-            "soiling_level": (SoilingLevelForm, "Verschmutzungsgrad gespeichert."),
-            "surcharge": (SurchargeForm, "Zuschlag gespeichert."),
-        }
 
         if action == "number_sequences":
             formset = self._sequence_formset(request.POST)
@@ -86,8 +88,9 @@ class MasterDataView(MasterDataAccessMixin, TemplateView):
                 messages.error(request, "Firmendaten konnten nicht gespeichert werden.")
             return redirect("company:master_data")
 
-        if action in form_map:
-            form_class, success_message = form_map[action]
+        if action in MASTER_DATA_CONFIG:
+            form_class = MASTER_DATA_CONFIG[action]["form"]
+            success_message = MASTER_DATA_CONFIG[action]["success"]
             form = form_class(request.POST)
             if form.is_valid():
                 form.save()
@@ -99,16 +102,9 @@ class MasterDataView(MasterDataAccessMixin, TemplateView):
 
 
 class MasterDataDeleteView(MasterDataAccessMixin, View):
-    model_map = {
-        "service": Service,
-        "price": Price,
-        "order_type": OrderType,
-        "soiling_level": SoilingLevel,
-        "surcharge": Surcharge,
-    }
-
     def post(self, request, model_name, pk):
-        model = self.model_map.get(model_name)
+        config = MASTER_DATA_CONFIG.get(model_name)
+        model = config["model"] if config else None
         if not model:
             messages.error(request, "Ungültiger Datensatztyp.")
             return redirect(reverse_lazy("company:master_data"))
@@ -117,3 +113,36 @@ class MasterDataDeleteView(MasterDataAccessMixin, View):
         instance.delete()
         messages.success(request, "Eintrag wurde gelöscht.")
         return redirect(reverse_lazy("company:master_data"))
+
+
+class MasterDataUpdateView(MasterDataAccessMixin, UpdateView):
+    template_name = "company/master_data_edit.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        self.model_name = kwargs["model_name"]
+        self.config = MASTER_DATA_CONFIG.get(self.model_name)
+        if not self.config:
+            messages.error(request, "Ungültiger Datensatztyp.")
+            return redirect("company:master_data")
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_queryset(self):
+        return self.config["model"].objects.all()
+
+    def get_form_class(self):
+        return self.config["form"]
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["model_name"] = self.model_name
+        context["model_title"] = self.config["model"]._meta.verbose_name
+        return context
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        label = self.config["model"]._meta.verbose_name.title()
+        messages.success(self.request, f"{label} wurde aktualisiert.")
+        return response
+
+    def get_success_url(self):
+        return reverse_lazy("company:master_data")

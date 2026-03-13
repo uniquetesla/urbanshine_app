@@ -5,9 +5,10 @@ from .models import Article, GoodsReceipt
 
 @admin.register(Article)
 class ArticleAdmin(admin.ModelAdmin):
-    list_display = ("formatted_artikelnummer", "barcode", "name", "kategorie", "preis", "lagerbestand", "icon")
-    list_filter = ("kategorie", "icon")
-    search_fields = ("artikelnummer", "barcode", "name", "kategorie", "beschreibung")
+    list_display = ("formatted_artikelnummer", "barcode", "name", "kategorie", "einheit", "preis", "lagerbestand", "icon")
+    list_filter = ("kategorie", "icon", "einheit")
+    search_fields = ("artikelnummer", "barcode", "name", "kategorie", "beschreibung", "einheit")
+    list_editable = ("einheit", "preis", "lagerbestand")
 
 
 @admin.register(GoodsReceipt)

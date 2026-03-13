@@ -97,6 +97,7 @@ class OfferItem(models.Model):
         verbose_name="Zuschlag",
     )
     menge = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("1.00"), verbose_name="Menge")
+    einheit = models.CharField(max_length=30, default="Einheit", verbose_name="Einheit")
     einzelpreis = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Einzelpreis (€)")
     gesamtpreis = models.DecimalField(max_digits=10, decimal_places=2, editable=False, verbose_name="Gesamtpreis (€)")
 
@@ -123,6 +124,7 @@ class OfferItem(models.Model):
     def save(self, *args, **kwargs):
         if self.leistung and self.verschmutzungsgrad:
             self.bezeichnung = self.leistung.name
+            self.einheit = self.leistung.unit
             self.einzelpreis = self.calculate_price()
         self.gesamtpreis = (self.menge * self.einzelpreis).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
         super().save(*args, **kwargs)

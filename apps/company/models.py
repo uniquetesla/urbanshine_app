@@ -15,6 +15,7 @@ class NamedBaseModel(models.Model):
 
 class Service(NamedBaseModel):
     price = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name="Preis (€)")
+    unit = models.CharField(max_length=30, default="Einheit", verbose_name="Einheit")
     estimated_duration_minutes = models.PositiveIntegerField(default=60, verbose_name="Geschätzte Dauer (Minuten)")
     description = models.TextField(blank=True, verbose_name="Beschreibung")
 

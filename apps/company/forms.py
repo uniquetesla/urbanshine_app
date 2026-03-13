@@ -9,7 +9,7 @@ from .models import CompanySettings, OrderType, Price, Service, SoilingLevel, Su
 class ServiceForm(forms.ModelForm):
     class Meta:
         model = Service
-        fields = ["name", "price", "estimated_duration_minutes", "description", "is_active"]
+        fields = ["name", "price", "unit", "estimated_duration_minutes", "description", "is_active"]
 
 
 class PriceForm(forms.ModelForm):

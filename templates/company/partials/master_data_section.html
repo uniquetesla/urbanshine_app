@@ -1,0 +1,19 @@
+<section class="glass-card panel admin-area">
+    <h3>{{ title }}</h3>
+    <form method="post" class="form-grid">{% csrf_token %}
+        <input type="hidden" name="action" value="{{ action }}">
+        {{ form.as_p }}
+        <button class="btn" type="submit">{{ title }} speichern</button>
+    </form>
+    <ul class="activity-list">
+        {% for item in items %}
+            <li>
+                <strong>{{ item }}</strong>
+                <div class="table-actions">
+                    <a class="btn btn-secondary btn-compact" href="{% url 'company:master_data_update' type item.pk %}">Bearbeiten</a>
+                    <form method="post" action="{% url 'company:master_data_delete' type item.pk %}" class="action-form">{% csrf_token %}<button class="btn btn-danger btn-compact" type="submit">Löschen</button></form>
+                </div>
+            </li>
+        {% empty %}<li>Keine Einträge vorhanden.</li>{% endfor %}
+    </ul>
+</section>

@@ -2,7 +2,7 @@
 
 {% block title %}Stammdaten | UrbanShine{% endblock %}
 {% block page_title %}Stammdaten-Administration{% endblock %}
-{% block page_subtitle %}Pflege zentraler Unternehmensdaten (nur Admin/Chef){% endblock %}
+{% block page_subtitle %}Klar gegliedert, schnell bedienbar, vollständig bearbeitbar{% endblock %}
 
 {% block content %}
 <section class="glass-card panel admin-area">
@@ -10,96 +10,15 @@
         <h3>⚙️ Adminbereich: Stammdaten</h3>
         <span class="admin-badge">Nur für Admin &amp; Chef</span>
     </div>
-    <p class="subtitle">Hier können Leistungen, Preise, Auftragsarten, Verschmutzungsgrade, Zuschläge sowie Firmendaten gepflegt werden.</p>
+    <p class="subtitle">Leistungen, Auftragsarten, Verschmutzungsgrade, Zuschläge, Preise, Nummernkreise und Firmendaten zentral verwalten.</p>
 </section>
 
 <div class="dashboard-grid">
-    <section class="glass-card panel admin-area">
-        <h3>Leistungen</h3>
-        <form method="post" class="form-grid">{% csrf_token %}
-            <input type="hidden" name="action" value="service">
-            {{ service_form.as_p }}
-            <button class="btn" type="submit">Leistung speichern</button>
-        </form>
-        <ul class="activity-list">
-            {% for item in services %}
-                <li>
-                    <strong>{{ item.name }} · {{ item.price }} € · {{ item.estimated_duration_minutes }} Min.</strong>
-                    <p>{{ item.description|default:'-' }}</p>
-                    <form method="post" action="{% url 'company:master_data_delete' 'service' item.pk %}">{% csrf_token %}<button class="btn btn-danger" type="submit"><span class="btn-icon" aria-hidden="true">🗑️</span><span>Löschen</span></button></form>
-                </li>
-            {% empty %}<li>Keine Leistungen vorhanden.</li>{% endfor %}
-        </ul>
-    </section>
-
-    <section class="glass-card panel admin-area">
-        <h3>Preise</h3>
-        <form method="post" class="form-grid">{% csrf_token %}
-            <input type="hidden" name="action" value="price">
-            {{ price_form.as_p }}
-            <button class="btn" type="submit">Preis speichern</button>
-        </form>
-        <ul class="activity-list">
-            {% for item in prices %}
-                <li>
-                    <strong>{{ item.name }}: {{ item.amount }} €{% if item.unit %} / {{ item.unit }}{% endif %}</strong>
-                    <form method="post" action="{% url 'company:master_data_delete' 'price' item.pk %}">{% csrf_token %}<button class="btn btn-danger" type="submit"><span class="btn-icon" aria-hidden="true">🗑️</span><span>Löschen</span></button></form>
-                </li>
-            {% empty %}<li>Keine Preise vorhanden.</li>{% endfor %}
-        </ul>
-    </section>
-
-    <section class="glass-card panel admin-area">
-        <h3>Auftragsarten</h3>
-        <form method="post" class="form-grid">{% csrf_token %}
-            <input type="hidden" name="action" value="order_type">
-            {{ order_type_form.as_p }}
-            <button class="btn" type="submit">Auftragsart speichern</button>
-        </form>
-        <ul class="activity-list">
-            {% for item in order_types %}
-                <li>
-                    <strong>{{ item.name }}</strong>
-                    <form method="post" action="{% url 'company:master_data_delete' 'order_type' item.pk %}">{% csrf_token %}<button class="btn btn-danger" type="submit"><span class="btn-icon" aria-hidden="true">🗑️</span><span>Löschen</span></button></form>
-                </li>
-            {% empty %}<li>Keine Auftragsarten vorhanden.</li>{% endfor %}
-        </ul>
-    </section>
-
-    <section class="glass-card panel admin-area">
-        <h3>Verschmutzungsgrade</h3>
-        <form method="post" class="form-grid">{% csrf_token %}
-            <input type="hidden" name="action" value="soiling_level">
-            {{ soiling_level_form.as_p }}
-            <button class="btn" type="submit">Verschmutzungsgrad speichern</button>
-        </form>
-        <ul class="activity-list">
-            {% for item in soiling_levels %}
-                <li>
-                    <strong>{{ item.name }} (Faktor {{ item.multiplier }})</strong>
-                    <form method="post" action="{% url 'company:master_data_delete' 'soiling_level' item.pk %}">{% csrf_token %}<button class="btn btn-danger" type="submit"><span class="btn-icon" aria-hidden="true">🗑️</span><span>Löschen</span></button></form>
-                </li>
-            {% empty %}<li>Keine Verschmutzungsgrade vorhanden.</li>{% endfor %}
-        </ul>
-    </section>
-
-    <section class="glass-card panel admin-area">
-        <h3>Zuschläge</h3>
-        <form method="post" class="form-grid">{% csrf_token %}
-            <input type="hidden" name="action" value="surcharge">
-            {{ surcharge_form.as_p }}
-            <button class="btn" type="submit">Zuschlag speichern</button>
-        </form>
-        <ul class="activity-list">
-            {% for item in surcharges %}
-                <li>
-                    <strong>{{ item.name }}: {{ item.amount }}{% if item.is_percentage %} %{% else %} €{% endif %}</strong>
-                    <form method="post" action="{% url 'company:master_data_delete' 'surcharge' item.pk %}">{% csrf_token %}<button class="btn btn-danger" type="submit"><span class="btn-icon" aria-hidden="true">🗑️</span><span>Löschen</span></button></form>
-                </li>
-            {% empty %}<li>Keine Zuschläge vorhanden.</li>{% endfor %}
-        </ul>
-    </section>
-
+    {% include 'company/partials/master_data_section.html' with title='Leistungen' action='service' form=service_form items=services type='service' %}
+    {% include 'company/partials/master_data_section.html' with title='Preise' action='price' form=price_form items=prices type='price' %}
+    {% include 'company/partials/master_data_section.html' with title='Auftragsarten' action='order_type' form=order_type_form items=order_types type='order_type' %}
+    {% include 'company/partials/master_data_section.html' with title='Verschmutzungsgrade' action='soiling_level' form=soiling_level_form items=soiling_levels type='soiling_level' %}
+    {% include 'company/partials/master_data_section.html' with title='Zuschläge' action='surcharge' form=surcharge_form items=surcharges type='surcharge' %}
 
     <section class="glass-card panel admin-area">
         <h3>Nummernkreise</h3>
@@ -107,7 +26,7 @@
             <input type="hidden" name="action" value="number_sequences">
             {{ number_sequence_formset.management_form }}
             {% for form in number_sequence_formset %}
-                <div class="glass-card" style="padding:.8rem;">
+                <div class="glass-card compact-card">
                     {{ form.id }}
                     <p><strong>{{ form.instance.get_sequence_type_display }}</strong></p>
                     <label>Prefix</label>{{ form.prefix }}

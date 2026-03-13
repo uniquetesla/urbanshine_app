@@ -134,6 +134,7 @@ class OrderPosition(models.Model):
     )
     status = models.CharField(max_length=20, choices=PositionStatus.choices, default=PositionStatus.NEU, verbose_name="Status")
     einzelpreis = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("0.00"), verbose_name="Einzelpreis (€)")
+    einheit = models.CharField(max_length=30, default="Einheit", verbose_name="Einheit")
     geschaetzte_dauer_minuten = models.PositiveIntegerField(default=0, verbose_name="Dauer (Minuten)")
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -157,6 +158,7 @@ class OrderPosition(models.Model):
     def save(self, *args, **kwargs):
         self.einzelpreis = self.calculate_price()
         self.geschaetzte_dauer_minuten = self.leistung.estimated_duration_minutes
+        self.einheit = self.leistung.unit
         super().save(*args, **kwargs)
 
 
