@@ -39,7 +39,20 @@ class SurchargeForm(forms.ModelForm):
 class CompanySettingsForm(forms.ModelForm):
     class Meta:
         model = CompanySettings
-        fields = ["company_name", "address", "phone", "email", "logo", "invoice_generation_enabled"]
+        fields = [
+            "company_name",
+            "address",
+            "tax_id",
+            "phone",
+            "email",
+            "website",
+            "bank_name",
+            "iban",
+            "bic",
+            "kleinunternehmerregelung",
+            "logo",
+            "invoice_generation_enabled",
+        ]
 
 
 class NumberSequenceForm(forms.ModelForm):

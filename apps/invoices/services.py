@@ -151,91 +151,212 @@ def _surcharge_amount_for_position(position):
     return position.zuschlag.amount.quantize(Decimal("0.01"))
 
 
+def _format_euro(value: Decimal) -> str:
+    amount = Decimal(value).quantize(Decimal("0.01"))
+    formatted = f"{amount:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+    return f"{formatted} €"
+
+
+def _format_quantity(value: Decimal) -> str:
+    number = Decimal(value).quantize(Decimal("0.01"))
+    formatted = f"{number:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+    return formatted
+
+
+def _draw_footer(pdf, width, company_settings: CompanySettings | None):
+    footer_y = 17 * mm
+    col_width = (width - 30 * mm) / 3
+    left_x = 15 * mm
+    middle_x = left_x + col_width
+    right_x = middle_x + col_width
+
+    company_name = company_settings.company_name if company_settings else "UrbanShine"
+    company_address_lines = (company_settings.address.splitlines() if company_settings and company_settings.address else [])
+
+    pdf.setStrokeColor(colors.HexColor("#cccccc"))
+    pdf.line(15 * mm, footer_y + 22 * mm, width - 15 * mm, footer_y + 22 * mm)
+    pdf.setFont("Helvetica-Bold", 8)
+    pdf.drawString(left_x, footer_y + 17 * mm, "Unternehmen")
+    pdf.drawString(middle_x, footer_y + 17 * mm, "Kontakt")
+    pdf.drawString(right_x, footer_y + 17 * mm, "Bankverbindung")
+
+    pdf.setFont("Helvetica", 8)
+    y = footer_y + 13 * mm
+    for line in [company_name, *company_address_lines[:2], f"Steuer-ID: {company_settings.tax_id}" if company_settings and company_settings.tax_id else ""]:
+        if line:
+            pdf.drawString(left_x, y, line)
+            y -= 4 * mm
+
+    y = footer_y + 13 * mm
+    contact_lines = [
+        f"Tel.: {company_settings.phone}" if company_settings and company_settings.phone else "",
+        f"E-Mail: {company_settings.email}" if company_settings and company_settings.email else "",
+        f"Web: {company_settings.website}" if company_settings and company_settings.website else "",
+    ]
+    for line in contact_lines:
+        if line:
+            pdf.drawString(middle_x, y, line)
+            y -= 4 * mm
+
+    y = footer_y + 13 * mm
+    bank_lines = [
+        company_settings.bank_name if company_settings and company_settings.bank_name else "",
+        f"IBAN: {company_settings.iban}" if company_settings and company_settings.iban else "",
+        f"BIC: {company_settings.bic}" if company_settings and company_settings.bic else "",
+    ]
+    for line in bank_lines:
+        if line:
+            pdf.drawString(right_x, y, line)
+            y -= 4 * mm
+
+
 def _build_invoice_pdf(invoice: Invoice, company_settings: CompanySettings | None):
     buffer = BytesIO()
     pdf = canvas.Canvas(buffer, pagesize=A4)
     width, height = A4
 
-    y = height - 25 * mm
+    company_name = company_settings.company_name if company_settings else "UrbanShine"
+    customer = invoice.kunde
+
+    left_x = 20 * mm
+    content_width = width - 40 * mm
+    top_y = height - 20 * mm
+
+    pdf.setTitle(f"Rechnung {invoice.formatted_rechnungsnummer}")
+
     if company_settings and company_settings.logo:
         logo_path = Path(company_settings.logo.path)
         if logo_path.exists():
-            pdf.drawImage(str(logo_path), 15 * mm, y - 15 * mm, width=35 * mm, height=15 * mm, preserveAspectRatio=True)
-    pdf.setFont("Helvetica-Bold", 18)
-    pdf.drawRightString(width - 15 * mm, y, f"Rechnung {invoice.formatted_rechnungsnummer}")
+            pdf.drawImage(str(logo_path), left_x, top_y - 15 * mm, width=32 * mm, height=15 * mm, preserveAspectRatio=True, anchor='nw')
 
-    y -= 20 * mm
-    pdf.setFont("Helvetica-Bold", 11)
-    pdf.drawString(15 * mm, y, "Firmendaten")
-    pdf.setFont("Helvetica", 10)
-    company_name = company_settings.company_name if company_settings else "UrbanShine"
-    company_address = company_settings.address if company_settings else ""
-    company_phone = company_settings.phone if company_settings else ""
-    company_email = company_settings.email if company_settings else ""
-    for line in [company_name, *company_address.splitlines(), company_phone, company_email]:
+    y = top_y - 18 * mm
+    pdf.setFont("Helvetica-Bold", 10)
+    pdf.drawString(left_x, y, company_name)
+    pdf.setFont("Helvetica", 9)
+    sender_lines = [
+        *(company_settings.address.splitlines() if company_settings and company_settings.address else []),
+        f"Steuer-ID: {company_settings.tax_id}" if company_settings and company_settings.tax_id else "",
+        f"Tel.: {company_settings.phone}" if company_settings and company_settings.phone else "",
+        f"E-Mail: {company_settings.email}" if company_settings and company_settings.email else "",
+        f"Web: {company_settings.website}" if company_settings and company_settings.website else "",
+    ]
+    for line in sender_lines:
         if line:
-            y -= 5 * mm
-            pdf.drawString(15 * mm, y, line)
+            y -= 4.2 * mm
+            pdf.drawString(left_x, y, line)
 
-    customer = invoice.kunde
-    y_customer = height - 55 * mm
-    pdf.setFont("Helvetica-Bold", 11)
-    pdf.drawString(110 * mm, y_customer, "Kundenadresse")
+    address_y = top_y - 55 * mm
     pdf.setFont("Helvetica", 10)
-    for line in [
+    receiver_lines = [
         f"{customer.vorname} {customer.nachname}",
         f"{customer.strasse} {customer.hausnummer}",
         f"{customer.plz} {customer.ort}",
-    ]:
-        y_customer -= 5 * mm
-        pdf.drawString(110 * mm, y_customer, line)
+    ]
+    for line in receiver_lines:
+        pdf.drawString(left_x, address_y, line)
+        address_y -= 5 * mm
 
-    y -= 12 * mm
+    info_x = width - 82 * mm
+    info_y = top_y - 40 * mm
+    leistungsdatum = invoice.auftrag.termin.date() if invoice.auftrag and invoice.auftrag.termin else invoice.rechnungsdatum
+    invoice_info = [
+        ("Rechnungsdatum:", f"{invoice.rechnungsdatum:%d.%m.%Y}"),
+        ("Rechnung Nr.:", invoice.formatted_rechnungsnummer),
+        ("Leistungsdatum:", f"{leistungsdatum:%d.%m.%Y}"),
+        ("Kundennummer:", customer.formatted_kundennummer),
+    ]
+    pdf.setFont("Helvetica", 9)
+    for label, value in invoice_info:
+        pdf.drawString(info_x, info_y, label)
+        pdf.drawRightString(width - 20 * mm, info_y, value)
+        info_y -= 5.2 * mm
+
+    title_y = top_y - 83 * mm
+    pdf.setFont("Helvetica-Bold", 18)
+    pdf.drawString(left_x, title_y, "RECHNUNG")
+
+    salutation = "Sehr geehrte Damen und Herren"
+    if customer.nachname:
+        salutation = f"Sehr geehrte/r {customer.vorname} {customer.nachname}"
+
+    intro_y = title_y - 9 * mm
     pdf.setFont("Helvetica", 10)
-    pdf.drawString(15 * mm, y, f"Rechnungsdatum: {invoice.rechnungsdatum:%d.%m.%Y}")
-    y -= 6 * mm
-    if invoice.bezahlt_am:
-        pdf.drawString(15 * mm, y, f"Bezahlt am: {invoice.bezahlt_am:%d.%m.%Y}")
+    pdf.drawString(left_x, intro_y, f"{salutation},")
+    intro_y -= 6 * mm
+    pdf.drawString(left_x, intro_y, "wie vereinbart stelle ich Ihnen folgende Leistungen in Rechnung:")
+
+    table_y = intro_y - 10 * mm
+    row_height = 7 * mm
+    col_pos = left_x
+    col_qty = left_x + 14 * mm
+    col_unit = left_x + 31 * mm
+    col_desc = left_x + 49 * mm
+    col_price = width - 55 * mm
+    col_total = width - 20 * mm
+
+    pdf.setFillColor(colors.HexColor("#f1f3f5"))
+    pdf.rect(left_x, table_y, content_width, row_height, fill=1, stroke=0)
+    pdf.setFillColor(colors.black)
+    pdf.setFont("Helvetica-Bold", 9)
+    pdf.drawString(col_pos + 1.5 * mm, table_y + 2.3 * mm, "Pos.")
+    pdf.drawRightString(col_qty + 15 * mm, table_y + 2.3 * mm, "Menge")
+    pdf.drawString(col_unit + 1 * mm, table_y + 2.3 * mm, "Einheit")
+    pdf.drawString(col_desc + 1 * mm, table_y + 2.3 * mm, "Beschreibung")
+    pdf.drawRightString(col_price + 18 * mm, table_y + 2.3 * mm, "Einzelpreis")
+    pdf.drawRightString(col_total, table_y + 2.3 * mm, "Gesamtpreis")
+
+    y = table_y - 5.8 * mm
+    pdf.setFont("Helvetica", 9)
+    for idx, item in enumerate(invoice.positionen.all(), start=1):
+        if y <= 55 * mm:
+            _draw_footer(pdf, width, company_settings)
+            pdf.showPage()
+            y = height - 30 * mm
+            pdf.setFont("Helvetica-Bold", 10)
+            pdf.drawString(left_x, y, f"Rechnung {invoice.formatted_rechnungsnummer} – Fortsetzung")
+            y -= 8 * mm
+            pdf.setFillColor(colors.HexColor("#f1f3f5"))
+            pdf.rect(left_x, y, content_width, row_height, fill=1, stroke=0)
+            pdf.setFillColor(colors.black)
+            pdf.setFont("Helvetica-Bold", 9)
+            pdf.drawString(col_pos + 1.5 * mm, y + 2.3 * mm, "Pos.")
+            pdf.drawRightString(col_qty + 15 * mm, y + 2.3 * mm, "Menge")
+            pdf.drawString(col_unit + 1 * mm, y + 2.3 * mm, "Einheit")
+            pdf.drawString(col_desc + 1 * mm, y + 2.3 * mm, "Beschreibung")
+            pdf.drawRightString(col_price + 18 * mm, y + 2.3 * mm, "Einzelpreis")
+            pdf.drawRightString(col_total, y + 2.3 * mm, "Gesamtpreis")
+            y -= 5.8 * mm
+            pdf.setFont("Helvetica", 9)
+
+        pdf.drawRightString(col_pos + 8 * mm, y, str(idx))
+        pdf.drawRightString(col_qty + 15 * mm, y, _format_quantity(item.menge))
+        pdf.drawString(col_unit + 1 * mm, y, item.einheit)
+        pdf.drawString(col_desc + 1 * mm, y, item.beschreibung[:52])
+        pdf.drawRightString(col_price + 18 * mm, y, _format_euro(item.einzelpreis))
+        pdf.drawRightString(col_total, y, _format_euro(item.gesamtpreis))
+        pdf.setStrokeColor(colors.HexColor("#e3e3e3"))
+        pdf.line(left_x, y - 1.8 * mm, left_x + content_width, y - 1.8 * mm)
         y -= 6 * mm
-    if invoice.auftrag:
-        pdf.drawString(15 * mm, y, f"Auftrag: {invoice.auftrag.formatted_auftragsnummer}")
-    elif invoice.verkauf:
-        pdf.drawString(15 * mm, y, f"Verkauf: {invoice.verkauf.verkaufsnummer}")
+
+    y -= 4 * mm
+    pdf.setFont("Helvetica-Bold", 12)
+    pdf.drawRightString(width - 20 * mm, y, f"Rechnungsbetrag: {_format_euro(invoice.betrag)}")
+
+    y -= 8 * mm
+    pdf.setFont("Helvetica", 9)
+    pdf.drawString(left_x, y, "Bitte überweisen Sie den Rechnungsbetrag innerhalb von 14 Tagen auf das unten angegebene Konto.")
+
+    if company_settings is None or company_settings.kleinunternehmerregelung:
+        y -= 6 * mm
+        pdf.drawString(left_x, y, "Bitte beachten Sie, dass nach § 19 UStG keine Umsatzsteuer ausgewiesen wird.")
 
     y -= 10 * mm
-    pdf.setFillColor(colors.HexColor("#f2f2f2"))
-    pdf.rect(15 * mm, y, width - 30 * mm, 8 * mm, fill=1, stroke=0)
-    pdf.setFillColor(colors.black)
+    pdf.drawString(left_x, y, "Freundliche Grüße")
+    y -= 6 * mm
     pdf.setFont("Helvetica-Bold", 10)
-    pdf.drawString(18 * mm, y + 3 * mm, "Position")
-    pdf.drawRightString(width - 18 * mm, y + 3 * mm, "Gesamt")
+    pdf.drawString(left_x, y, company_name)
 
-    y -= 9 * mm
-    pdf.setFont("Helvetica", 10)
-    for item in invoice.positionen.all():
-        if y <= 40 * mm:
-            pdf.showPage()
-            y = height - 25 * mm
-            pdf.setFont("Helvetica", 10)
-        pdf.drawString(18 * mm, y, f"{item.beschreibung} ({item.menge} {item.einheit} × {item.einzelpreis:.2f} €)")
-        pdf.drawRightString(width - 18 * mm, y, f"{item.gesamtpreis:.2f} €")
-        y -= 6 * mm
-
-    y -= 8 * mm
-    pdf.line(15 * mm, y, width - 15 * mm, y)
-    y -= 8 * mm
-    pdf.setFont("Helvetica-Bold", 11)
-    pdf.drawString(18 * mm, y, "Summe")
-    pdf.drawRightString(width - 18 * mm, y, f"{invoice.betrag:.2f} €")
-
-    y -= 7 * mm
-    pdf.setFont("Helvetica", 9)
-    pdf.drawRightString(width - 18 * mm, y, "Gemäß § 19 UStG wird keine Umsatzsteuer berechnet.")
-
-    y -= 18 * mm
-    pdf.setFont("Helvetica", 9)
-    pdf.drawString(15 * mm, y, f"Erstellt am {timezone.localtime():%d.%m.%Y %H:%M}")
-
+    _draw_footer(pdf, width, company_settings)
     pdf.showPage()
     pdf.save()
 
