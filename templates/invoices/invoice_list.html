@@ -10,9 +10,9 @@
 
     <form method="get" style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1rem;">
         <input type="search" name="q" value="{{ query }}" placeholder="Suche nach Rechnungsnr., Kunde, Kundennr. oder Status">
-        <button class="btn" type="submit">Suchen</button>
+        <button class="btn" type="submit"><span class="btn-icon" aria-hidden="true">🔍</span><span>Suchen</span></button>
         {% if query %}
-            <a class="btn btn-secondary" href="{% url 'invoices:invoice_list' %}">Zurücksetzen</a>
+            <a class="btn btn-secondary" href="{% url 'invoices:invoice_list' %}"><span class="btn-icon" aria-hidden="true">↺</span><span>Zurücksetzen</span></a>
         {% endif %}
     </form>
 
@@ -46,16 +46,16 @@
                             {{ invoice.get_zahlungsstatus_display }}
                         </span>
                     </td>
-                    <td style="display:flex;gap:.4rem;flex-wrap:wrap;">
-                        <a class="btn btn-secondary" href="{% url 'invoices:invoice_detail' invoice.pk %}">Details</a>
+                    <td class="table-actions">
+                        <a class="btn btn-secondary" href="{% url 'invoices:invoice_detail' invoice.pk %}"><span class="btn-icon" aria-hidden="true">🔎</span><span>Details</span></a>
                         {% if invoice.pdf_datei %}
-                            <a class="btn" href="{% url 'invoices:invoice_pdf' invoice.pk %}">PDF</a>
+                            <a class="btn" href="{% url 'invoices:invoice_pdf' invoice.pk %}"><span class="btn-icon" aria-hidden="true">⬇️</span><span>PDF</span></a>
                         {% endif %}
                         {% if user.role != 'stammkunde' and invoice.zahlungsstatus != payment_status_paid %}
                             <form method="post" action="{% url 'invoices:invoice_mark_paid' invoice.pk %}">
                                 {% csrf_token %}
                                 <input type="hidden" name="next" value="{% url 'invoices:invoice_list' %}">
-                                <button class="btn btn-action" type="submit">Als bezahlt markieren</button>
+                                <button class="btn btn-success" type="submit"><span class="btn-icon" aria-hidden="true">✅</span><span>Als bezahlt markieren</span></button>
                             </form>
                         {% endif %}
                     </td>

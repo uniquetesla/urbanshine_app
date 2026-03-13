@@ -7,8 +7,8 @@
     <p>Möchtest du <strong>{{ object.name }}</strong> wirklich löschen?</p>
     <form method="post" style="display:flex;gap:.6rem;">
         {% csrf_token %}
-        <button type="submit" class="btn btn-danger">Löschen</button>
-        <a href="{% url 'catalog:article_list' %}" class="btn btn-secondary">Abbrechen</a>
+        <button type="submit" class="btn btn-danger"><span class="btn-icon" aria-hidden="true">🗑️</span><span>Löschen</span></button>
+        <a href="{% url 'catalog:article_list' %}" class="btn btn-secondary"><span class="btn-icon" aria-hidden="true">↩️</span><span>Abbrechen</span></a>
     </form>
 </section>
 {% endblock %}

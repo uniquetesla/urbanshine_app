@@ -6,7 +6,7 @@
 <section class="glass-card panel full">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:.7rem;flex-wrap:wrap;">
         <h3>{{ invoice.kunde.vorname }} {{ invoice.kunde.nachname }}</h3>
-        <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+        <div class="button-row">
             {% if user.role != 'stammkunde' and invoice.zahlungsstatus != payment_status_paid %}
                 <form method="post" action="{% url 'invoices:invoice_mark_paid' invoice.pk %}" style="display:flex;align-items:end;gap:.5rem;flex-wrap:wrap;">
                     {% csrf_token %}
@@ -15,13 +15,13 @@
                         <label for="bezahlt_am">Bezahlt am (optional)</label>
                         <input id="bezahlt_am" name="bezahlt_am" type="date">
                     </div>
-                    <button class="btn btn-action" type="submit">Als bezahlt markieren</button>
+                    <button class="btn btn-success" type="submit"><span class="btn-icon" aria-hidden="true">✅</span><span>Als bezahlt markieren</span></button>
                 </form>
             {% endif %}
             {% if invoice.pdf_datei %}
-                <a href="{% url 'invoices:invoice_pdf' invoice.pk %}" class="btn">PDF herunterladen</a>
+                <a href="{% url 'invoices:invoice_pdf' invoice.pk %}" class="btn"><span class="btn-icon" aria-hidden="true">⬇️</span><span>PDF herunterladen</span></a>
             {% endif %}
-            <a href="{% url 'invoices:invoice_list' %}" class="btn btn-secondary">Zurück zur Liste</a>
+            <a href="{% url 'invoices:invoice_list' %}" class="btn btn-secondary"><span class="btn-icon" aria-hidden="true">←</span><span>Zurück zur Liste</span></a>
         </div>
     </div>
 

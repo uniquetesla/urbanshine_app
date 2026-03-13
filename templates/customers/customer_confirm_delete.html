@@ -8,8 +8,8 @@
     <p>Der Kunde <strong>{{ object.vorname }} {{ object.nachname }}</strong> (Nr. {{ object.kundennummer }}) wird dauerhaft entfernt.</p>
     <form method="post" style="display:flex;gap:.6rem;">
         {% csrf_token %}
-        <button class="btn btn-danger" type="submit">Ja, löschen</button>
-        <a class="btn btn-secondary" href="{% url 'customers:customer_list' %}">Abbrechen</a>
+        <button class="btn btn-danger" type="submit"><span class="btn-icon" aria-hidden="true">🗑️</span><span>Ja, löschen</span></button>
+        <a class="btn btn-secondary" href="{% url 'customers:customer_list' %}"><span class="btn-icon" aria-hidden="true">↩️</span><span>Abbrechen</span></a>
     </form>
 </section>
 {% endblock %}

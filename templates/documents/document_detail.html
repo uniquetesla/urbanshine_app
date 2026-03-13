@@ -13,10 +13,10 @@
         <li><strong>Datei</strong><p>{{ document.file.name|cut:"company_documents/" }}</p></li>
     </ul>
     <div style="margin-top: 1rem; display: flex; gap: .6rem; flex-wrap: wrap;">
-        <a class="btn" href="{% url 'documents:document_download' document.pk %}">Datei herunterladen</a>
-        <a class="btn btn-secondary" href="{% url 'documents:document_update' document.pk %}">Bearbeiten</a>
-        <a class="btn btn-danger" href="{% url 'documents:document_delete' document.pk %}">Löschen</a>
-        <a class="btn btn-secondary" href="{% url 'documents:document_list' %}">Zurück zur Liste</a>
+        <a class="btn" href="{% url 'documents:document_download' document.pk %}"><span class="btn-icon" aria-hidden="true">⬇️</span><span>Datei herunterladen</span></a>
+        <a class="btn btn-secondary" href="{% url 'documents:document_update' document.pk %}"><span class="btn-icon" aria-hidden="true">✏️</span><span>Bearbeiten</span></a>
+        <a class="btn btn-danger" href="{% url 'documents:document_delete' document.pk %}"><span class="btn-icon" aria-hidden="true">🗑️</span><span>Löschen</span></a>
+        <a class="btn btn-secondary" href="{% url 'documents:document_list' %}"><span class="btn-icon" aria-hidden="true">←</span><span>Zurück zur Liste</span></a>
     </div>
 </section>
 {% endblock %}

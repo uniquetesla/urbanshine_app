@@ -7,10 +7,10 @@
     <h3>Möchten Sie diesen Auftrag wirklich löschen?</h3>
     <p>Auftragsnummer: <strong>{{ object.auftragsnummer }}</strong></p>
     <p>Kunde: <strong>{{ object.kunde.vorname }} {{ object.kunde.nachname }}</strong></p>
-    <form method="post" style="margin-top:1rem;display:flex;gap:.6rem;">
+    <form method="post" class="button-row">
         {% csrf_token %}
-        <button class="btn btn-danger" type="submit">Ja, löschen</button>
-        <a href="{% url 'orders:order_list' %}" class="btn btn-secondary">Abbrechen</a>
+        <button class="btn btn-danger" type="submit"><span class="btn-icon" aria-hidden="true">🗑️</span><span>Ja, löschen</span></button>
+        <a href="{% url 'orders:order_list' %}" class="btn btn-secondary"><span class="btn-icon" aria-hidden="true">↩️</span><span>Abbrechen</span></a>
     </form>
 </section>
 {% endblock %}

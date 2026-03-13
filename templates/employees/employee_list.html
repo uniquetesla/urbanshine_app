@@ -21,9 +21,9 @@
                     <td>{{ employee.get_full_name|default:employee.username }}</td>
                     <td>{{ employee.get_role_display }}</td>
                     <td>{{ employee.auftraege.count }}</td>
-                    <td style="display:flex;gap:.4rem;flex-wrap:wrap;">
-                        <a href="{% url 'employees:employee_detail' employee.pk %}" class="btn btn-secondary">Details</a>
-                        <a href="{% url 'employees:employee_calendar' employee.pk %}" class="btn btn-secondary">Kalender</a>
+                    <td class="table-actions">
+                        <a href="{% url 'employees:employee_detail' employee.pk %}" class="btn btn-secondary"><span class="btn-icon" aria-hidden="true">🔎</span><span>Details</span></a>
+                        <a href="{% url 'employees:employee_calendar' employee.pk %}" class="btn btn-secondary"><span class="btn-icon" aria-hidden="true">📅</span><span>Kalender</span></a>
                     </td>
                 </tr>
             {% empty %}

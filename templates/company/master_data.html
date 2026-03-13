@@ -26,7 +26,7 @@
                 <li>
                     <strong>{{ item.name }} · {{ item.price }} € · {{ item.estimated_duration_minutes }} Min.</strong>
                     <p>{{ item.description|default:'-' }}</p>
-                    <form method="post" action="{% url 'company:master_data_delete' 'service' item.pk %}">{% csrf_token %}<button class="btn btn-danger" type="submit">Löschen</button></form>
+                    <form method="post" action="{% url 'company:master_data_delete' 'service' item.pk %}">{% csrf_token %}<button class="btn btn-danger" type="submit"><span class="btn-icon" aria-hidden="true">🗑️</span><span>Löschen</span></button></form>
                 </li>
             {% empty %}<li>Keine Leistungen vorhanden.</li>{% endfor %}
         </ul>
@@ -43,7 +43,7 @@
             {% for item in prices %}
                 <li>
                     <strong>{{ item.name }}: {{ item.amount }} €{% if item.unit %} / {{ item.unit }}{% endif %}</strong>
-                    <form method="post" action="{% url 'company:master_data_delete' 'price' item.pk %}">{% csrf_token %}<button class="btn btn-danger" type="submit">Löschen</button></form>
+                    <form method="post" action="{% url 'company:master_data_delete' 'price' item.pk %}">{% csrf_token %}<button class="btn btn-danger" type="submit"><span class="btn-icon" aria-hidden="true">🗑️</span><span>Löschen</span></button></form>
                 </li>
             {% empty %}<li>Keine Preise vorhanden.</li>{% endfor %}
         </ul>
@@ -60,7 +60,7 @@
             {% for item in order_types %}
                 <li>
                     <strong>{{ item.name }}</strong>
-                    <form method="post" action="{% url 'company:master_data_delete' 'order_type' item.pk %}">{% csrf_token %}<button class="btn btn-danger" type="submit">Löschen</button></form>
+                    <form method="post" action="{% url 'company:master_data_delete' 'order_type' item.pk %}">{% csrf_token %}<button class="btn btn-danger" type="submit"><span class="btn-icon" aria-hidden="true">🗑️</span><span>Löschen</span></button></form>
                 </li>
             {% empty %}<li>Keine Auftragsarten vorhanden.</li>{% endfor %}
         </ul>
@@ -77,7 +77,7 @@
             {% for item in soiling_levels %}
                 <li>
                     <strong>{{ item.name }} (Faktor {{ item.multiplier }})</strong>
-                    <form method="post" action="{% url 'company:master_data_delete' 'soiling_level' item.pk %}">{% csrf_token %}<button class="btn btn-danger" type="submit">Löschen</button></form>
+                    <form method="post" action="{% url 'company:master_data_delete' 'soiling_level' item.pk %}">{% csrf_token %}<button class="btn btn-danger" type="submit"><span class="btn-icon" aria-hidden="true">🗑️</span><span>Löschen</span></button></form>
                 </li>
             {% empty %}<li>Keine Verschmutzungsgrade vorhanden.</li>{% endfor %}
         </ul>
@@ -94,7 +94,7 @@
             {% for item in surcharges %}
                 <li>
                     <strong>{{ item.name }}: {{ item.amount }}{% if item.is_percentage %} %{% else %} €{% endif %}</strong>
-                    <form method="post" action="{% url 'company:master_data_delete' 'surcharge' item.pk %}">{% csrf_token %}<button class="btn btn-danger" type="submit">Löschen</button></form>
+                    <form method="post" action="{% url 'company:master_data_delete' 'surcharge' item.pk %}">{% csrf_token %}<button class="btn btn-danger" type="submit"><span class="btn-icon" aria-hidden="true">🗑️</span><span>Löschen</span></button></form>
                 </li>
             {% empty %}<li>Keine Zuschläge vorhanden.</li>{% endfor %}
         </ul>

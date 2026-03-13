@@ -7,11 +7,11 @@
     <div class="glass-card panel full">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:.7rem;flex-wrap:wrap;margin-bottom:1rem;">
             <h3>Artikel</h3>
-            <form method="get" style="display:flex;gap:.5rem;flex-wrap:wrap;">
+            <form method="get" class="button-row">
                 <input type="search" name="q" value="{{ query }}" placeholder="Suche nach Artikelnummer, Barcode, Name, Kategorie oder Beschreibung">
-                <button class="btn" type="submit">Suchen</button>
+                <button class="btn" type="submit"><span class="btn-icon" aria-hidden="true">🔍</span><span>Suchen</span></button>
                 {% if query %}
-                    <a class="btn btn-secondary" href="{% url 'checkout:pos' %}">Zurücksetzen</a>
+                    <a class="btn btn-secondary" href="{% url 'checkout:pos' %}"><span class="btn-icon" aria-hidden="true">↺</span><span>Zurücksetzen</span></a>
                 {% endif %}
             </form>
         </div>
@@ -82,7 +82,7 @@
                 <td>{{ sale.get_zahlungsart_display }}</td>
                 <td>{{ sale.gesamtbetrag }} €</td>
                 <td>{% if invoice %}<a href="{% url 'invoices:invoice_detail' invoice.pk %}">{{ invoice.formatted_rechnungsnummer }}</a>{% else %}<span style="opacity:.75;">Automatisch bei Verkauf mit Kunde</span>{% endif %}</td>
-                <td>{% if invoice %}<a class="btn btn-secondary" href="{% url 'invoices:invoice_detail' invoice.pk %}">Rechnung ansehen</a>{% else %}<form method="post" class="action-form" action="{% url 'checkout:sale_create_invoice' sale.pk %}">{% csrf_token %}<button class="btn btn-action" type="submit">Manuell erstellen</button></form>{% endif %}</td>
+                <td>{% if invoice %}<a class="btn btn-secondary" href="{% url 'invoices:invoice_detail' invoice.pk %}"><span class="btn-icon" aria-hidden="true">🧾</span><span>Rechnung ansehen</span></a>{% else %}<form method="post" class="action-form" action="{% url 'checkout:sale_create_invoice' sale.pk %}">{% csrf_token %}<button class="btn btn-success" type="submit">Manuell erstellen</button></form>{% endif %}</td>
             </tr>
             {% endwith %}
         {% empty %}

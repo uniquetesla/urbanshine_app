@@ -57,7 +57,7 @@
             </div>
             <div class="topbar-actions">
                 <span class="user-pill">{{ request.user.first_name|default:request.user.username }}</span>
-                <form method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}<button class="btn btn-secondary" type="submit">Abmelden</button></form>
+                <form method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}<button class="btn btn-secondary" type="submit"><span class="btn-icon" aria-hidden="true">⇦</span><span>Abmelden</span></button></form>
             </div>
         </header>
 

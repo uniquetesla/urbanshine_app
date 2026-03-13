@@ -6,14 +6,14 @@
 <section class="glass-card panel full">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:.7rem;flex-wrap:wrap;margin-bottom:1rem;">
         <h3>Alle Kunden</h3>
-        <a href="{% url 'customers:customer_create' %}" class="btn">Kunde anlegen</a>
+        <a href="{% url 'customers:customer_create' %}" class="btn"><span class="btn-icon" aria-hidden="true">➕</span><span>Kunde anlegen</span></a>
     </div>
 
     <form method="get" style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1rem;">
         <input type="search" name="q" value="{{ query }}" placeholder="Suche nach Name, Nummer, Ort, E-Mail oder Telefon">
-        <button class="btn" type="submit">Suchen</button>
+        <button class="btn" type="submit"><span class="btn-icon" aria-hidden="true">🔍</span><span>Suchen</span></button>
         {% if query %}
-            <a class="btn btn-secondary" href="{% url 'customers:customer_list' %}">Zurücksetzen</a>
+            <a class="btn btn-secondary" href="{% url 'customers:customer_list' %}"><span class="btn-icon" aria-hidden="true">↺</span><span>Zurücksetzen</span></a>
         {% endif %}
     </form>
 
@@ -38,10 +38,10 @@
                         {% if customer.telefon %}{{ customer.telefon }}<br>{% endif %}
                         {{ customer.email|default:"-" }}
                     </td>
-                    <td style="display:flex;gap:.4rem;flex-wrap:wrap;">
-                        <a class="btn btn-secondary" href="{% url 'customers:customer_detail' customer.pk %}">Details</a>
-                        <a class="btn btn-secondary" href="{% url 'customers:customer_update' customer.pk %}">Bearbeiten</a>
-                        <a class="btn btn-danger" href="{% url 'customers:customer_delete' customer.pk %}">Löschen</a>
+                    <td class="table-actions">
+                        <a class="btn btn-secondary" href="{% url 'customers:customer_detail' customer.pk %}"><span class="btn-icon" aria-hidden="true">🔎</span><span>Details</span></a>
+                        <a class="btn btn-secondary" href="{% url 'customers:customer_update' customer.pk %}"><span class="btn-icon" aria-hidden="true">✏️</span><span>Bearbeiten</span></a>
+                        <a class="btn btn-danger" href="{% url 'customers:customer_delete' customer.pk %}"><span class="btn-icon" aria-hidden="true">🗑️</span><span>Löschen</span></a>
                     </td>
                 </tr>
             {% empty %}

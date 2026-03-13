@@ -66,7 +66,7 @@
             </ul></div>
         {% endif %}
 
-        <div style="margin-top:1rem;display:flex;gap:.6rem;"><button class="btn" type="submit">Speichern</button><a href="{% url 'orders:order_list' %}" class="btn btn-secondary">Zurück</a></div>
+        <div class="button-row"><button class="btn" type="submit"><span class="btn-icon" aria-hidden="true">💾</span><span>Speichern</span></button><a href="{% url 'orders:order_list' %}" class="btn btn-secondary"><span class="btn-icon" aria-hidden="true">←</span><span>Zurück</span></a></div>
     </form>
 </section>
 {{ service_prices|json_script:"service-prices-data" }}
