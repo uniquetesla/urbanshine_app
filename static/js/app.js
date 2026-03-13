@@ -233,8 +233,48 @@ document.addEventListener('DOMContentLoaded', () => {
         qtyInput.select();
       } catch (_error) {
         spawnToast('Wareneingang konnte nicht vorbereitet werden.', 'error');
+  }
+
+  const scanInput = document.getElementById('barcode_scan');
+  if (scanInput) {
+    const checkoutModal = document.getElementById('pos-checkout-modal');
+    const openCheckoutModalBtn = document.getElementById('pos-open-checkout-modal');
+    const closeCheckoutModalBtn = document.getElementById('pos-close-checkout-modal');
+
+    const focusScanInput = () => {
+      window.setTimeout(() => {
+        scanInput.focus();
+        scanInput.select();
+      }, 50);
+    };
+
+    focusScanInput();
+
+    if (openCheckoutModalBtn && checkoutModal) {
+      openCheckoutModalBtn.addEventListener('click', () => {
+        checkoutModal.classList.add('open');
+        checkoutModal.setAttribute('aria-hidden', 'false');
+        checkoutModal.querySelector('#customer_search')?.focus();
+      });
+    }
+
+    if (closeCheckoutModalBtn && checkoutModal) {
+      closeCheckoutModalBtn.addEventListener('click', () => {
+        checkoutModal.classList.remove('open');
+        checkoutModal.setAttribute('aria-hidden', 'true');
+        focusScanInput();
+      });
+    }
+
+    checkoutModal?.addEventListener('click', (event) => {
+      if (event.target === checkoutModal) {
+        checkoutModal.classList.remove('open');
+        checkoutModal.setAttribute('aria-hidden', 'true');
+        focusScanInput();
       }
     });
+  }
+});
 
     bookForm?.addEventListener('submit', async (event) => {
       event.preventDefault();

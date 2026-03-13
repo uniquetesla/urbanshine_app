@@ -1,74 +1,120 @@
 {% extends "base.html" %}
 {% block title %}Kasse | UrbanShine{% endblock %}
 {% block page_title %}Kasse{% endblock %}
-{% block page_subtitle %}Artikel per Suche oder Barcode erfassen und Verkäufe buchen{% endblock %}
+{% block page_subtitle %}Scanner-freundlicher Verkauf mit fixem Warenkorb{% endblock %}
 {% block content %}
-<section class="dashboard-layout">
+<section class="pos-layout">
     <div class="glass-card panel full">
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:.7rem;flex-wrap:wrap;margin-bottom:1rem;">
-            <h3>Artikel</h3>
+        <div class="panel-heading" style="margin-bottom:1rem;">
+            <h3>Artikelverkauf</h3>
             <form method="get" class="button-row">
                 <input type="search" name="q" value="{{ query }}" placeholder="Suche nach Artikelnummer, Barcode, Name, Kategorie oder Beschreibung">
-                <button class="btn" type="submit"><span class="btn-icon" aria-hidden="true">🔍</span><span>Suchen</span></button>
+                <button class="btn" type="submit">Suchen</button>
                 {% if query %}
-                    <a class="btn btn-secondary" href="{% url 'checkout:pos' %}"><span class="btn-icon" aria-hidden="true">↺</span><span>Zurücksetzen</span></a>
+                    <a class="btn btn-secondary" href="{% url 'checkout:pos' %}">Zurücksetzen</a>
                 {% endif %}
             </form>
         </div>
 
-        <form method="post" style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1rem;align-items:flex-end;">{% csrf_token %}
-            <input type="hidden" name="action" value="scan">
-            <div style="min-width:240px;flex:1;">
-                <label for="barcode_scan">Barcode-Scan</label>
-                <input id="barcode_scan" type="text" name="barcode" placeholder="Barcode scannen" autofocus>
-            </div>
-            <button class="btn btn-touch" type="submit">Scan buchen</button>
-        </form>
-
-        <div class="table-wrap"><table><thead><tr><th>Art.-Nr.</th><th>Barcode</th><th>Artikel</th><th>Kategorie</th><th>Preis</th><th>Lagerbestand</th><th>Auswahl</th></tr></thead><tbody>
+        <div class="pos-tiles-grid">
             {% for article in articles %}
-                <tr>
-                    <td>{{ article.formatted_artikelnummer }}</td>
-                    <td>{{ article.barcode }}</td>
-                    <td>{{ article.name }}</td><td>{{ article.kategorie }}</td><td>{{ article.preis }} €</td><td>{{ article.lagerbestand }}</td>
-                    <td><form method="post" style="display:flex;gap:.5rem;align-items:center;">{% csrf_token %}<input type="hidden" name="action" value="add"><input type="hidden" name="article_id" value="{{ article.id }}"><input type="number" name="quantity" min="1" value="1" style="width:90px;"><button class="btn" type="submit" {% if article.lagerbestand == 0 %}disabled{% endif %}>Auswählen</button></form></td>
-                </tr>
+                <form method="post" class="pos-article-tile">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="add">
+                    <input type="hidden" name="article_id" value="{{ article.id }}">
+                    <input type="hidden" name="quantity" value="1">
+                    <button type="submit" {% if article.lagerbestand == 0 %}disabled{% endif %}>
+                        <strong>{{ article.name }}</strong>
+                        <span>{{ article.formatted_artikelnummer }}{% if article.barcode %} · {{ article.barcode }}{% endif %}</span>
+                        <span>{{ article.preis }} €</span>
+                        <small>Lager: {{ article.lagerbestand }}</small>
+                    </button>
+                </form>
             {% empty %}
-                <tr><td colspan="7">Keine Artikel gefunden.</td></tr>
+                <p>Keine Artikel gefunden.</p>
             {% endfor %}
-        </tbody></table></div>
+        </div>
     </div>
 
-    <aside class="glass-card quick-actions">
-        <h3>Warenkorb</h3>
-        {% if cart_items %}
-            <div class="table-wrap"><table><thead><tr><th>Artikel</th><th>Menge</th><th>Summe</th><th></th></tr></thead><tbody>
-            {% for item in cart_items %}
-                <tr>
-                    <td>{{ item.article.formatted_artikelnummer }} · {{ item.article.name }}</td>
-                    <td><form method="post" style="display:flex;gap:.4rem;align-items:center;">{% csrf_token %}<input type="hidden" name="action" value="update"><input type="hidden" name="article_id" value="{{ item.article.id }}"><input type="number" name="quantity" min="0" value="{{ item.quantity }}" style="width:80px;"><button class="btn btn-secondary" type="submit">Ändern</button></form></td>
-                    <td>{{ item.line_total }} €</td>
-                    <td><form method="post">{% csrf_token %}<input type="hidden" name="action" value="remove"><input type="hidden" name="article_id" value="{{ item.article.id }}"><button class="btn btn-danger" type="submit">Entfernen</button></form></td>
-                </tr>
-            {% endfor %}
-            </tbody></table></div>
-            <p><strong>Gesamt: {{ cart_total }} €</strong></p>
-
-            <form method="post" style="display:grid;gap:.6rem;">{% csrf_token %}
-                <input type="hidden" name="action" value="checkout">
-                <label for="customer_search">Kunde</label>
-                <input type="text" name="customer_search" id="customer_search" list="kunden-vorschlaege" placeholder="Kundennummer oder Name" required>
-                <datalist id="kunden-vorschlaege">{% for customer in customer_suggestions %}<option value="{{ customer }}"></option>{% endfor %}</datalist>
-                <label for="payment_method">Zahlungsart</label>
-                <select name="payment_method" id="payment_method" required><option value="">Bitte wählen</option>{% for value, label in payment_methods %}<option value="{{ value }}">{{ label }}</option>{% endfor %}</select>
-                <button class="btn" type="submit">Verkauf abschließen</button>
+    <aside class="glass-card quick-actions pos-cart-panel">
+        <div>
+            <h3>Scanfeld</h3>
+            <form method="post" id="pos-scan-form">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="scan">
+                <input id="barcode_scan" type="text" name="barcode" placeholder="Barcode/Artikelnummer scannen" autocomplete="off" autofocus>
+                <button class="btn btn-touch" type="submit" style="width:100%;margin-top:.5rem;">Scannen &amp; hinzufügen</button>
             </form>
-            <a class="btn btn-secondary" href="{% url 'checkout:pos' %}?clear=1">Warenkorb leeren</a>
-        {% else %}
-            <p>Der Warenkorb ist leer.</p>
-        {% endif %}
+        </div>
+
+        <div>
+            <h3>Warenkorb</h3>
+            {% if cart_items %}
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr><th>Artikel</th><th>Menge</th><th>Einzelpreis</th><th>Summe</th><th></th></tr>
+                        </thead>
+                        <tbody>
+                        {% for item in cart_items %}
+                            <tr>
+                                <td>{{ item.article.name }}</td>
+                                <td>
+                                    <form method="post" class="pos-inline-form">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="update">
+                                        <input type="hidden" name="article_id" value="{{ item.article.id }}">
+                                        <input type="number" name="quantity" min="0" value="{{ item.quantity }}">
+                                        <button class="btn btn-secondary btn-compact" type="submit">OK</button>
+                                    </form>
+                                </td>
+                                <td>{{ item.article.preis }} €</td>
+                                <td>{{ item.line_total }} €</td>
+                                <td>
+                                    <form method="post">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="remove">
+                                        <input type="hidden" name="article_id" value="{{ item.article.id }}">
+                                        <button class="btn btn-danger btn-compact" type="submit">✕</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <p><strong>Gesamtsumme: {{ cart_total }} €</strong></p>
+
+                <button class="btn" type="button" id="pos-open-checkout-modal" style="width:100%;">Verkauf abschließen</button>
+                <a class="btn btn-secondary" href="{% url 'checkout:pos' %}?clear=1">Warenkorb leeren</a>
+            {% else %}
+                <p>Der Warenkorb ist leer.</p>
+            {% endif %}
+        </div>
     </aside>
 </section>
+
+<div class="receipt-overlay" id="pos-checkout-modal" aria-hidden="true">
+    <div class="glass-card receipt-modal">
+        <h3>Verkauf abschließen</h3>
+        <form method="post" style="display:grid;gap:.6rem;">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="checkout">
+            <label for="customer_search">Kunde</label>
+            <input type="text" name="customer_search" id="customer_search" list="kunden-vorschlaege" placeholder="Kundennummer oder Name" required>
+            <datalist id="kunden-vorschlaege">{% for customer in customer_suggestions %}<option value="{{ customer }}"></option>{% endfor %}</datalist>
+            <label for="payment_method">Zahlungsart</label>
+            <select name="payment_method" id="payment_method" required>
+                <option value="">Bitte wählen</option>
+                {% for value, label in payment_methods %}<option value="{{ value }}">{{ label }}</option>{% endfor %}
+            </select>
+            <div class="button-row">
+                <button class="btn" type="submit">Verkauf bestätigen</button>
+                <button class="btn btn-secondary" type="button" id="pos-close-checkout-modal">Abbrechen</button>
+            </div>
+        </form>
+    </div>
+</div>
 
 <section class="glass-card panel full" style="margin-top:1rem;">
     <h3>Letzte Verkäufe</h3>
@@ -82,7 +128,7 @@
                 <td>{{ sale.get_zahlungsart_display }}</td>
                 <td>{{ sale.gesamtbetrag }} €</td>
                 <td>{% if invoice %}<a href="{% url 'invoices:invoice_detail' invoice.pk %}">{{ invoice.formatted_rechnungsnummer }}</a>{% else %}<span style="opacity:.75;">Automatisch bei Verkauf mit Kunde</span>{% endif %}</td>
-                <td>{% if invoice %}<a class="btn btn-secondary" href="{% url 'invoices:invoice_detail' invoice.pk %}"><span class="btn-icon" aria-hidden="true">🧾</span><span>Rechnung ansehen</span></a>{% else %}<form method="post" class="action-form" action="{% url 'checkout:sale_create_invoice' sale.pk %}">{% csrf_token %}<button class="btn btn-success" type="submit">Manuell erstellen</button></form>{% endif %}</td>
+                <td>{% if invoice %}<a class="btn btn-secondary" href="{% url 'invoices:invoice_detail' invoice.pk %}">Rechnung ansehen</a>{% else %}<form method="post" class="action-form" action="{% url 'checkout:sale_create_invoice' sale.pk %}">{% csrf_token %}<button class="btn btn-success" type="submit">Manuell erstellen</button></form>{% endif %}</td>
             </tr>
             {% endwith %}
         {% empty %}

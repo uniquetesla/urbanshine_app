@@ -16,7 +16,7 @@ class MultiFileInput(forms.ClearableFileInput):
 
 class OrderForm(forms.ModelForm):
     kunden_suche = forms.CharField(label="Kunde suchen", required=True)
-    bilder = forms.FileField(required=False, widget=MultiFileInput(attrs={"multiple": True}), label="Dateien Upload")
+    anhaenge = forms.FileField(required=False, widget=MultiFileInput(attrs={"multiple": True}), label="Dateien / Fotos")
 
     class Meta:
         model = Order
@@ -65,8 +65,8 @@ class OrderForm(forms.ModelForm):
             self.add_error("kunden_suche", "Bitte einen gültigen Kunden aus der Liste auswählen.")
         return cleaned_data
 
-    def clean_bilder(self):
-        return self.files.getlist("bilder")
+    def clean_anhaenge(self):
+        return self.files.getlist("anhaenge")
 
 
 class OrderPositionForm(forms.ModelForm):

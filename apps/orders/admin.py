@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Order, OrderImage, OrderPosition
+from .models import Order, OrderAttachment, OrderPosition
 
 
 class OrderPositionInline(admin.TabularInline):
@@ -8,8 +8,8 @@ class OrderPositionInline(admin.TabularInline):
     extra = 0
 
 
-class OrderImageInline(admin.TabularInline):
-    model = OrderImage
+class OrderAttachmentInline(admin.TabularInline):
+    model = OrderAttachment
     extra = 0
 
 
@@ -19,7 +19,7 @@ class OrderAdmin(admin.ModelAdmin):
     search_fields = ("auftragsnummer", "kunde__vorname", "kunde__nachname", "auftragsart")
     list_filter = ("status", "order_type")
     filter_horizontal = ("mitarbeiter",)
-    inlines = [OrderPositionInline, OrderImageInline]
+    inlines = [OrderPositionInline, OrderAttachmentInline]
 
 
 @admin.register(OrderPosition)
@@ -28,6 +28,6 @@ class OrderPositionAdmin(admin.ModelAdmin):
     list_filter = ("status", "leistung", "verschmutzungsgrad", "einheit")
 
 
-@admin.register(OrderImage)
-class OrderImageAdmin(admin.ModelAdmin):
-    list_display = ("auftrag", "uploaded_at")
+@admin.register(OrderAttachment)
+class OrderAttachmentAdmin(admin.ModelAdmin):
+    list_display = ("auftrag", "display_name", "uploaded_by", "uploaded_at")

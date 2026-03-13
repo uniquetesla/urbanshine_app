@@ -44,6 +44,27 @@
 
     <div style="margin-top:1rem;"><strong>Interne Notizen</strong><p>{{ order.interne_notizen|default:"Keine internen Notizen."|linebreaksbr }}</p></div>
 
-    <div style="margin-top:1rem;"><strong>Dateien</strong><ul>{% for file in order.bilder.all %}<li><a href="{{ file.bild.url }}" target="_blank" rel="noopener">{{ file.bild.name }}</a></li>{% empty %}<li>Keine Dateien hochgeladen.</li>{% endfor %}</ul></div>
+    <div style="margin-top:1rem;">
+        <strong>Dateien / Anhänge</strong>
+        <div class="order-attachments-grid" style="margin-top:.5rem;">
+            {% for attachment in order.anhaenge.all %}
+                <article class="order-attachment-card">
+                    {% if attachment.is_image %}<img src="{{ attachment.datei.url }}" alt="{{ attachment.display_name }}">{% endif %}
+                    <p><a href="{{ attachment.datei.url }}" target="_blank" rel="noopener">{{ attachment.display_name }}</a></p>
+                    <small>Hochgeladen: {{ attachment.uploaded_at|date:"d.m.Y H:i" }}</small>
+                    {% if attachment.uploaded_by %}<small>Von: {{ attachment.uploaded_by.get_full_name|default:attachment.uploaded_by.username }}</small>{% endif %}
+                    {% if user.role != 'stammkunde' %}
+                        <form method="post" action="{% url 'orders:order_attachment_delete' order.pk attachment.pk %}" style="margin-top:.45rem;">
+                            {% csrf_token %}
+                            <input type="hidden" name="next" value="{% url 'orders:order_detail' order.pk %}">
+                            <button class="btn btn-danger btn-compact" type="submit">Löschen</button>
+                        </form>
+                    {% endif %}
+                </article>
+            {% empty %}
+                <p>Keine Dateien hochgeladen.</p>
+            {% endfor %}
+        </div>
+    </div>
 </section>
 {% endblock %}
