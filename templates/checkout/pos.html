@@ -4,11 +4,11 @@
 {% block page_subtitle %}Scanner-freundlicher Verkauf mit fixem Warenkorb{% endblock %}
 {% block content %}
 <section class="pos-layout">
-    <div class="glass-card panel full">
-        <div class="panel-heading" style="margin-bottom:1rem;">
-            <h3>Artikelverkauf</h3>
-            <form method="get" class="button-row">
-                <input type="search" name="q" value="{{ query }}" placeholder="Suche nach Artikelnummer, Barcode, Name, Kategorie oder Beschreibung">
+    <div class="glass-card panel full pos-products-panel">
+        <div class="panel-heading pos-panel-header">
+            <h3>Artikelübersicht</h3>
+            <form method="get" class="button-row pos-search-row">
+                <input type="search" name="q" value="{{ query }}" placeholder="Suche nach Artikelnummer, Barcode, Name, Kategorie oder Beschreibung" aria-label="Artikel suchen">
                 <button class="btn" type="submit">Suchen</button>
                 {% if query %}
                     <a class="btn btn-secondary" href="{% url 'checkout:pos' %}">Zurücksetzen</a>
@@ -26,7 +26,7 @@
                     <button type="submit" {% if article.lagerbestand == 0 %}disabled{% endif %}>
                         <strong>{{ article.name }}</strong>
                         <span>{{ article.formatted_artikelnummer }}{% if article.barcode %} · {{ article.barcode }}{% endif %}</span>
-                        <span>{{ article.preis }} €</span>
+                        <span>{{ article.preis|floatformat:2 }} €</span>
                         <small>Lager: {{ article.lagerbestand }}</small>
                     </button>
                 </form>
@@ -36,57 +36,61 @@
         </div>
     </div>
 
-    <aside class="glass-card quick-actions pos-cart-panel">
-        <div>
-            <h3>Scanfeld</h3>
+    <aside class="glass-card quick-actions pos-cart-panel" aria-label="Warenkorb">
+        <div class="pos-scan-wrap">
+            <h3>Barcode / Artikelnummer</h3>
             <form method="post" id="pos-scan-form">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="scan">
-                <input id="barcode_scan" type="text" name="barcode" placeholder="Barcode/Artikelnummer scannen" autocomplete="off" autofocus>
-                <button class="btn btn-touch" type="submit" style="width:100%;margin-top:.5rem;">Scannen &amp; hinzufügen</button>
+                <input id="barcode_scan" type="text" name="barcode" placeholder="Barcode oder Artikelnummer scannen" autocomplete="off" autofocus>
             </form>
         </div>
 
-        <div>
-            <h3>Warenkorb</h3>
-            {% if cart_items %}
-                <div class="table-wrap">
-                    <table>
-                        <thead>
-                            <tr><th>Artikel</th><th>Menge</th><th>Einzelpreis</th><th>Summe</th><th></th></tr>
-                        </thead>
-                        <tbody>
-                        {% for item in cart_items %}
-                            <tr>
-                                <td>{{ item.article.name }}</td>
-                                <td>
-                                    <form method="post" class="pos-inline-form">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="action" value="update">
-                                        <input type="hidden" name="article_id" value="{{ item.article.id }}">
-                                        <input type="number" name="quantity" min="0" value="{{ item.quantity }}">
-                                        <button class="btn btn-secondary btn-compact" type="submit">OK</button>
-                                    </form>
-                                </td>
-                                <td>{{ item.article.preis }} €</td>
-                                <td>{{ item.line_total }} €</td>
-                                <td>
-                                    <form method="post">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="action" value="remove">
-                                        <input type="hidden" name="article_id" value="{{ item.article.id }}">
-                                        <button class="btn btn-danger btn-compact" type="submit">✕</button>
-                                    </form>
-                                </td>
-                            </tr>
-                        {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                <p><strong>Gesamtsumme: {{ cart_total }} €</strong></p>
+        <div class="pos-cart-wrap">
+            <div class="pos-cart-header">
+                <h3>Warenkorb</h3>
+                {% if cart_items %}
+                    <a class="btn btn-secondary btn-compact" href="{% url 'checkout:pos' %}?clear=1">Leeren</a>
+                {% endif %}
+            </div>
 
-                <button class="btn" type="button" id="pos-open-checkout-modal" style="width:100%;">Verkauf abschließen</button>
-                <a class="btn btn-secondary" href="{% url 'checkout:pos' %}?clear=1">Warenkorb leeren</a>
+            {% if cart_items %}
+                <div class="pos-cart-items" aria-live="polite">
+                    {% for item in cart_items %}
+                        <article class="pos-cart-item">
+                            <p class="pos-cart-item-name">{{ item.article.name }}</p>
+                            <p class="pos-cart-item-price">{{ item.quantity }} × {{ item.article.preis|floatformat:2 }} € = {{ item.line_total|floatformat:2 }} €</p>
+                            <div class="pos-cart-item-actions">
+                                <form method="post" class="pos-inline-form">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="update">
+                                    <input type="hidden" name="article_id" value="{{ item.article.id }}">
+                                    <input type="hidden" name="quantity" value="{{ item.quantity|add:-1 }}">
+                                    <button class="btn btn-secondary btn-compact action-icon" type="submit" aria-label="Menge reduzieren">−</button>
+                                </form>
+                                <span class="pos-qty-chip">{{ item.quantity }}</span>
+                                <form method="post" class="pos-inline-form">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="update">
+                                    <input type="hidden" name="article_id" value="{{ item.article.id }}">
+                                    <input type="hidden" name="quantity" value="{{ item.quantity|add:1 }}">
+                                    <button class="btn btn-secondary btn-compact action-icon" type="submit" aria-label="Menge erhöhen">+</button>
+                                </form>
+                                <form method="post" class="pos-inline-form">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="remove">
+                                    <input type="hidden" name="article_id" value="{{ item.article.id }}">
+                                    <button class="btn btn-danger btn-compact action-icon" type="submit" aria-label="Artikel entfernen">✕</button>
+                                </form>
+                            </div>
+                        </article>
+                    {% endfor %}
+                </div>
+
+                <div class="pos-cart-footer">
+                    <p class="pos-total-row"><span>Gesamtsumme</span><strong>{{ cart_total|floatformat:2 }} €</strong></p>
+                    <button class="btn" type="button" id="pos-open-checkout-modal">Verkauf abschließen</button>
+                </div>
             {% else %}
                 <p>Der Warenkorb ist leer.</p>
             {% endif %}
@@ -126,7 +130,7 @@
                 <td>{{ sale.created_at|date:"d.m.Y H:i" }}</td>
                 <td>{{ sale.kunde.vorname }} {{ sale.kunde.nachname }}</td>
                 <td>{{ sale.get_zahlungsart_display }}</td>
-                <td>{{ sale.gesamtbetrag }} €</td>
+                <td>{{ sale.gesamtbetrag|floatformat:2 }} €</td>
                 <td>{% if invoice %}<a href="{% url 'invoices:invoice_detail' invoice.pk %}">{{ invoice.formatted_rechnungsnummer }}</a>{% else %}<span style="opacity:.75;">Automatisch bei Verkauf mit Kunde</span>{% endif %}</td>
                 <td>{% if invoice %}<a class="btn btn-secondary" href="{% url 'invoices:invoice_detail' invoice.pk %}">Rechnung ansehen</a>{% else %}<form method="post" class="action-form" action="{% url 'checkout:sale_create_invoice' sale.pk %}">{% csrf_token %}<button class="btn btn-success" type="submit">Manuell erstellen</button></form>{% endif %}</td>
             </tr>

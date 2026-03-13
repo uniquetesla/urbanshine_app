@@ -233,48 +233,8 @@ document.addEventListener('DOMContentLoaded', () => {
         qtyInput.select();
       } catch (_error) {
         spawnToast('Wareneingang konnte nicht vorbereitet werden.', 'error');
-  }
-
-  const scanInput = document.getElementById('barcode_scan');
-  if (scanInput) {
-    const checkoutModal = document.getElementById('pos-checkout-modal');
-    const openCheckoutModalBtn = document.getElementById('pos-open-checkout-modal');
-    const closeCheckoutModalBtn = document.getElementById('pos-close-checkout-modal');
-
-    const focusScanInput = () => {
-      window.setTimeout(() => {
-        scanInput.focus();
-        scanInput.select();
-      }, 50);
-    };
-
-    focusScanInput();
-
-    if (openCheckoutModalBtn && checkoutModal) {
-      openCheckoutModalBtn.addEventListener('click', () => {
-        checkoutModal.classList.add('open');
-        checkoutModal.setAttribute('aria-hidden', 'false');
-        checkoutModal.querySelector('#customer_search')?.focus();
-      });
-    }
-
-    if (closeCheckoutModalBtn && checkoutModal) {
-      closeCheckoutModalBtn.addEventListener('click', () => {
-        checkoutModal.classList.remove('open');
-        checkoutModal.setAttribute('aria-hidden', 'true');
-        focusScanInput();
-      });
-    }
-
-    checkoutModal?.addEventListener('click', (event) => {
-      if (event.target === checkoutModal) {
-        checkoutModal.classList.remove('open');
-        checkoutModal.setAttribute('aria-hidden', 'true');
-        focusScanInput();
       }
     });
-  }
-});
 
     bookForm?.addEventListener('submit', async (event) => {
       event.preventDefault();
@@ -300,4 +260,59 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  const posScanInput = document.getElementById('barcode_scan');
+  if (posScanInput) {
+    const posScanForm = document.getElementById('pos-scan-form');
+    const checkoutModal = document.getElementById('pos-checkout-modal');
+    const openCheckoutModalBtn = document.getElementById('pos-open-checkout-modal');
+    const closeCheckoutModalBtn = document.getElementById('pos-close-checkout-modal');
+
+    const focusScanInput = () => {
+      if (checkoutModal?.classList.contains('open')) return;
+      window.setTimeout(() => {
+        posScanInput.focus();
+        posScanInput.select();
+      }, 40);
+    };
+
+    focusScanInput();
+
+    posScanForm?.addEventListener('submit', () => {
+      posScanInput.value = posScanInput.value.trim();
+    });
+
+    document.addEventListener('click', (event) => {
+      if (checkoutModal?.classList.contains('open')) return;
+      const clickedInteractive = event.target.closest('input, select, textarea, button, a');
+      if (!clickedInteractive || clickedInteractive.closest('.pos-cart-panel') || clickedInteractive.closest('.pos-products-panel')) {
+        focusScanInput();
+      }
+    });
+
+    if (openCheckoutModalBtn && checkoutModal) {
+      openCheckoutModalBtn.addEventListener('click', () => {
+        checkoutModal.classList.add('open');
+        checkoutModal.setAttribute('aria-hidden', 'false');
+        checkoutModal.querySelector('#customer_search')?.focus();
+      });
+    }
+
+    if (closeCheckoutModalBtn && checkoutModal) {
+      closeCheckoutModalBtn.addEventListener('click', () => {
+        checkoutModal.classList.remove('open');
+        checkoutModal.setAttribute('aria-hidden', 'true');
+        focusScanInput();
+      });
+    }
+
+    checkoutModal?.addEventListener('click', (event) => {
+      if (event.target === checkoutModal) {
+        checkoutModal.classList.remove('open');
+        checkoutModal.setAttribute('aria-hidden', 'true');
+        focusScanInput();
+      }
+    });
+
+    window.addEventListener('pageshow', focusScanInput);
+  }
 });
