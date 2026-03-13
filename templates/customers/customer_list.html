@@ -40,8 +40,6 @@
                     </td>
                     <td class="table-actions">
                         <a class="btn btn-secondary action-icon" aria-label="Details" title="Details" href="{% url 'customers:customer_detail' customer.pk %}"><span class="btn-icon" aria-hidden="true">🔎</span><span class="btn-text">Details</span></a>
-                        <a class="btn btn-secondary action-icon" aria-label="Bearbeiten" title="Bearbeiten" href="{% url 'customers:customer_update' customer.pk %}"><span class="btn-icon" aria-hidden="true">🛠️</span><span class="btn-text">Bearbeiten</span></a>
-                        <a class="btn btn-danger action-icon" aria-label="Löschen" title="Löschen" href="{% url 'customers:customer_delete' customer.pk %}"><span class="btn-icon" aria-hidden="true">🗑️</span><span class="btn-text">Löschen</span></a>
                     </td>
                 </tr>
             {% empty %}

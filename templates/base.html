@@ -17,10 +17,6 @@
             {% else %}
                 <span class="brand-dot" aria-hidden="true"></span>
             {% endif %}
-            <div>
-                <strong>{{ company_settings.company_name|default:'UrbanShine' }}</strong>
-                <small>Operations Suite</small>
-            </div>
         </div>
 
         <nav class="sidebar-nav" aria-label="Hauptnavigation">
@@ -47,7 +43,7 @@
                 {% if request.user.role == 'admin' or request.user.role == 'chef' %}
                     <details class="sidebar-group" {% if request.resolver_match.namespace == 'company' or request.resolver_match.url_name == 'user_list' or request.resolver_match.url_name == 'user_create' or request.resolver_match.url_name == 'user_update' %}open{% endif %}>
                         <summary><span class="nav-icon" aria-hidden="true">⚙️</span><span>Admin</span></summary>
-                        <a href="{% url 'company:master_data' %}" class="nav-link nav-link-admin {% if request.resolver_match.namespace == 'company' %}active{% endif %}"><span class="nav-icon" aria-hidden="true">🧩</span><span>Stammdaten &amp; Einstellungen</span></a>
+                        <a href="{% url 'company:master_data' %}" class="nav-link nav-link-admin {% if request.resolver_match.namespace == 'company' %}active{% endif %}"><span class="nav-icon" aria-hidden="true">🧩</span><span>Interner Admin</span></a>
                         <a href="{% url 'accounts:user_list' %}" class="nav-link nav-link-admin {% if request.resolver_match.url_name == 'user_list' or request.resolver_match.url_name == 'user_create' or request.resolver_match.url_name == 'user_update' %}active{% endif %}"><span class="nav-icon" aria-hidden="true">🛡️</span><span>Benutzer &amp; Rollen</span></a>
                     </details>
                 {% endif %}

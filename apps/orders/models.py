@@ -25,6 +25,18 @@ class PositionStatus(models.TextChoices):
     STORNIERT = "storniert", "Storniert"
 
 
+def map_order_status_to_position_status(order_status):
+    status_map = {
+        OrderStatus.NEU: PositionStatus.NEU,
+        OrderStatus.GEPLANT: PositionStatus.GEPLANT,
+        OrderStatus.IN_BEARBEITUNG: PositionStatus.IN_BEARBEITUNG,
+        OrderStatus.ABGESCHLOSSEN: PositionStatus.ABGESCHLOSSEN,
+        OrderStatus.ABGERECHNET: PositionStatus.ABGESCHLOSSEN,
+        OrderStatus.STORNIERT: PositionStatus.STORNIERT,
+    }
+    return status_map.get(order_status, PositionStatus.NEU)
+
+
 class Order(models.Model):
     auftragsnummer = models.PositiveIntegerField(
         unique=True,
@@ -106,6 +118,10 @@ class Order(models.Model):
             self.auftragsart = self.order_type.name
         if save and self.pk:
             self.save(update_fields=["gesamtpreis", "gesamtzeit_minuten", "leistungen", "preisberechnung", "auftragsart", "updated_at"])
+
+    def sync_position_statuses(self):
+        target_status = map_order_status_to_position_status(self.status)
+        self.positionen.exclude(status=target_status).update(status=target_status)
 
     def save(self, *args, **kwargs):
         if not self.auftragsnummer:

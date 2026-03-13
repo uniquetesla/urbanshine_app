@@ -39,7 +39,6 @@
                         {% if offer.umgewandelter_auftrag %}
                             <a class="btn" href="{% url 'orders:order_detail' offer.umgewandelter_auftrag.pk %}">Auftrag</a>
                         {% else %}
-                            <a class="btn action-icon" aria-label="Bearbeiten" title="Bearbeiten" href="{% url 'offers:offer_update' offer.pk %}"><span class="btn-icon" aria-hidden="true">🛠️</span><span class="btn-text">Bearbeiten</span></a>
                         {% endif %}
                     </td>
                 </tr>

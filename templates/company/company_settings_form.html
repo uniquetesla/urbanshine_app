@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block title %}Firmendaten bearbeiten | Interner Admin{% endblock %}
+{% block page_title %}Firmendaten bearbeiten{% endblock %}
+{% block page_subtitle %}Logo, Kontakt und Rechnungsparameter verwalten{% endblock %}
+{% block content %}
+<section class="glass-card panel admin-area" style="max-width:980px;">
+    <form method="post" enctype="multipart/form-data" class="form-grid">{% csrf_token %}
+        {{ form.as_p }}
+        <div class="button-row" style="grid-column:1/-1;">
+            <button class="btn" type="submit">Speichern</button>
+            <a class="btn btn-secondary" href="{% url 'company:company_settings_detail' %}">Abbrechen</a>
+        </div>
+    </form>
+</section>
+{% endblock %}

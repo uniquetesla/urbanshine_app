@@ -53,7 +53,6 @@
                     <td>{{ order.gesamtzeit_formatiert }}</td>
                     <td class="table-actions">
                         <a class="btn btn-secondary action-icon" aria-label="Details" title="Details" href="{% url 'orders:order_detail' order.pk %}"><span class="btn-icon" aria-hidden="true">🔎</span><span class="btn-text">Details</span></a>
-                        <a class="btn btn-secondary action-icon" aria-label="Bearbeiten" title="Bearbeiten" href="{% url 'orders:order_update' order.pk %}"><span class="btn-icon" aria-hidden="true">🛠️</span><span class="btn-text">Bearbeiten</span></a>
                         {% if invoice %}
                             <a class="btn action-icon" aria-label="Rechnung ansehen" title="Rechnung ansehen" href="{% url 'invoices:invoice_detail' invoice.pk %}"><span class="btn-icon" aria-hidden="true">📄</span><span class="btn-text">Rechnung ansehen</span></a>
                         {% else %}
@@ -63,7 +62,6 @@
                                 <button class="btn btn-success action-icon" aria-label="Rechnung erstellen" title="Rechnung erstellen" type="submit"><span class="btn-icon" aria-hidden="true">📄➕</span><span class="btn-text">Rechnung erstellen</span></button>
                             </form>
                         {% endif %}
-                        <a class="btn btn-danger action-icon" aria-label="Löschen" title="Löschen" href="{% url 'orders:order_delete' order.pk %}"><span class="btn-icon" aria-hidden="true">🗑️</span><span class="btn-text">Löschen</span></a>
                     </td>
                 </tr>
                 {% endwith %}

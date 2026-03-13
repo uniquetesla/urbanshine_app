@@ -2,30 +2,23 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
-from django.views.generic import TemplateView, UpdateView, View
+from django.views.generic import CreateView, DeleteView, DetailView, ListView, TemplateView, UpdateView
 
 from apps.accounts.models import UserRole
 from apps.core.models import NumberSequence, NumberSequenceType
 from apps.core.number_sequences import ensure_sequence
 
-from .forms import (
-    CompanySettingsForm,
-    NumberSequenceFormSet,
-    OrderTypeForm,
-    PriceForm,
-    ServiceForm,
-    SoilingLevelForm,
-    SurchargeForm,
-)
+from .forms import CompanySettingsForm, NumberSequenceForm, OrderTypeForm, PriceForm, ServiceForm, SoilingLevelForm, SurchargeForm
 from .models import CompanySettings, OrderType, Price, Service, SoilingLevel, Surcharge
 
 
-MASTER_DATA_CONFIG = {
-    "service": {"model": Service, "form": ServiceForm, "success": "Leistung gespeichert."},
-    "price": {"model": Price, "form": PriceForm, "success": "Preis gespeichert."},
-    "order_type": {"model": OrderType, "form": OrderTypeForm, "success": "Auftragsart gespeichert."},
-    "soiling_level": {"model": SoilingLevel, "form": SoilingLevelForm, "success": "Verschmutzungsgrad gespeichert."},
-    "surcharge": {"model": Surcharge, "form": SurchargeForm, "success": "Zuschlag gespeichert."},
+MASTER_DATA_MODULES = {
+    "service": {"model": Service, "form": ServiceForm, "title": "Leistungen", "fields": ["name", "price", "unit", "estimated_duration_minutes", "is_active"]},
+    "order_type": {"model": OrderType, "form": OrderTypeForm, "title": "Auftragsarten", "fields": ["name", "is_active"]},
+    "soiling_level": {"model": SoilingLevel, "form": SoilingLevelForm, "title": "Verschmutzungsgrade", "fields": ["name", "multiplier", "is_active"]},
+    "surcharge": {"model": Surcharge, "form": SurchargeForm, "title": "Zuschläge", "fields": ["name", "amount", "is_percentage", "is_active"]},
+    "price": {"model": Price, "form": PriceForm, "title": "Artikelpreise", "fields": ["name", "amount", "unit", "is_active"]},
+    "number_sequence": {"model": NumberSequence, "form": NumberSequenceForm, "title": "Nummernkreise", "fields": ["sequence_type", "prefix", "separator", "start_value", "padding", "last_value"]},
 }
 
 
@@ -38,111 +31,106 @@ class MasterDataAccessMixin(LoginRequiredMixin, UserPassesTestMixin):
 class MasterDataView(MasterDataAccessMixin, TemplateView):
     template_name = "company/master_data.html"
 
-    def _sequence_formset(self, data=None):
-        for sequence_type, _label in NumberSequenceType.choices:
-            ensure_sequence(sequence_type)
-        return NumberSequenceFormSet(data, queryset=NumberSequence.objects.order_by("sequence_type"))
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        settings_instance, _ = CompanySettings.objects.get_or_create(company_name="UrbanShine")
-
-        context.update(
-            {
-                "service_form": ServiceForm(),
-                "price_form": PriceForm(),
-                "order_type_form": OrderTypeForm(),
-                "soiling_level_form": SoilingLevelForm(),
-                "surcharge_form": SurchargeForm(),
-                "company_form": CompanySettingsForm(instance=settings_instance),
-                "number_sequence_formset": kwargs.get("number_sequence_formset") or self._sequence_formset(),
-                "services": Service.objects.all(),
-                "prices": Price.objects.all(),
-                "order_types": OrderType.objects.all(),
-                "soiling_levels": SoilingLevel.objects.all(),
-                "surcharges": Surcharge.objects.all(),
-                "company_settings": settings_instance,
-            }
-        )
+        for sequence_type, _label in NumberSequenceType.choices:
+            ensure_sequence(sequence_type)
+        context["modules"] = MASTER_DATA_MODULES
+        context["company_settings"] = CompanySettings.objects.first()
         return context
 
-    def post(self, request, *args, **kwargs):
-        action = request.POST.get("action")
 
-        if action == "number_sequences":
-            formset = self._sequence_formset(request.POST)
-            if formset.is_valid():
-                formset.save()
-                messages.success(request, "Nummernkreise wurden gespeichert.")
-                return redirect("company:master_data")
-            messages.error(request, "Nummernkreise konnten nicht gespeichert werden.")
-            return self.render_to_response(self.get_context_data(number_sequence_formset=formset))
-
-        if action == "company_settings":
-            settings_instance, _ = CompanySettings.objects.get_or_create(company_name="UrbanShine")
-            form = CompanySettingsForm(request.POST, request.FILES, instance=settings_instance)
-            if form.is_valid():
-                form.save()
-                messages.success(request, "Firmendaten wurden gespeichert.")
-            else:
-                messages.error(request, "Firmendaten konnten nicht gespeichert werden.")
-            return redirect("company:master_data")
-
-        if action in MASTER_DATA_CONFIG:
-            form_class = MASTER_DATA_CONFIG[action]["form"]
-            success_message = MASTER_DATA_CONFIG[action]["success"]
-            form = form_class(request.POST)
-            if form.is_valid():
-                form.save()
-                messages.success(request, success_message)
-            else:
-                messages.error(request, "Bitte Eingaben prüfen.")
-
-        return redirect("company:master_data")
-
-
-class MasterDataDeleteView(MasterDataAccessMixin, View):
-    def post(self, request, model_name, pk):
-        config = MASTER_DATA_CONFIG.get(model_name)
-        model = config["model"] if config else None
-        if not model:
-            messages.error(request, "Ungültiger Datensatztyp.")
-            return redirect(reverse_lazy("company:master_data"))
-
-        instance = get_object_or_404(model, pk=pk)
-        instance.delete()
-        messages.success(request, "Eintrag wurde gelöscht.")
-        return redirect(reverse_lazy("company:master_data"))
-
-
-class MasterDataUpdateView(MasterDataAccessMixin, UpdateView):
-    template_name = "company/master_data_edit.html"
+class MasterDataModuleMixin(MasterDataAccessMixin):
+    module_name = None
 
     def dispatch(self, request, *args, **kwargs):
-        self.model_name = kwargs["model_name"]
-        self.config = MASTER_DATA_CONFIG.get(self.model_name)
-        if not self.config:
-            messages.error(request, "Ungültiger Datensatztyp.")
+        self.module_name = kwargs.get("module")
+        self.module = MASTER_DATA_MODULES.get(self.module_name)
+        if not self.module:
+            messages.error(request, "Unbekanntes Admin-Modul.")
             return redirect("company:master_data")
         return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
-        return self.config["model"].objects.all()
+        return self.module["model"].objects.all()
 
     def get_form_class(self):
-        return self.config["form"]
+        return self.module["form"]
+
+    def get_success_url(self):
+        return reverse_lazy("company:master_data_module_list", kwargs={"module": self.module_name})
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["model_name"] = self.model_name
-        context["model_title"] = self.config["model"]._meta.verbose_name
+        context["module"] = self.module
+        context["module_name"] = self.module_name
+        context["module_title"] = self.module["title"]
+        context["list_fields"] = self.module["fields"]
         return context
 
-    def form_valid(self, form):
-        response = super().form_valid(form)
-        label = self.config["model"]._meta.verbose_name.title()
-        messages.success(self.request, f"{label} wurde aktualisiert.")
-        return response
 
-    def get_success_url(self):
-        return reverse_lazy("company:master_data")
+class MasterDataModuleListView(MasterDataModuleMixin, ListView):
+    template_name = "company/module_list.html"
+    context_object_name = "items"
+
+    def get_queryset(self):
+        queryset = super().get_queryset().order_by("id")
+        query = self.request.GET.get("q", "").strip()
+        if query and hasattr(self.module["model"], "name"):
+            queryset = queryset.filter(name__icontains=query)
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["query"] = self.request.GET.get("q", "").strip()
+        return context
+
+
+class MasterDataModuleCreateView(MasterDataModuleMixin, CreateView):
+    template_name = "company/module_form.html"
+
+    def form_valid(self, form):
+        messages.success(self.request, f"{self.module['title']} erfolgreich angelegt.")
+        return super().form_valid(form)
+
+
+class MasterDataModuleDetailView(MasterDataModuleMixin, DetailView):
+    template_name = "company/module_detail.html"
+    context_object_name = "item"
+
+
+class MasterDataModuleUpdateView(MasterDataModuleMixin, UpdateView):
+    template_name = "company/module_form.html"
+
+    def form_valid(self, form):
+        messages.success(self.request, f"{self.module['title']} wurde aktualisiert.")
+        return super().form_valid(form)
+
+
+class MasterDataModuleDeleteView(MasterDataModuleMixin, DeleteView):
+    template_name = "company/module_confirm_delete.html"
+
+    def form_valid(self, form):
+        messages.success(self.request, "Eintrag wurde gelöscht.")
+        return super().form_valid(form)
+
+
+class CompanySettingsDetailView(MasterDataAccessMixin, DetailView):
+    template_name = "company/company_settings_detail.html"
+    context_object_name = "settings"
+
+    def get_object(self, queryset=None):
+        return CompanySettings.objects.first() or CompanySettings.objects.create(company_name="UrbanShine")
+
+
+class CompanySettingsUpdateView(MasterDataAccessMixin, UpdateView):
+    form_class = CompanySettingsForm
+    template_name = "company/company_settings_form.html"
+    success_url = reverse_lazy("company:company_settings_detail")
+
+    def get_object(self, queryset=None):
+        return CompanySettings.objects.first() or CompanySettings.objects.create(company_name="UrbanShine")
+
+    def form_valid(self, form):
+        messages.success(self.request, "Firmendaten wurden erfolgreich gespeichert.")
+        return super().form_valid(form)

@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Artikel {{ article.formatted_artikelnummer }} | UrbanShine{% endblock %}
+{% block page_title %}Artikeldetails{% endblock %}
+{% block page_subtitle %}Stammdaten und Lagerinformationen im Überblick{% endblock %}
+{% block content %}
+<section class="glass-card panel full">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:.8rem;flex-wrap:wrap;">
+        <h3>{{ article.name }}</h3>
+        <div style="display:flex;gap:.5rem;">
+            <a href="{% url 'catalog:article_update' article.pk %}" class="btn btn-secondary"><span class="btn-icon" aria-hidden="true">✏️</span><span>Bearbeiten</span></a>
+            <a href="{% url 'catalog:article_delete' article.pk %}" class="btn btn-danger"><span class="btn-icon" aria-hidden="true">🗑️</span><span>Löschen</span></a>
+            <a href="{% url 'catalog:article_list' %}" class="btn btn-secondary"><span class="btn-icon" aria-hidden="true">←</span><span>Zurück</span></a>
+        </div>
+    </div>
+    <div class="form-grid" style="margin-top:1rem;">
+        <div><strong>Artikelnummer</strong><br>{{ article.formatted_artikelnummer }}</div>
+        <div><strong>Barcode</strong><br>{{ article.barcode|default:"-" }}</div>
+        <div><strong>Kategorie</strong><br>{{ article.kategorie }}</div>
+        <div><strong>Einheit</strong><br>{{ article.einheit }}</div>
+        <div><strong>Preis</strong><br>{{ article.preis }} €</div>
+        <div><strong>Lagerbestand</strong><br>{{ article.lagerbestand }}</div>
+    </div>
+    <div style="margin-top:1rem;"><strong>Beschreibung</strong><p>{{ article.beschreibung|default:"Keine Beschreibung hinterlegt."|linebreaksbr }}</p></div>
+</section>
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block title %}Firmendaten | Interner Admin{% endblock %}
+{% block page_title %}Firmendaten{% endblock %}
+{% block page_subtitle %}Zentrale Daten für Branding und Dokumente{% endblock %}
+{% block content %}
+<section class="glass-card panel admin-area full">
+    <div class="button-row" style="justify-content:space-between;">
+        <h3>{{ settings.company_name }}</h3>
+        <div>
+            <a class="btn" href="{% url 'company:company_settings_update' %}">Bearbeiten</a>
+            <a class="btn btn-secondary" href="{% url 'company:master_data' %}">Zurück</a>
+        </div>
+    </div>
+    <div class="form-grid" style="margin-top:1rem;">
+        <div><strong>Adresse</strong><br>{{ settings.address|default:'-'|linebreaksbr }}</div>
+        <div><strong>E-Mail</strong><br>{{ settings.email|default:'-' }}</div>
+        <div><strong>Telefon</strong><br>{{ settings.phone|default:'-' }}</div>
+        <div><strong>Webseite</strong><br>{{ settings.website|default:'-' }}</div>
+        <div><strong>Steuer-ID</strong><br>{{ settings.tax_id|default:'-' }}</div>
+        <div><strong>Bank</strong><br>{{ settings.bank_name|default:'-' }}</div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block title %}{{ module_title }} löschen | Interner Admin{% endblock %}
+{% block page_title %}{{ module_title }} löschen{% endblock %}
+{% block page_subtitle %}Datensatz dauerhaft entfernen{% endblock %}
+{% block content %}
+<section class="glass-card panel admin-area" style="max-width:720px;">
+    <p>Soll dieser Datensatz wirklich gelöscht werden?</p>
+    <form method="post">{% csrf_token %}
+        <div class="button-row">
+            <button class="btn btn-danger" type="submit">Löschen</button>
+            <a class="btn btn-secondary" href="{% url 'company:master_data_module_detail' module_name object.pk %}">Abbrechen</a>
+        </div>
+    </form>
+</section>
+{% endblock %}
