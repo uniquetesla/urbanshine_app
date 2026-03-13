@@ -1,21 +1,56 @@
 {% extends "base.html" %}
 {% block title %}Termine | UrbanShine{% endblock %}
 {% block page_title %}Terminmodul{% endblock %}
-{% block page_subtitle %}Ansichten für Heute und Woche{% endblock %}
+{% block page_subtitle %}Tages- und Wochenplanung inkl. offene Zuordnungen{% endblock %}
 {% block content %}
 <section class="glass-card panel full">
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:.8rem;flex-wrap:wrap;">
-        <h3>Terminübersicht</h3>
+    <div style="display:flex;justify-content:space-between;align-items:end;gap:.8rem;flex-wrap:wrap;">
+        <div>
+            <h3>Terminübersicht</h3>
+            <small>Für Touch-Bedienung optimiert und inklusive Zuordnungskontrolle.</small>
+        </div>
+        <form method="get" style="display:flex;gap:.5rem;align-items:end;flex-wrap:wrap;">
+            <input type="hidden" name="ansicht" value="{{ selected_view }}">
+            <div>
+                <label for="datum">Datum</label>
+                <input id="datum" type="date" name="datum" value="{{ selected_date|date:'Y-m-d' }}">
+            </div>
+            <button class="btn" type="submit">Anzeigen</button>
+        </form>
         <div style="display:flex;gap:.5rem;">
-            <a href="?ansicht=heute" class="btn {% if selected_view == 'heute' %}{% else %}btn-secondary{% endif %}">Heute</a>
-            <a href="?ansicht=woche" class="btn {% if selected_view == 'woche' %}{% else %}btn-secondary{% endif %}">Woche</a>
+            <a href="?ansicht=tag&datum={{ selected_date|date:'Y-m-d' }}" class="btn {% if selected_view != 'tag' %}btn-secondary{% endif %}">Tag</a>
+            <a href="?ansicht=woche&datum={{ selected_date|date:'Y-m-d' }}" class="btn {% if selected_view != 'woche' %}btn-secondary{% endif %}">Woche</a>
         </div>
     </div>
 
     {% if selected_view == 'woche' %}
         {% include "scheduling/partials/appointment_table.html" with appointments=week_appointments empty_text="Keine Termine in dieser Woche." %}
     {% else %}
-        {% include "scheduling/partials/appointment_table.html" with appointments=today_appointments empty_text="Keine Termine für heute." %}
+        {% include "scheduling/partials/appointment_table.html" with appointments=today_appointments empty_text="Keine Termine für diesen Tag." %}
     {% endif %}
+</section>
+
+<section class="glass-card panel full" style="margin-top:1rem;">
+    <h3>Offene Zuordnungen</h3>
+    <p style="margin-bottom:.6rem;">Aufträge ohne Termin oder ohne Mitarbeiter, damit die Planung vollständig bleibt.</p>
+    <div class="table-wrap">
+        <table>
+            <thead><tr><th>Auftrag</th><th>Kunde</th><th>Status</th><th>Termin</th><th>Mitarbeiter</th><th>Aktion</th></tr></thead>
+            <tbody>
+            {% for order in unassigned_orders %}
+                <tr>
+                    <td>{{ order.formatted_auftragsnummer }}</td>
+                    <td>{{ order.kunde.vorname }} {{ order.kunde.nachname }}</td>
+                    <td>{{ order.get_status_display }}</td>
+                    <td>{{ order.termin|date:"d.m.Y H:i"|default:"Nicht gesetzt" }}</td>
+                    <td>{% for employee in order.mitarbeiter.all %}{{ employee.get_full_name|default:employee.username }}{% if not forloop.last %}, {% endif %}{% empty %}Nicht zugeordnet{% endfor %}</td>
+                    <td><a class="btn btn-secondary" href="{% url 'orders:order_update' order.pk %}">Planung bearbeiten</a></td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="6">Keine offenen Zuordnungen.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </section>
 {% endblock %}

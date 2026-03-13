@@ -113,6 +113,7 @@ class CheckoutView(EmployeeOnlyMixin, LoginRequiredMixin, TemplateView):
             return
 
         article_ids = [int(article_id) for article_id in cart.keys()]
+        invoice = None
         with transaction.atomic():
             articles = {
                 article.id: article
@@ -147,10 +148,17 @@ class CheckoutView(EmployeeOnlyMixin, LoginRequiredMixin, TemplateView):
 
             sale.gesamtbetrag = total
             sale.save(update_fields=["gesamtbetrag"])
+            invoice = create_invoice_for_sale(sale) if sale.kunde else None
 
         self.request.session[self.cart_session_key] = {}
         self.request.session.modified = True
-        messages.success(self.request, f"Verkauf #{sale.verkaufsnummer} wurde gespeichert.")
+        if invoice:
+            messages.success(
+                self.request,
+                f"Verkauf #{sale.verkaufsnummer} wurde gespeichert. Rechnung {invoice.formatted_rechnungsnummer} wurde erstellt.",
+            )
+        else:
+            messages.success(self.request, f"Verkauf #{sale.verkaufsnummer} wurde gespeichert.")
 
     def _get_cart(self):
         return self.request.session.get(self.cart_session_key, {})

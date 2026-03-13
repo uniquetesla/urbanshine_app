@@ -51,6 +51,7 @@ class Invoice(models.Model):
         default=PaymentStatus.OFFEN,
         verbose_name="Zahlungsstatus",
     )
+    bezahlt_am = models.DateField(blank=True, null=True, verbose_name="Bezahlt am")
     notizen = models.TextField(blank=True, verbose_name="Notizen")
     pdf_datei = models.FileField(upload_to="invoices/", blank=True, null=True, verbose_name="PDF-Datei")
     created_at = models.DateTimeField(auto_now_add=True)
@@ -75,3 +76,21 @@ class Invoice(models.Model):
         if not self.rechnungsnummer:
             self.rechnungsnummer = next_sequence_value(NumberSequenceType.RECHNUNG)
         super().save(*args, **kwargs)
+
+
+class InvoiceLineItem(models.Model):
+    rechnung = models.ForeignKey(Invoice, on_delete=models.CASCADE, related_name="positionen", verbose_name="Rechnung")
+    beschreibung = models.CharField(max_length=255, verbose_name="Beschreibung")
+    menge = models.DecimalField(max_digits=10, decimal_places=2, default=1, verbose_name="Menge")
+    einheit = models.CharField(max_length=30, default="Stk.", verbose_name="Einheit")
+    einzelpreis = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Einzelpreis (€)")
+    gesamtpreis = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Gesamtpreis (€)")
+    sortierung = models.PositiveIntegerField(default=0, verbose_name="Sortierung")
+
+    class Meta:
+        ordering = ["sortierung", "id"]
+        verbose_name = "Rechnungsposition"
+        verbose_name_plural = "Rechnungspositionen"
+
+    def __str__(self):
+        return f"{self.rechnung.formatted_rechnungsnummer} · {self.beschreibung}"
