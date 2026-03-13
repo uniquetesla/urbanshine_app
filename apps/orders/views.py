@@ -81,7 +81,7 @@ class OrderCreateView(EmployeeOnlyMixin, LoginRequiredMixin, CreateView):
         return super().form_invalid(form)
 
     def form_valid(self, form):
-        position_formset = OrderPositionFormSet(self.request.POST)
+        position_formset = OrderPositionFormSet(self.request.POST, self.request.FILES)
         if not position_formset.is_valid():
             return self.render_to_response(self.get_context_data(form=form, position_formset=position_formset))
 
@@ -131,7 +131,7 @@ class OrderUpdateView(EmployeeOnlyMixin, LoginRequiredMixin, UpdateView):
 
     def form_valid(self, form):
         old_status = self.get_object().status
-        position_formset = OrderPositionFormSet(self.request.POST, instance=self.object)
+        position_formset = OrderPositionFormSet(self.request.POST, self.request.FILES, instance=self.object)
         if not position_formset.is_valid():
             return self.render_to_response(self.get_context_data(form=form, position_formset=position_formset))
 
@@ -208,15 +208,16 @@ class OrderQuickStatusUpdateView(EmployeeOnlyMixin, LoginRequiredMixin, View):
 
 def _get_price_context():
     return {
-        "service_prices": {str(service.pk): str(service.price) for service in Service.objects.filter(is_active=True)},
+        "service_prices": {str(service.pk): str(service.price) for service in Service.objects.all()},
+        "service_durations": {str(service.pk): service.estimated_duration_minutes for service in Service.objects.all()},
         "soiling_multipliers": {
-            str(level.pk): str(level.multiplier) for level in SoilingLevel.objects.filter(is_active=True)
+            str(level.pk): str(level.multiplier) for level in SoilingLevel.objects.all()
         },
         "surcharge_values": {
             str(surcharge.pk): {
                 "amount": str(surcharge.amount),
                 "is_percentage": surcharge.is_percentage,
             }
-            for surcharge in Surcharge.objects.filter(is_active=True)
+            for surcharge in Surcharge.objects.all()
         },
     }

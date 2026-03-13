@@ -28,15 +28,19 @@
         {{ position_formset.management_form }}
         <div class="table-wrap">
             <table>
-                <thead><tr><th>Leistung</th><th>Verschmutzungsgrad</th><th>Zuschlag</th><th>Status</th><th>Einzelpreis</th><th>Entfernen</th></tr></thead>
-                <tbody>
+                <thead><tr><th>Leistung</th><th>Verschmutzungsgrad</th><th>Zuschlag</th><th>Status</th><th>Einzelpreis</th><th>Dauer</th><th>Entfernen</th></tr></thead>
+                <tbody id="order-position-body">
                 {% for pform in position_formset %}
-                    <tr>
+                    <tr class="order-position-row" data-form-index="{{ forloop.counter0 }}">
                         <td>{{ pform.leistung }}{% if pform.leistung.errors %}<small style="color:#ff9ca4;display:block;">{{ pform.leistung.errors|striptags }}</small>{% endif %}</td>
                         <td>{{ pform.verschmutzungsgrad }}{% if pform.verschmutzungsgrad.errors %}<small style="color:#ff9ca4;display:block;">{{ pform.verschmutzungsgrad.errors|striptags }}</small>{% endif %}</td>
                         <td>{{ pform.zuschlag }}{% if pform.zuschlag.errors %}<small style="color:#ff9ca4;display:block;">{{ pform.zuschlag.errors|striptags }}</small>{% endif %}</td>
                         <td>{{ pform.status }}{% if pform.status.errors %}<small style="color:#ff9ca4;display:block;">{{ pform.status.errors|striptags }}</small>{% endif %}</td>
-                        <td><strong data-role="row-price">0,00 €</strong>{% if pform.non_field_errors %}<small style="color:#ff9ca4;display:block;">{{ pform.non_field_errors|striptags }}</small>{% endif %}</td>
+                        <td>
+                            <strong data-role="row-price">{{ pform.instance.einzelpreis|default_if_none:'0.00' }} €</strong>
+                            {% if pform.non_field_errors %}<small style="color:#ff9ca4;display:block;">{{ pform.non_field_errors|striptags }}</small>{% endif %}
+                        </td>
+                        <td><span data-role="row-duration">{{ pform.instance.geschaetzte_dauer_minuten|default:0 }} Min.</span></td>
                         <td>{% if pform.instance.pk %}{{ pform.DELETE }}{% endif %}{{ pform.id }}</td>
                     </tr>
                 {% endfor %}
@@ -44,7 +48,8 @@
             </table>
         </div>
 
-        <p style="margin-top:1rem;"><strong>Gesamtsumme (Vorschau):</strong> <span id="order-total-price">0,00 €</span></p>
+        <p style="margin-top:1rem;"><strong>Gesamtsumme (Vorschau):</strong> <span id="order-total-price">{{ object.gesamtpreis|default:'0.00' }} €</span></p>
+        <p><strong>Geschätzte Gesamtzeit:</strong> <span id="order-total-duration">{{ object.gesamtzeit_minuten|default:0 }} Min.</span></p>
         <p><strong>Hinweis:</strong> Der Gesamtpreis und die Gesamtzeit werden serverseitig aus den Positionen berechnet.</p>
 
         {% if object and object.bilder.exists %}
@@ -57,6 +62,7 @@
     </form>
 </section>
 {{ service_prices|json_script:"service-prices-data" }}
+{{ service_durations|json_script:"service-durations-data" }}
 {{ soiling_multipliers|json_script:"soiling-multipliers-data" }}
 {{ surcharge_values|json_script:"surcharge-values-data" }}
 {% endblock %}
