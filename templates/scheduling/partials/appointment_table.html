@@ -2,18 +2,21 @@
     <table>
         <thead>
         <tr>
+            <th>Uhrzeit</th>
             <th>Auftrag</th>
             <th>Kunde</th>
             <th>Mitarbeiter</th>
-            <th>Zeit</th>
+            <th>Status</th>
+            <th>Aktion</th>
         </tr>
         </thead>
         <tbody>
         {% for appointment in appointments %}
             <tr>
+                <td><strong>{{ appointment.termin|date:"H:i" }}</strong><br><small>{{ appointment.termin|date:"d.m.Y" }}</small></td>
                 <td>
                     <a href="{% url 'orders:order_detail' appointment.pk %}">
-                        #{{ appointment.auftragsnummer }} · {{ appointment.auftragsart }}
+                        {{ appointment.formatted_auftragsnummer }} · {{ appointment.order_type.name|default:appointment.auftragsart }}
                     </a>
                 </td>
                 <td>{{ appointment.kunde.vorname }} {{ appointment.kunde.nachname }}</td>
@@ -21,14 +24,19 @@
                     {% for employee in appointment.mitarbeiter.all %}
                         {{ employee.get_full_name|default:employee.username }}{% if not forloop.last %}, {% endif %}
                     {% empty %}
-                        -
+                        Nicht zugeordnet
                     {% endfor %}
                 </td>
-                <td>{{ appointment.termin|date:"d.m.Y H:i" }}</td>
+                <td>
+                    <span style="padding:.2rem .5rem;border-radius:999px;background:{% if appointment.status == 'abgeschlossen' %}rgba(83, 217, 162, .22){% elif appointment.status == 'geplant' %}rgba(122, 169, 255, .2){% else %}rgba(255,255,255,.08){% endif %};">
+                        {{ appointment.get_status_display }}
+                    </span>
+                </td>
+                <td><a class="btn btn-secondary" href="{% url 'orders:order_update' appointment.pk %}">Termin bearbeiten</a></td>
             </tr>
         {% empty %}
             <tr>
-                <td colspan="4">{{ empty_text }}</td>
+                <td colspan="6">{{ empty_text }}</td>
             </tr>
         {% endfor %}
         </tbody>

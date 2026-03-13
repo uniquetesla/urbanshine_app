@@ -1,10 +1,11 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import Q
 from django.utils import timezone
 from django.views.generic import TemplateView
 
-from apps.orders.models import Order
+from apps.orders.models import Order, OrderStatus
 
 
 class AppointmentOverviewView(LoginRequiredMixin, TemplateView):
@@ -14,26 +15,47 @@ class AppointmentOverviewView(LoginRequiredMixin, TemplateView):
         context = super().get_context_data(**kwargs)
 
         now = timezone.localtime()
-        selected_view = self.request.GET.get("ansicht", "heute")
-        if selected_view not in {"heute", "woche"}:
-            selected_view = "heute"
+        selected_view = self.request.GET.get("ansicht", "tag")
+        if selected_view not in {"tag", "woche"}:
+            selected_view = "tag"
 
-        start_of_day = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        selected_date = self._resolve_selected_date(now)
+        start_of_day = selected_date.replace(hour=0, minute=0, second=0, microsecond=0)
         end_of_day = start_of_day + timedelta(days=1)
         start_of_week = start_of_day - timedelta(days=start_of_day.weekday())
         end_of_week = start_of_week + timedelta(days=7)
 
         today_appointments = self._load_appointments(start_of_day, end_of_day)
         week_appointments = self._load_appointments(start_of_week, end_of_week)
+        unassigned_orders = (
+            Order.objects.filter(Q(termin__isnull=True) | Q(mitarbeiter__isnull=True), status__in=[OrderStatus.NEU, OrderStatus.GEPLANT])
+            .select_related("kunde")
+            .prefetch_related("mitarbeiter")
+            .distinct()
+            .order_by("-auftragsnummer")[:25]
+        )
 
         context.update(
             {
                 "selected_view": selected_view,
+                "selected_date": selected_date,
                 "today_appointments": today_appointments,
                 "week_appointments": week_appointments,
+                "unassigned_orders": unassigned_orders,
+                "status_labels": dict(OrderStatus.choices),
             }
         )
         return context
+
+    def _resolve_selected_date(self, now):
+        date_raw = self.request.GET.get("datum")
+        if not date_raw:
+            return now
+        try:
+            selected = datetime.strptime(date_raw, "%Y-%m-%d")
+            return timezone.make_aware(selected, timezone.get_current_timezone())
+        except ValueError:
+            return now
 
     @staticmethod
     def _load_appointments(start, end):

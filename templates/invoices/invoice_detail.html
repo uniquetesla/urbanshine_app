@@ -1,12 +1,23 @@
 {% extends "base.html" %}
-{% block title %}Rechnung R-{{ invoice.rechnungsnummer|stringformat:"05d" }} | UrbanShine{% endblock %}
-{% block page_title %}Rechnung R-{{ invoice.rechnungsnummer|stringformat:"05d" }}{% endblock %}
+{% block title %}Rechnung {{ invoice.formatted_rechnungsnummer }} | UrbanShine{% endblock %}
+{% block page_title %}Rechnung {{ invoice.formatted_rechnungsnummer }}{% endblock %}
 {% block page_subtitle %}Rechnungsdetailseite{% endblock %}
 {% block content %}
 <section class="glass-card panel full">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:.7rem;flex-wrap:wrap;">
         <h3>{{ invoice.kunde.vorname }} {{ invoice.kunde.nachname }}</h3>
-        <div style="display:flex;gap:.5rem;">
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+            {% if user.role != 'stammkunde' and invoice.zahlungsstatus != payment_status_paid %}
+                <form method="post" action="{% url 'invoices:invoice_mark_paid' invoice.pk %}" style="display:flex;align-items:end;gap:.5rem;flex-wrap:wrap;">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{% url 'invoices:invoice_detail' invoice.pk %}">
+                    <div>
+                        <label for="bezahlt_am">Bezahlt am (optional)</label>
+                        <input id="bezahlt_am" name="bezahlt_am" type="date">
+                    </div>
+                    <button class="btn btn-action" type="submit">Als bezahlt markieren</button>
+                </form>
+            {% endif %}
             {% if invoice.pdf_datei %}
                 <a href="{% url 'invoices:invoice_pdf' invoice.pk %}" class="btn">PDF herunterladen</a>
             {% endif %}
@@ -15,14 +26,39 @@
     </div>
 
     <div class="form-grid" style="margin-top:1rem;">
-        <div><strong>Rechnungsnummer</strong><br>R-{{ invoice.rechnungsnummer|stringformat:"05d" }}</div>
+        <div><strong>Rechnungsnummer</strong><br>{{ invoice.formatted_rechnungsnummer }}</div>
         <div><strong>Zahlungsstatus</strong><br>{{ invoice.get_zahlungsstatus_display }}</div>
         <div><strong>Rechnungsdatum</strong><br>{{ invoice.rechnungsdatum|date:"d.m.Y" }}</div>
         <div><strong>Fällig am</strong><br>{{ invoice.faellig_am|date:"d.m.Y"|default:"-" }}</div>
+        <div><strong>Bezahlt am</strong><br>{{ invoice.bezahlt_am|date:"d.m.Y"|default:"-" }}</div>
         <div><strong>Betrag</strong><br>{{ invoice.betrag }} €</div>
         <div><strong>Kundennummer</strong><br>{{ invoice.kunde.kundennummer }}</div>
-        <div><strong>Auftrag</strong><br>{% if invoice.auftrag %}{{ invoice.auftrag.auftragsnummer }}{% else %}-{% endif %}</div>
-        <div><strong>Verkauf</strong><br>{% if invoice.verkauf %}{{ invoice.verkauf.verkaufsnummer }}{% else %}-{% endif %}</div>
+        <div><strong>Auftrag</strong><br>{% if invoice.auftrag %}{{ invoice.auftrag.formatted_auftragsnummer }}{% else %}-{% endif %}</div>
+        <div><strong>Verkauf</strong><br>{% if invoice.verkauf %}#{{ invoice.verkauf.verkaufsnummer }}{% else %}-{% endif %}</div>
+    </div>
+
+    <div style="margin-top:1rem;">
+        <strong>Rechnungspositionen</strong>
+        <div class="table-wrap" style="margin-top:.5rem;">
+            <table>
+                <thead>
+                    <tr><th>Beschreibung</th><th>Menge</th><th>Einheit</th><th>Einzelpreis</th><th>Gesamtpreis</th></tr>
+                </thead>
+                <tbody>
+                {% for item in invoice.positionen.all %}
+                    <tr>
+                        <td>{{ item.beschreibung }}</td>
+                        <td>{{ item.menge }}</td>
+                        <td>{{ item.einheit }}</td>
+                        <td>{{ item.einzelpreis }} €</td>
+                        <td>{{ item.gesamtpreis }} €</td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="5">Keine Rechnungspositionen vorhanden.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <div style="margin-top:1rem;">
