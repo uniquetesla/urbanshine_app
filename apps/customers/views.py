@@ -1,11 +1,18 @@
 from django.contrib import messages
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.db.models import Q
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
+from apps.accounts.models import UserRole
+
 from .forms import CustomerForm
 from .models import Customer
+
+
+class EmployeeOnlyMixin(UserPassesTestMixin):
+    def test_func(self):
+        return self.request.user.role != UserRole.STAMMKUNDE
 
 
 class CustomerListView(LoginRequiredMixin, ListView):
@@ -15,6 +22,11 @@ class CustomerListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         queryset = Customer.objects.order_by("kundennummer")
+        if self.request.user.role == UserRole.STAMMKUNDE:
+            if not self.request.user.email:
+                return queryset.none()
+            queryset = queryset.filter(email__iexact=self.request.user.email)
+
         query = self.request.GET.get("q", "").strip()
         if query:
             queryset = queryset.filter(
@@ -33,7 +45,7 @@ class CustomerListView(LoginRequiredMixin, ListView):
         return context
 
 
-class CustomerCreateView(LoginRequiredMixin, CreateView):
+class CustomerCreateView(EmployeeOnlyMixin, LoginRequiredMixin, CreateView):
     model = Customer
     form_class = CustomerForm
     template_name = "customers/customer_form.html"
@@ -44,7 +56,7 @@ class CustomerCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
-class CustomerUpdateView(LoginRequiredMixin, UpdateView):
+class CustomerUpdateView(EmployeeOnlyMixin, LoginRequiredMixin, UpdateView):
     model = Customer
     form_class = CustomerForm
     template_name = "customers/customer_form.html"
@@ -55,7 +67,7 @@ class CustomerUpdateView(LoginRequiredMixin, UpdateView):
         return super().form_valid(form)
 
 
-class CustomerDeleteView(LoginRequiredMixin, DeleteView):
+class CustomerDeleteView(EmployeeOnlyMixin, LoginRequiredMixin, DeleteView):
     model = Customer
     template_name = "customers/customer_confirm_delete.html"
     success_url = reverse_lazy("customers:customer_list")
@@ -70,10 +82,18 @@ class CustomerDetailView(LoginRequiredMixin, DetailView):
     template_name = "customers/customer_detail.html"
     context_object_name = "customer"
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if self.request.user.role == UserRole.STAMMKUNDE:
+            if not self.request.user.email:
+                return queryset.none()
+            return queryset.filter(email__iexact=self.request.user.email)
+        return queryset
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["auftraege"] = self.object.auftraege.order_by("-created_at")[:5]
         context["rechnungen"] = self.object.rechnungen.order_by("-rechnungsdatum", "-rechnungsnummer")[:5]
-        context["angebote"] = []
+        context["angebote"] = self.object.angebote.order_by("-angebotsnummer")[:5]
         context["verkaeufe"] = []
         return context
