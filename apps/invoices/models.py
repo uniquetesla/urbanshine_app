@@ -1,5 +1,7 @@
 from django.db import models
-from django.db.models import Max
+
+from apps.core.models import NumberSequenceType
+from apps.core.number_sequences import format_sequence, next_sequence_value
 from django.utils import timezone
 
 
@@ -63,10 +65,13 @@ class Invoice(models.Model):
         verbose_name_plural = "Rechnungen"
 
     def __str__(self):
-        return f"R-{self.rechnungsnummer:05d} · {self.kunde}"
+        return f"{self.formatted_rechnungsnummer} · {self.kunde}"
+
+    @property
+    def formatted_rechnungsnummer(self):
+        return format_sequence(NumberSequenceType.RECHNUNG, self.rechnungsnummer)
 
     def save(self, *args, **kwargs):
         if not self.rechnungsnummer:
-            last_number = Invoice.objects.aggregate(last=Max("rechnungsnummer"))["last"] or 0
-            self.rechnungsnummer = last_number + 1
+            self.rechnungsnummer = next_sequence_value(NumberSequenceType.RECHNUNG)
         super().save(*args, **kwargs)

@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Wareneingang | UrbanShine{% endblock %}
+{% block page_title %}Wareneingang{% endblock %}
+{% block page_subtitle %}Barcode scannen, Menge buchen und Bestand direkt erhöhen{% endblock %}
+{% block content %}
+<section class="dashboard-layout">
+    <div class="glass-card panel full">
+        <h3>Schneller Wareneingang</h3>
+        <form method="post" class="form-grid touch-form">{% csrf_token %}
+            {% for field in form %}
+                <div>
+                    {{ field.label_tag }}
+                    {{ field }}
+                    {% if field.errors %}<small style="color:#ff9ca4;">{{ field.errors|striptags }}</small>{% endif %}
+                </div>
+            {% endfor %}
+            <div style="display:flex;align-items:flex-end;">
+                <button class="btn btn-touch" type="submit">Wareneingang buchen</button>
+            </div>
+        </form>
+    </div>
+    <aside class="glass-card quick-actions">
+        <h3>Hinweis</h3>
+        <p class="subtitle">Scannerfreundlich: Cursor startet im Barcode-Feld. Nach jeder Buchung kannst du direkt den nächsten Artikel scannen.</p>
+    </aside>
+</section>
+
+<section class="glass-card panel full" style="margin-top:1rem;">
+    <h3>Letzte Buchungen</h3>
+    <div class="table-wrap"><table><thead><tr><th>Zeit</th><th>Artikel</th><th>Artikelnummer</th><th>Barcode</th><th>Menge</th><th>Benutzer</th><th>Notiz</th></tr></thead><tbody>
+    {% for receipt in receipts %}
+        <tr>
+            <td>{{ receipt.created_at|date:"d.m.Y H:i" }}</td>
+            <td>{{ receipt.artikel.name }}</td>
+            <td>{{ receipt.artikelnummer }}</td>
+            <td>{{ receipt.barcode }}</td>
+            <td>+{{ receipt.menge }}</td>
+            <td>{{ receipt.gebucht_von.get_full_name|default:receipt.gebucht_von.username }}</td>
+            <td>{{ receipt.notiz|default:"-" }}</td>
+        </tr>
+    {% empty %}
+        <tr><td colspan="7">Noch keine Wareneingänge gebucht.</td></tr>
+    {% endfor %}
+    </tbody></table></div>
+</section>
+{% endblock %}

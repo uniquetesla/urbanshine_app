@@ -87,7 +87,7 @@ def _build_invoice_pdf(invoice: Invoice, company_settings: CompanySettings | Non
         if logo_path.exists():
             pdf.drawImage(str(logo_path), 15 * mm, y - 15 * mm, width=35 * mm, height=15 * mm, preserveAspectRatio=True)
     pdf.setFont("Helvetica-Bold", 18)
-    pdf.drawRightString(width - 15 * mm, y, f"Rechnung R-{invoice.rechnungsnummer:05d}")
+    pdf.drawRightString(width - 15 * mm, y, f"Rechnung {invoice.formatted_rechnungsnummer}")
 
     y -= 20 * mm
     pdf.setFont("Helvetica-Bold", 11)
@@ -120,7 +120,7 @@ def _build_invoice_pdf(invoice: Invoice, company_settings: CompanySettings | Non
     pdf.drawString(15 * mm, y, f"Rechnungsdatum: {invoice.rechnungsdatum:%d.%m.%Y}")
     y -= 6 * mm
     if invoice.auftrag:
-        pdf.drawString(15 * mm, y, f"Auftrag: {invoice.auftrag.auftragsnummer}")
+        pdf.drawString(15 * mm, y, f"Auftrag: {invoice.auftrag.formatted_auftragsnummer}")
     elif invoice.verkauf:
         pdf.drawString(15 * mm, y, f"Verkauf: {invoice.verkauf.verkaufsnummer}")
 
@@ -168,6 +168,6 @@ def _build_invoice_pdf(invoice: Invoice, company_settings: CompanySettings | Non
     pdf.showPage()
     pdf.save()
 
-    filename = f"rechnung_R-{invoice.rechnungsnummer:05d}.pdf"
+    filename = f"rechnung_{invoice.formatted_rechnungsnummer}.pdf"
     invoice.pdf_datei.save(filename, ContentFile(buffer.getvalue()), save=True)
     buffer.close()

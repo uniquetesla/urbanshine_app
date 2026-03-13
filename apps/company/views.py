@@ -5,8 +5,18 @@ from django.urls import reverse_lazy
 from django.views.generic import TemplateView, View
 
 from apps.accounts.models import UserRole
+from apps.core.models import NumberSequence, NumberSequenceType
+from apps.core.number_sequences import ensure_sequence
 
-from .forms import CompanySettingsForm, OrderTypeForm, PriceForm, ServiceForm, SoilingLevelForm, SurchargeForm
+from .forms import (
+    CompanySettingsForm,
+    NumberSequenceFormSet,
+    OrderTypeForm,
+    PriceForm,
+    ServiceForm,
+    SoilingLevelForm,
+    SurchargeForm,
+)
 from .models import CompanySettings, OrderType, Price, Service, SoilingLevel, Surcharge
 
 
@@ -18,6 +28,11 @@ class MasterDataAccessMixin(LoginRequiredMixin, UserPassesTestMixin):
 
 class MasterDataView(MasterDataAccessMixin, TemplateView):
     template_name = "company/master_data.html"
+
+    def _sequence_formset(self, data=None):
+        for sequence_type, _label in NumberSequenceType.choices:
+            ensure_sequence(sequence_type)
+        return NumberSequenceFormSet(data, queryset=NumberSequence.objects.order_by("sequence_type"))
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -31,6 +46,7 @@ class MasterDataView(MasterDataAccessMixin, TemplateView):
                 "soiling_level_form": SoilingLevelForm(),
                 "surcharge_form": SurchargeForm(),
                 "company_form": CompanySettingsForm(instance=settings_instance),
+                "number_sequence_formset": kwargs.get("number_sequence_formset") or self._sequence_formset(),
                 "services": Service.objects.all(),
                 "prices": Price.objects.all(),
                 "order_types": OrderType.objects.all(),
@@ -50,6 +66,15 @@ class MasterDataView(MasterDataAccessMixin, TemplateView):
             "soiling_level": (SoilingLevelForm, "Verschmutzungsgrad gespeichert."),
             "surcharge": (SurchargeForm, "Zuschlag gespeichert."),
         }
+
+        if action == "number_sequences":
+            formset = self._sequence_formset(request.POST)
+            if formset.is_valid():
+                formset.save()
+                messages.success(request, "Nummernkreise wurden gespeichert.")
+                return redirect("company:master_data")
+            messages.error(request, "Nummernkreise konnten nicht gespeichert werden.")
+            return self.render_to_response(self.get_context_data(number_sequence_formset=formset))
 
         if action == "company_settings":
             settings_instance, _ = CompanySettings.objects.get_or_create(company_name="UrbanShine")

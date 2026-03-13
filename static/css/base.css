@@ -305,3 +305,28 @@ th, td { padding: .75rem; border-bottom: 1px solid rgba(255,255,255,.14); text-a
     margin: .35rem 0 0;
     color: var(--muted);
 }
+
+.btn:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.8);
+    outline-offset: 2px;
+}
+
+.btn:active {
+    transform: translateY(1px);
+}
+
+.btn-touch,
+.btn-action {
+    min-height: 42px;
+    padding: .65rem 1rem;
+    font-size: .95rem;
+}
+
+.action-form {
+    display: inline-flex;
+}
+
+.touch-form input,
+.touch-form button {
+    min-height: 44px;
+}

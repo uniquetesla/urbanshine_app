@@ -1,6 +1,6 @@
 {% extends "base.html" %}
-{% block title %}Auftrag {{ order.auftragsnummer }} | UrbanShine{% endblock %}
-{% block page_title %}Auftrag {{ order.auftragsnummer }}{% endblock %}
+{% block title %}Auftrag {{ order.formatted_auftragsnummer }} | UrbanShine{% endblock %}
+{% block page_title %}Auftrag {{ order.formatted_auftragsnummer }}{% endblock %}
 {% block page_subtitle %}Vollständige Auftragsansicht{% endblock %}
 {% block content %}
 <section class="glass-card panel full">
@@ -14,7 +14,7 @@
                     <form method="post" action="{% url 'orders:order_create_invoice' order.pk %}">
                         {% csrf_token %}
                         <input type="hidden" name="next" value="{% url 'orders:order_detail' order.pk %}">
-                        <button class="btn" type="submit">Rechnung erstellen</button>
+                        <button class="btn btn-action" type="submit">Rechnung erstellen</button>
                     </form>
                 {% endif %}
             {% endwith %}

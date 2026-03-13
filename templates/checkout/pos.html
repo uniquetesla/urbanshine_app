@@ -1,14 +1,14 @@
 {% extends "base.html" %}
 {% block title %}Kasse | UrbanShine{% endblock %}
 {% block page_title %}Kasse{% endblock %}
-{% block page_subtitle %}Artikel suchen, Warenkorb pflegen und Verkäufe buchen{% endblock %}
+{% block page_subtitle %}Artikel per Suche oder Barcode erfassen und Verkäufe buchen{% endblock %}
 {% block content %}
 <section class="dashboard-layout">
     <div class="glass-card panel full">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:.7rem;flex-wrap:wrap;margin-bottom:1rem;">
             <h3>Artikel</h3>
             <form method="get" style="display:flex;gap:.5rem;flex-wrap:wrap;">
-                <input type="search" name="q" value="{{ query }}" placeholder="Suche nach Artikelname, Kategorie oder Beschreibung">
+                <input type="search" name="q" value="{{ query }}" placeholder="Suche nach Artikelnummer, Barcode, Name, Kategorie oder Beschreibung">
                 <button class="btn" type="submit">Suchen</button>
                 {% if query %}
                     <a class="btn btn-secondary" href="{% url 'checkout:pos' %}">Zurücksetzen</a>
@@ -16,14 +16,25 @@
             </form>
         </div>
 
-        <div class="table-wrap"><table><thead><tr><th>Artikel</th><th>Kategorie</th><th>Preis</th><th>Lagerbestand</th><th>Auswahl</th></tr></thead><tbody>
+        <form method="post" style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1rem;align-items:flex-end;">{% csrf_token %}
+            <input type="hidden" name="action" value="scan">
+            <div style="min-width:240px;flex:1;">
+                <label for="barcode_scan">Barcode-Scan</label>
+                <input id="barcode_scan" type="text" name="barcode" placeholder="Barcode scannen" autofocus>
+            </div>
+            <button class="btn btn-touch" type="submit">Scan buchen</button>
+        </form>
+
+        <div class="table-wrap"><table><thead><tr><th>Art.-Nr.</th><th>Barcode</th><th>Artikel</th><th>Kategorie</th><th>Preis</th><th>Lagerbestand</th><th>Auswahl</th></tr></thead><tbody>
             {% for article in articles %}
                 <tr>
+                    <td>{{ article.formatted_artikelnummer }}</td>
+                    <td>{{ article.barcode }}</td>
                     <td>{{ article.name }}</td><td>{{ article.kategorie }}</td><td>{{ article.preis }} €</td><td>{{ article.lagerbestand }}</td>
                     <td><form method="post" style="display:flex;gap:.5rem;align-items:center;">{% csrf_token %}<input type="hidden" name="action" value="add"><input type="hidden" name="article_id" value="{{ article.id }}"><input type="number" name="quantity" min="1" value="1" style="width:90px;"><button class="btn" type="submit" {% if article.lagerbestand == 0 %}disabled{% endif %}>Auswählen</button></form></td>
                 </tr>
             {% empty %}
-                <tr><td colspan="5">Keine Artikel gefunden.</td></tr>
+                <tr><td colspan="7">Keine Artikel gefunden.</td></tr>
             {% endfor %}
         </tbody></table></div>
     </div>
@@ -34,7 +45,7 @@
             <div class="table-wrap"><table><thead><tr><th>Artikel</th><th>Menge</th><th>Summe</th><th></th></tr></thead><tbody>
             {% for item in cart_items %}
                 <tr>
-                    <td>{{ item.article.name }}</td>
+                    <td>{{ item.article.formatted_artikelnummer }} · {{ item.article.name }}</td>
                     <td><form method="post" style="display:flex;gap:.4rem;align-items:center;">{% csrf_token %}<input type="hidden" name="action" value="update"><input type="hidden" name="article_id" value="{{ item.article.id }}"><input type="number" name="quantity" min="0" value="{{ item.quantity }}" style="width:80px;"><button class="btn btn-secondary" type="submit">Ändern</button></form></td>
                     <td>{{ item.line_total }} €</td>
                     <td><form method="post">{% csrf_token %}<input type="hidden" name="action" value="remove"><input type="hidden" name="article_id" value="{{ item.article.id }}"><button class="btn btn-danger" type="submit">Entfernen</button></form></td>
@@ -70,8 +81,8 @@
                 <td>{{ sale.kunde.vorname }} {{ sale.kunde.nachname }}</td>
                 <td>{{ sale.get_zahlungsart_display }}</td>
                 <td>{{ sale.gesamtbetrag }} €</td>
-                <td>{% if invoice %}<a href="{% url 'invoices:invoice_detail' invoice.pk %}">R-{{ invoice.rechnungsnummer|stringformat:"05d" }}</a>{% else %}-{% endif %}</td>
-                <td>{% if invoice %}<a class="btn btn-secondary" href="{% url 'invoices:invoice_detail' invoice.pk %}">Rechnung ansehen</a>{% else %}<form method="post" action="{% url 'checkout:sale_create_invoice' sale.pk %}">{% csrf_token %}<button class="btn" type="submit">Rechnung erstellen</button></form>{% endif %}</td>
+                <td>{% if invoice %}<a href="{% url 'invoices:invoice_detail' invoice.pk %}">{{ invoice.formatted_rechnungsnummer }}</a>{% else %}-{% endif %}</td>
+                <td>{% if invoice %}<a class="btn btn-secondary" href="{% url 'invoices:invoice_detail' invoice.pk %}">Rechnung ansehen</a>{% else %}<form method="post" class="action-form" action="{% url 'checkout:sale_create_invoice' sale.pk %}">{% csrf_token %}<button class="btn btn-action" type="submit">Rechnung erstellen</button></form>{% endif %}</td>
             </tr>
             {% endwith %}
         {% empty %}

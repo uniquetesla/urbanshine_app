@@ -1,5 +1,8 @@
 from django.db import models
-from django.db.models import Max
+
+
+from apps.core.models import NumberSequenceType
+from apps.core.number_sequences import format_sequence, next_sequence_value
 
 
 class Customer(models.Model):
@@ -27,10 +30,13 @@ class Customer(models.Model):
         verbose_name_plural = "Kunden"
 
     def __str__(self):
-        return f"{self.kundennummer} · {self.vorname} {self.nachname}"
+        return f"{self.formatted_kundennummer} · {self.vorname} {self.nachname}"
+
+    @property
+    def formatted_kundennummer(self):
+        return format_sequence(NumberSequenceType.KUNDE, self.kundennummer)
 
     def save(self, *args, **kwargs):
         if not self.kundennummer:
-            last_number = Customer.objects.aggregate(last=Max("kundennummer"))["last"] or 0
-            self.kundennummer = last_number + 1
+            self.kundennummer = next_sequence_value(NumberSequenceType.KUNDE)
         super().save(*args, **kwargs)

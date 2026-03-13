@@ -2,7 +2,10 @@ from decimal import Decimal
 
 from django.conf import settings
 from django.db import models
-from django.db.models import Max, Sum
+
+from apps.core.models import NumberSequenceType
+from apps.core.number_sequences import format_sequence, next_sequence_value
+from django.db.models import Sum
 
 
 class OrderStatus(models.TextChoices):
@@ -71,7 +74,11 @@ class Order(models.Model):
         verbose_name_plural = "Aufträge"
 
     def __str__(self):
-        return f"{self.auftragsnummer} · {self.kunde}"
+        return f"{self.formatted_auftragsnummer} · {self.kunde}"
+
+    @property
+    def formatted_auftragsnummer(self):
+        return format_sequence(NumberSequenceType.AUFTRAG, self.auftragsnummer)
 
     @property
     def gesamtzeit_formatiert(self):
@@ -102,8 +109,7 @@ class Order(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.auftragsnummer:
-            last_number = Order.objects.aggregate(last=Max("auftragsnummer"))["last"] or 0
-            self.auftragsnummer = last_number + 1
+            self.auftragsnummer = next_sequence_value(NumberSequenceType.AUFTRAG)
         if self.order_type and not self.auftragsart:
             self.auftragsart = self.order_type.name
         super().save(*args, **kwargs)
