@@ -21,7 +21,7 @@ def _customer_for_user(user):
 
 class EmployeeOnlyMixin(UserPassesTestMixin):
     def test_func(self):
-        return self.request.user.role != UserRole.STAMMKUNDE
+        return self.request.user.is_authenticated and self.request.user.role != UserRole.STAMMKUNDE
 
 
 class OfferListView(LoginRequiredMixin, ListView):

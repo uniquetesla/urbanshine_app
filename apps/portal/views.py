@@ -23,6 +23,9 @@ class CustomerPortalView(LoginRequiredMixin, FormView):
     success_url = "/portal/"
 
     def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return self.handle_no_permission()
+
         if request.user.role != UserRole.STAMMKUNDE:
             messages.info(request, "Das Kundenportal ist nur für Stammkunden verfügbar.")
             from django.shortcuts import redirect
