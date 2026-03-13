@@ -1,15 +1,28 @@
 from django.contrib import messages
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.views import View
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
+from apps.accounts.models import UserRole
+from apps.customers.models import Customer
 from apps.invoices.services import create_invoice_for_completed_order
 
 from .forms import OrderForm
 from .models import Order, OrderImage, OrderStatus
+
+
+def _customer_for_user(user):
+    if not user.email:
+        return None
+    return Customer.objects.filter(email__iexact=user.email).first()
+
+
+class EmployeeOnlyMixin(UserPassesTestMixin):
+    def test_func(self):
+        return self.request.user.role != UserRole.STAMMKUNDE
 
 
 class OrderListView(LoginRequiredMixin, ListView):
@@ -19,6 +32,13 @@ class OrderListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         queryset = Order.objects.select_related("kunde").prefetch_related("mitarbeiter").order_by("-auftragsnummer")
+
+        if self.request.user.role == UserRole.STAMMKUNDE:
+            customer = _customer_for_user(self.request.user)
+            if not customer:
+                return queryset.none()
+            queryset = queryset.filter(kunde=customer)
+
         query = self.request.GET.get("q", "").strip()
         if query:
             queryset = queryset.filter(
@@ -38,7 +58,7 @@ class OrderListView(LoginRequiredMixin, ListView):
         return context
 
 
-class OrderCreateView(LoginRequiredMixin, CreateView):
+class OrderCreateView(EmployeeOnlyMixin, LoginRequiredMixin, CreateView):
     model = Order
     form_class = OrderForm
     template_name = "orders/order_form.html"
@@ -55,7 +75,7 @@ class OrderCreateView(LoginRequiredMixin, CreateView):
             OrderImage.objects.create(auftrag=self.object, bild=image)
 
 
-class OrderUpdateView(LoginRequiredMixin, UpdateView):
+class OrderUpdateView(EmployeeOnlyMixin, LoginRequiredMixin, UpdateView):
     model = Order
     form_class = OrderForm
     template_name = "orders/order_form.html"
@@ -77,7 +97,7 @@ class OrderUpdateView(LoginRequiredMixin, UpdateView):
             OrderImage.objects.create(auftrag=self.object, bild=image)
 
 
-class OrderDeleteView(LoginRequiredMixin, DeleteView):
+class OrderDeleteView(EmployeeOnlyMixin, LoginRequiredMixin, DeleteView):
     model = Order
     template_name = "orders/order_confirm_delete.html"
     success_url = reverse_lazy("orders:order_list")
@@ -92,8 +112,17 @@ class OrderDetailView(LoginRequiredMixin, DetailView):
     template_name = "orders/order_detail.html"
     context_object_name = "order"
 
+    def get_queryset(self):
+        queryset = super().get_queryset().select_related("kunde").prefetch_related("mitarbeiter", "bilder")
+        if self.request.user.role == UserRole.STAMMKUNDE:
+            customer = _customer_for_user(self.request.user)
+            if not customer:
+                return queryset.none()
+            return queryset.filter(kunde=customer)
+        return queryset
 
-class OrderQuickStatusUpdateView(LoginRequiredMixin, View):
+
+class OrderQuickStatusUpdateView(EmployeeOnlyMixin, LoginRequiredMixin, View):
     def post(self, request, pk):
         order = get_object_or_404(Order, pk=pk)
         new_status = request.POST.get("status")

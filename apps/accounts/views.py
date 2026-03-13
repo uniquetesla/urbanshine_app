@@ -28,6 +28,13 @@ class UrbanShineLoginView(LoginView):
 class DashboardView(LoginRequiredMixin, TemplateView):
     template_name = "accounts/dashboard.html"
 
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.role == UserRole.STAMMKUNDE:
+            from django.shortcuts import redirect
+
+            return redirect("portal:dashboard")
+        return super().dispatch(request, *args, **kwargs)
+
 
 class UserManagementAccessMixin(LoginRequiredMixin, RoleRequiredMixin):
     allowed_roles = (UserRole.ADMIN, UserRole.CHEF)

@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Kundenportal | UrbanShine{% endblock %}
+{% block page_title %}Kundenportal{% endblock %}
+{% block page_subtitle %}Ihre Aufträge, Rechnungen, Angebote und Terminanfragen{% endblock %}
+{% block content %}
+<section class="dashboard-layout">
+    {% if customer %}
+        <article class="glass-card panel full">
+            <h3>Ihre Kundendaten</h3>
+            <p><strong>{{ customer.vorname }} {{ customer.nachname }}</strong> · Kundennummer {{ customer.kundennummer }}</p>
+            <p>{{ customer.strasse }} {{ customer.hausnummer }}, {{ customer.plz }} {{ customer.ort }}</p>
+        </article>
+
+        <article class="glass-card panel">
+            <h3>Eigene Aufträge</h3>
+            <ul class="activity-list">
+                {% for order in orders %}
+                    <li>
+                        <strong>#{{ order.auftragsnummer }} · {{ order.auftragsart }}</strong>
+                        <p>Status: {{ order.get_status_display }} · {{ order.gesamtpreis }} €</p>
+                    </li>
+                {% empty %}
+                    <li><p>Aktuell sind keine Aufträge vorhanden.</p></li>
+                {% endfor %}
+            </ul>
+        </article>
+
+        <article class="glass-card panel">
+            <h3>Rechnungen</h3>
+            <ul class="activity-list">
+                {% for invoice in invoices %}
+                    <li>
+                        <strong>R-{{ invoice.rechnungsnummer|stringformat:"05d" }}</strong>
+                        <p>{{ invoice.betrag }} € · {{ invoice.get_zahlungsstatus_display }}</p>
+                    </li>
+                {% empty %}
+                    <li><p>Aktuell sind keine Rechnungen vorhanden.</p></li>
+                {% endfor %}
+            </ul>
+        </article>
+
+        <article class="glass-card panel">
+            <h3>Angebote</h3>
+            <ul class="activity-list">
+                {% for offer in offers %}
+                    <li>
+                        <strong>A-{{ offer.angebotsnummer|stringformat:"05d" }} · {{ offer.titel }}</strong>
+                        <p>Status: {{ offer.get_status_display }} · {{ offer.gesamtpreis }} €</p>
+                    </li>
+                {% empty %}
+                    <li><p>Aktuell sind keine Angebote vorhanden.</p></li>
+                {% endfor %}
+            </ul>
+        </article>
+    {% else %}
+        <article class="glass-card panel full">
+            <h3>Kundenkonto noch nicht zugeordnet</h3>
+            <p>Für Ihren Login wurde noch kein Kundenprofil mit derselben E-Mail-Adresse gefunden.</p>
+            <p>Bitte kontaktieren Sie uns, damit wir Ihr Stammkundenkonto verknüpfen können.</p>
+        </article>
+    {% endif %}
+
+    <aside class="glass-card quick-actions">
+        <h3>Termin anfragen</h3>
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button class="btn" type="submit">Anfrage senden</button>
+        </form>
+    </aside>
+</section>
+{% endblock %}

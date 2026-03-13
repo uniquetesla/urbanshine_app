@@ -1,14 +1,27 @@
 from django.contrib import messages
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.shortcuts import get_object_or_404, redirect
-from django.urls import reverse, reverse_lazy
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.views import View
 from django.views.generic import DetailView, ListView
 
+from apps.accounts.models import UserRole
+from apps.customers.models import Customer
 from apps.orders.models import Order, OrderStatus
 
 from .forms import OfferForm, OfferItemFormSet
 from .models import Offer, OfferStatus
+
+
+def _customer_for_user(user):
+    if not user.email:
+        return None
+    return Customer.objects.filter(email__iexact=user.email).first()
+
+
+class EmployeeOnlyMixin(UserPassesTestMixin):
+    def test_func(self):
+        return self.request.user.role != UserRole.STAMMKUNDE
 
 
 class OfferListView(LoginRequiredMixin, ListView):
@@ -17,10 +30,16 @@ class OfferListView(LoginRequiredMixin, ListView):
     context_object_name = "offers"
 
     def get_queryset(self):
-        return Offer.objects.select_related("kunde", "umgewandelter_auftrag")
+        queryset = Offer.objects.select_related("kunde", "umgewandelter_auftrag")
+        if self.request.user.role == UserRole.STAMMKUNDE:
+            customer = _customer_for_user(self.request.user)
+            if not customer:
+                return queryset.none()
+            queryset = queryset.filter(kunde=customer)
+        return queryset
 
 
-class OfferCreateView(LoginRequiredMixin, View):
+class OfferCreateView(EmployeeOnlyMixin, LoginRequiredMixin, View):
     template_name = "offers/offer_form.html"
 
     def get(self, request):
@@ -40,8 +59,6 @@ class OfferCreateView(LoginRequiredMixin, View):
         return self._render(request, form, formset)
 
     def _render(self, request, form, formset):
-        from django.shortcuts import render
-
         return render(request, self.template_name, {"form": form, "formset": formset})
 
 
@@ -50,8 +67,17 @@ class OfferDetailView(LoginRequiredMixin, DetailView):
     template_name = "offers/offer_detail.html"
     context_object_name = "offer"
 
+    def get_queryset(self):
+        queryset = super().get_queryset().select_related("kunde", "umgewandelter_auftrag").prefetch_related("positionen")
+        if self.request.user.role == UserRole.STAMMKUNDE:
+            customer = _customer_for_user(self.request.user)
+            if not customer:
+                return queryset.none()
+            queryset = queryset.filter(kunde=customer)
+        return queryset
 
-class OfferConvertToOrderView(LoginRequiredMixin, View):
+
+class OfferConvertToOrderView(EmployeeOnlyMixin, LoginRequiredMixin, View):
     def post(self, request, pk):
         offer = get_object_or_404(Offer.objects.prefetch_related("positionen"), pk=pk)
 
