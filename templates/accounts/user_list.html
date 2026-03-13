@@ -27,8 +27,8 @@
                     <td>{{ user.first_name }} {{ user.last_name }}</td>
                     <td>{{ user.get_role_display }}</td>
                     <td>{% if user.is_active %}Aktiv{% else %}Deaktiviert{% endif %}</td>
-                    <td style="display:flex;gap:.4rem;flex-wrap:wrap;">
-                        <a class="btn btn-secondary" href="{% url 'accounts:user_update' user.pk %}">Bearbeiten</a>
+                    <td class="table-actions">
+                        <a class="btn btn-secondary" href="{% url 'accounts:user_update' user.pk %}"><span class="btn-icon" aria-hidden="true">✏️</span><span>Bearbeiten</span></a>
                         {% if user.is_active %}
                         <form method="post" action="{% url 'accounts:user_deactivate' user.pk %}" style="display:inline;">
                             {% csrf_token %}

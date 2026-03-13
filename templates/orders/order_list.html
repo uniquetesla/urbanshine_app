@@ -6,14 +6,14 @@
 <section class="glass-card panel full">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:.7rem;flex-wrap:wrap;margin-bottom:1rem;">
         <h3>Alle Aufträge</h3>
-        <a href="{% url 'orders:order_create' %}" class="btn">Auftrag erstellen</a>
+        <a href="{% url 'orders:order_create' %}" class="btn"><span class="btn-icon" aria-hidden="true">➕</span><span>Auftrag erstellen</span></a>
     </div>
 
     <form method="get" style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1rem;">
         <input type="search" name="q" value="{{ query }}" placeholder="Suche nach Auftragsnummer, Kunde, Art, Leistung, Status">
-        <button class="btn" type="submit">Suchen</button>
+        <button class="btn" type="submit"><span class="btn-icon" aria-hidden="true">🔍</span><span>Suchen</span></button>
         {% if query %}
-            <a class="btn btn-secondary" href="{% url 'orders:order_list' %}">Zurücksetzen</a>
+            <a class="btn btn-secondary" href="{% url 'orders:order_list' %}"><span class="btn-icon" aria-hidden="true">↺</span><span>Zurücksetzen</span></a>
         {% endif %}
     </form>
 
@@ -51,19 +51,19 @@
                     <td>{{ order.termin|date:"d.m.Y H:i"|default:"-" }}</td>
                     <td>{{ order.gesamtpreis }} €</td>
                     <td>{{ order.gesamtzeit_formatiert }}</td>
-                    <td style="display:flex;gap:.4rem;flex-wrap:wrap;">
-                        <a class="btn btn-secondary" href="{% url 'orders:order_detail' order.pk %}">Details</a>
-                        <a class="btn btn-secondary" href="{% url 'orders:order_update' order.pk %}">Bearbeiten</a>
+                    <td class="table-actions">
+                        <a class="btn btn-secondary" href="{% url 'orders:order_detail' order.pk %}"><span class="btn-icon" aria-hidden="true">🔎</span><span>Details</span></a>
+                        <a class="btn btn-secondary" href="{% url 'orders:order_update' order.pk %}"><span class="btn-icon" aria-hidden="true">✏️</span><span>Bearbeiten</span></a>
                         {% if invoice %}
-                            <a class="btn" href="{% url 'invoices:invoice_detail' invoice.pk %}">Rechnung ansehen</a>
+                            <a class="btn" href="{% url 'invoices:invoice_detail' invoice.pk %}"><span class="btn-icon" aria-hidden="true">🧾</span><span>Rechnung ansehen</span></a>
                         {% else %}
                             <form method="post" action="{% url 'orders:order_create_invoice' order.pk %}" style="display:inline;">
                                 {% csrf_token %}
                                 <input type="hidden" name="next" value="{% url 'orders:order_list' %}">
-                                <button class="btn btn-action" type="submit">Rechnung erstellen</button>
+                                <button class="btn btn-success" type="submit"><span class="btn-icon" aria-hidden="true">🧾</span><span>Rechnung erstellen</span></button>
                             </form>
                         {% endif %}
-                        <a class="btn btn-danger" href="{% url 'orders:order_delete' order.pk %}">Löschen</a>
+                        <a class="btn btn-danger" href="{% url 'orders:order_delete' order.pk %}"><span class="btn-icon" aria-hidden="true">🗑️</span><span>Löschen</span></a>
                     </td>
                 </tr>
                 {% endwith %}

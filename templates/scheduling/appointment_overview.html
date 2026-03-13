@@ -15,7 +15,7 @@
                 <label for="datum">Datum</label>
                 <input id="datum" type="date" name="datum" value="{{ selected_date|date:'Y-m-d' }}">
             </div>
-            <button class="btn" type="submit">Anzeigen</button>
+            <button class="btn" type="submit"><span class="btn-icon" aria-hidden="true">🔍</span><span>Anzeigen</span></button>
         </form>
         <div style="display:flex;gap:.5rem;">
             <a href="?ansicht=tag&datum={{ selected_date|date:'Y-m-d' }}" class="btn {% if selected_view != 'tag' %}btn-secondary{% endif %}">Tag</a>
@@ -44,7 +44,7 @@
                     <td>{{ order.get_status_display }}</td>
                     <td>{{ order.termin|date:"d.m.Y H:i"|default:"Nicht gesetzt" }}</td>
                     <td>{% for employee in order.mitarbeiter.all %}{{ employee.get_full_name|default:employee.username }}{% if not forloop.last %}, {% endif %}{% empty %}Nicht zugeordnet{% endfor %}</td>
-                    <td><a class="btn btn-secondary" href="{% url 'orders:order_update' order.pk %}">Planung bearbeiten</a></td>
+                    <td><a class="btn btn-secondary" href="{% url 'orders:order_update' order.pk %}"><span class="btn-icon" aria-hidden="true">📅</span><span>Planung bearbeiten</span></a></td>
                 </tr>
             {% empty %}
                 <tr><td colspan="6">Keine offenen Zuordnungen.</td></tr>

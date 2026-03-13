@@ -50,7 +50,7 @@
         <p><strong>Gesamtpreis (Vorschau):</strong> <span id="offer-total-price">{{ object.gesamtpreis|default:'0'|floatformat:2 }} €</span></p>
         <p><strong>Hinweis:</strong> Der Gesamtpreis wird serverseitig aus den Positionen und dem Rabatt berechnet.</p>
 
-        <div style="margin-top:1rem;display:flex;gap:.6rem;"><button class="btn" type="submit">Speichern</button><a href="{% url 'offers:offer_list' %}" class="btn btn-secondary">Zurück</a></div>
+        <div class="button-row"><button class="btn" type="submit"><span class="btn-icon" aria-hidden="true">💾</span><span>Speichern</span></button><a href="{% url 'offers:offer_list' %}" class="btn btn-secondary"><span class="btn-icon" aria-hidden="true">←</span><span>Zurück</span></a></div>
     </form>
 </section>
 {{ service_prices|json_script:"service-prices-data" }}

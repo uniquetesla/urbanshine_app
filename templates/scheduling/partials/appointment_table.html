@@ -32,7 +32,7 @@
                         {{ appointment.get_status_display }}
                     </span>
                 </td>
-                <td><a class="btn btn-secondary" href="{% url 'orders:order_update' appointment.pk %}">Termin bearbeiten</a></td>
+                <td><a class="btn btn-secondary" href="{% url 'orders:order_update' appointment.pk %}"><span class="btn-icon" aria-hidden="true">📅</span><span>Termin bearbeiten</span></a></td>
             </tr>
         {% empty %}
             <tr>

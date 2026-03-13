@@ -6,7 +6,7 @@
 <section class="glass-card panel full">
     <div class="panel-heading">
         <h3>Dokumentenübersicht</h3>
-        <a class="btn" href="{% url 'documents:document_create' %}">Dokument hochladen</a>
+        <a class="btn" href="{% url 'documents:document_create' %}"><span class="btn-icon" aria-hidden="true">⬆️</span><span>Dokument hochladen</span></a>
     </div>
 
     <form method="get" class="form-grid" style="margin-top: 1rem;">
@@ -24,8 +24,8 @@
             </select>
         </div>
         <div style="display: flex; align-items: end; gap: .5rem;">
-            <button class="btn" type="submit">Filtern</button>
-            <a class="btn btn-secondary" href="{% url 'documents:document_list' %}">Zurücksetzen</a>
+            <button class="btn" type="submit"><span class="btn-icon" aria-hidden="true">🔍</span><span>Filtern</span></button>
+            <a class="btn btn-secondary" href="{% url 'documents:document_list' %}"><span class="btn-icon" aria-hidden="true">↺</span><span>Zurücksetzen</span></a>
         </div>
     </form>
 
@@ -52,7 +52,7 @@
                         <td>{{ document.uploaded_at|date:"d.m.Y H:i" }}</td>
                         <td>{{ document.uploaded_by|default:"System" }}</td>
                         <td>
-                            <a class="btn btn-secondary" href="{% url 'documents:document_detail' document.pk %}">Details</a>
+                            <a class="btn btn-secondary" href="{% url 'documents:document_detail' document.pk %}"><span class="btn-icon" aria-hidden="true">🔎</span><span>Details</span></a>
                         </td>
                     </tr>
                 {% empty %}
@@ -70,7 +70,7 @@
         </div>
         {% if documents %}
             <div style="margin-top: 1rem; display: flex; gap: .65rem;">
-                <button class="btn" type="submit">Auswahl als ZIP herunterladen</button>
+                <button class="btn" type="submit"><span class="btn-icon" aria-hidden="true">🗂️</span><span>Auswahl als ZIP herunterladen</span></button>
             </div>
         {% endif %}
     </form>

@@ -75,9 +75,9 @@
 
     <aside class="glass-card quick-actions">
         <h3>Schnellaktionen</h3>
-        <a class="btn" href="{% url 'orders:order_create' %}">Neuer Auftrag</a>
-        <a class="btn btn-secondary" href="{% url 'customers:customer_create' %}">Neuer Kunde</a>
-        <a class="btn btn-secondary" href="{% url 'offers:offer_create' %}">Neues Angebot</a>
+        <a class="btn" href="{% url 'orders:order_create' %}"><span class="btn-icon" aria-hidden="true">➕</span><span>Neuer Auftrag</span></a>
+        <a class="btn btn-secondary" href="{% url 'customers:customer_create' %}"><span class="btn-icon" aria-hidden="true">➕</span><span>Neuer Kunde</span></a>
+        <a class="btn btn-secondary" href="{% url 'offers:offer_create' %}"><span class="btn-icon" aria-hidden="true">📄</span><span>Neues Angebot</span></a>
         <a class="btn btn-secondary" href="{% url 'invoices:invoice_list' %}">Rechnungen öffnen</a>
         {% if request.user.role == 'admin' or request.user.role == 'chef' %}
             <a class="btn btn-secondary" href="{% url 'documents:document_list' %}">Firmendokumente</a>

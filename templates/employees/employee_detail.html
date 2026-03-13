@@ -7,8 +7,8 @@
     <div style="display:flex;justify-content:space-between;align-items:center;gap:.7rem;flex-wrap:wrap;">
         <h3>Profil</h3>
         <div style="display:flex;gap:.5rem;">
-            <a href="{% url 'employees:employee_calendar' employee.pk %}" class="btn btn-secondary">Kalenderansicht</a>
-            <a href="{% url 'employees:employee_list' %}" class="btn btn-secondary">Zurück</a>
+            <a href="{% url 'employees:employee_calendar' employee.pk %}" class="btn btn-secondary"><span class="btn-icon" aria-hidden="true">📅</span><span>Kalenderansicht</span></a>
+            <a href="{% url 'employees:employee_list' %}" class="btn btn-secondary"><span class="btn-icon" aria-hidden="true">←</span><span>Zurück</span></a>
         </div>
     </div>
 

@@ -7,8 +7,8 @@
     <div style="display:flex;justify-content:space-between;align-items:center;gap:.7rem;flex-wrap:wrap;">
         <h3>{{ customer.vorname }} {{ customer.nachname }}</h3>
         <div style="display:flex;gap:.5rem;">
-            <a href="{% url 'customers:customer_update' customer.pk %}" class="btn btn-secondary">Bearbeiten</a>
-            <a href="{% url 'customers:customer_list' %}" class="btn btn-secondary">Zurück zur Liste</a>
+            <a href="{% url 'customers:customer_update' customer.pk %}" class="btn btn-secondary"><span class="btn-icon" aria-hidden="true">✏️</span><span>Bearbeiten</span></a>
+            <a href="{% url 'customers:customer_list' %}" class="btn btn-secondary"><span class="btn-icon" aria-hidden="true">←</span><span>Zurück zur Liste</span></a>
         </div>
     </div>
 

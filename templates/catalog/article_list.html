@@ -6,14 +6,14 @@
 <section class="glass-card panel full">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:.7rem;flex-wrap:wrap;margin-bottom:1rem;">
         <h3>Alle Artikel</h3>
-        <div style="display:flex;gap:.5rem;flex-wrap:wrap;"><a href="{% url 'catalog:goods_receipt' %}" class="btn btn-secondary">Wareneingang</a><a href="{% url 'catalog:article_create' %}" class="btn">Artikel anlegen</a></div>
+        <div class="button-row"><a href="{% url 'catalog:goods_receipt' %}" class="btn btn-secondary"><span class="btn-icon" aria-hidden="true">⬆️</span><span>Wareneingang</span></a><a href="{% url 'catalog:article_create' %}" class="btn"><span class="btn-icon" aria-hidden="true">➕</span><span>Artikel anlegen</span></a></div>
     </div>
 
     <form method="get" style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1rem;">
         <input type="search" name="q" value="{{ query }}" placeholder="Suche nach Artikelnummer, Barcode, Name, Kategorie oder Beschreibung">
-        <button class="btn" type="submit">Suchen</button>
+        <button class="btn" type="submit"><span class="btn-icon" aria-hidden="true">🔍</span><span>Suchen</span></button>
         {% if query %}
-            <a class="btn btn-secondary" href="{% url 'catalog:article_list' %}">Zurücksetzen</a>
+            <a class="btn btn-secondary" href="{% url 'catalog:article_list' %}"><span class="btn-icon" aria-hidden="true">↺</span><span>Zurücksetzen</span></a>
         {% endif %}
     </form>
 
@@ -44,9 +44,9 @@
                     <td>{{ article.preis }} €</td>
                     <td>{{ article.lagerbestand }}</td>
                     <td>{{ article.beschreibung|default:'-'|truncatechars:90 }}</td>
-                    <td style="display:flex;gap:.4rem;flex-wrap:wrap;">
-                        <a class="btn btn-secondary" href="{% url 'catalog:article_update' article.pk %}">Bearbeiten</a>
-                        <a class="btn btn-danger" href="{% url 'catalog:article_delete' article.pk %}">Löschen</a>
+                    <td class="table-actions">
+                        <a class="btn btn-secondary" href="{% url 'catalog:article_update' article.pk %}"><span class="btn-icon" aria-hidden="true">✏️</span><span>Bearbeiten</span></a>
+                        <a class="btn btn-danger" href="{% url 'catalog:article_delete' article.pk %}"><span class="btn-icon" aria-hidden="true">🗑️</span><span>Löschen</span></a>
                     </td>
                 </tr>
             {% empty %}
